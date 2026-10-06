@@ -1,0 +1,41 @@
+/* Clean, white, CoinGecko-style. Colour is only used for up (green) and down (red). */
+:root {
+  --bg: #ffffff;
+  --fg: #0d1421;
+  --muted: #58667e;
+  --line: #eff2f5;
+  --hover: #f8fafd;
+  --chip: #eff2f5;
+  --bull: #16c784;
+  --bear: #ea3943;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.num { font-variant-numeric: tabular-nums; }
+.up { color: var(--bull); }
+.down { color: var(--bear); }
+.muted { color: var(--muted); }
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-inline: 24px;
+}
+
+@media (max-width: 700px) {
+  .container { padding-inline: 16px; }
+}

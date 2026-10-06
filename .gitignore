@@ -1,0 +1,15 @@
+# Secrets: never commit the real settings file
+.env
+
+# Built backend program
+backend/adalytics
+
+# Frontend downloads and build output
+frontend/node_modules/
+frontend/dist/
+
+# Editor and system files
+.vscode/
+.idea/
+.DS_Store
+*.log

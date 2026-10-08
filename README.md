@@ -10,7 +10,8 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 
 **Token list**
 
-* Price, 1 hour, 24 hour and 7 day change, 24 hour volume, fully diluted valuation (FDV) and a small 7 day price line for every token
+* Price, 1 hour, 24 hour and 7 day change, 24 hour volume, fully diluted valuation (FDV) and a small price line for every token
+* A 24h / 7d toggle: Top Gainers, Top Losers and the small lines all follow the same period
 * Top Volume, Top Gainers and Top Losers views
 * Search by name, ticker or policy ID (press `/` to jump to the search box)
 * Refreshes by itself every minute
@@ -22,7 +23,7 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 * A range that is still loading can be clicked: the chart area shows the live percentage and the chart appears when it reaches 100%
 * Price in ADA and USD, low and high over the chosen range, volume, number of trades, buys against sells, holder count, pool liquidity and the time of the last trade
 * Info box with the project website, policy ID and fingerprint (with copy buttons), creation date, a Cardanoscan link and the project description
-* The 5 most recent trades, each with a link to the transaction on Cardanoscan
+* The 50 most recent trades, each with a link to the transaction on Cardanoscan
 
 It also works on phones.
 

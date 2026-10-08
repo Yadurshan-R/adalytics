@@ -1,4 +1,4 @@
-<!-- A token's 5 most recent trades (last 24 hours, newest first), refreshed every
+<!-- A token's 50 most recent trades (last 24 hours, newest first), refreshed every
      minute. Each row links to the transaction on Cardanoscan. -->
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
@@ -9,7 +9,7 @@ const props = defineProps({
   ticker: { type: String, required: true },
 })
 
-const SHOWN = 5
+const SHOWN = 50 // the most the backend keeps per token (MaxTrades)
 const trades = ref([])
 const loaded = ref(false)
 const error = ref('')
@@ -68,7 +68,7 @@ function ada(v) {
         </thead>
         <tbody>
           <template v-if="!loaded">
-            <tr v-for="n in SHOWN" :key="n" class="skeleton">
+            <tr v-for="n in 5" :key="n" class="skeleton">
               <td class="left"><i style="width: 70px" /></td>
               <td class="left"><i style="width: 36px" /></td>
               <td class="hide-sm"><i style="width: 70px" /></td>

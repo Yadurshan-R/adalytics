@@ -494,8 +494,8 @@ func TestBackfillLoadsOlderHistory(t *testing.T) {
 	if _, _, _, _, err := tr.Chart("snek", "7D", false); err != ErrRangeLoading {
 		t.Errorf("7D before it is loaded: %v", err)
 	}
-	if q := tr.Quotes()[0]; q.Change7d != nil {
-		t.Errorf("7d change before 7 days are loaded: %v", *q.Change7d)
+	if q := tr.Quotes()[0]; q.Change7d != nil || q.Sparkline7d != nil {
+		t.Errorf("7d change or line before 7 days are loaded: %v %v", q.Change7d, q.Sparkline7d)
 	}
 
 	before := len(f.calls)
@@ -505,15 +505,15 @@ func TestBackfillLoadsOlderHistory(t *testing.T) {
 		t.Errorf("backfill requests: %s", got)
 	}
 	h = tr.History()
-	if !h.Done || !h.Ranges[1].Ready || h.Ranges[1].Progress != 100 || h.SparklineDays != 7 {
+	if !h.Done || !h.Ranges[1].Ready || h.Ranges[1].Progress != 100 {
 		t.Errorf("after backfill: %+v", h)
 	}
 	q := tr.Quotes()[0]
 	if want := (2000000.0/1900000 - 1) * 100; q.Change7d == nil || math.Abs(*q.Change7d-want) > 1e-9 {
 		t.Errorf("7d change %v, want %v", q.Change7d, want)
 	}
-	if len(q.Sparkline) != 85 {
-		t.Errorf("7 day sparkline has %d points, want 85 (every 2 hours)", len(q.Sparkline))
+	if len(q.Sparkline) != 25 || len(q.Sparkline7d) != 85 {
+		t.Errorf("sparklines have %d and %d points, want 25 (hourly) and 85 (every 2 hours)", len(q.Sparkline), len(q.Sparkline7d))
 	}
 	_, r, points, _, err := tr.Chart("snek", "7d", false)
 	if err != nil || r.Key != "7D" || len(points) != 169 || points[0].Price != 1900000.0/744260765 {

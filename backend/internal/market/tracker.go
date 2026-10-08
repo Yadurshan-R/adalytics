@@ -65,7 +65,8 @@ type Quote struct {
 	FDVADA       float64    `json:"fdv_ada,omitempty"`      // price × total supply
 	Holders      int        `json:"holders,omitempty"`      // wallets holding the token; 0 until loaded
 	HasLogo      bool       `json:"has_logo"`
-	Sparkline    []float64  `json:"sparkline"` // prices over the last 24h (hourly) or 7 days (every 2h), oldest first
+	Sparkline    []float64  `json:"sparkline"`              // prices over the last 24h (hourly), oldest first
+	Sparkline7d  []float64  `json:"sparkline_7d,omitempty"` // prices over the last 7 days (every 2 hours), once loaded
 	ReserveADA   float64    `json:"reserve_ada"`
 	ReserveToken float64    `json:"reserve_token"`
 	Decimals     int        `json:"decimals"`
@@ -276,16 +277,11 @@ func (t *Tracker) Quotes() []Quote {
 			q.Change1h = changePct(s.points, now.Add(-time.Hour).Unix())
 			q.Change24h = changePct(s.points, now.Add(-24*time.Hour).Unix())
 			q.Volume24hADA = volumeSince(s.points, now.Add(-24*time.Hour).Unix())
-			sparkFrom, sparkStep := now.Add(-24*time.Hour), time.Hour
+			q.Sparkline = sparkline(s.points, now.Add(-24*time.Hour), now, time.Hour)
 			if week {
 				c := changePct(s.points, now.Add(-7*24*time.Hour).Unix())
 				q.Change7d = &c
-				sparkFrom, sparkStep = now.Add(-7*24*time.Hour), 2*time.Hour
-			}
-			spark := bucket(s.points, sparkFrom, now, sparkStep)
-			q.Sparkline = make([]float64, len(spark))
-			for j, p := range spark {
-				q.Sparkline[j] = p.Price
+				q.Sparkline7d = sparkline(s.points, now.Add(-7*24*time.Hour), now, 2*time.Hour)
 			}
 		}
 		out = append(out, q)
@@ -302,6 +298,16 @@ func (t *Tracker) Quotes() []Quote {
 	}
 	for i := range out {
 		out[i].Rank = i + 1
+	}
+	return out
+}
+
+// sparkline is the price at every step from start to end, for the list's small lines.
+func sparkline(points []Point, start, end time.Time, step time.Duration) []float64 {
+	spark := bucket(points, start, end, step)
+	out := make([]float64, len(spark))
+	for i, p := range spark {
+		out[i] = p.Price
 	}
 	return out
 }
@@ -796,19 +802,18 @@ type Loading struct {
 
 // History says how much history is loaded.
 type History struct {
-	Loading       *Loading      `json:"loading,omitempty"` // only during the first load
-	Days          int           `json:"days"`              // days that will be loaded (HISTORY_DAYS)
-	LoadedHours   float64       `json:"loaded_hours"`      // hours loaded so far
-	Done          bool          `json:"done"`
-	Ranges        []RangeStatus `json:"ranges"`         // only ranges within Days
-	SparklineDays int           `json:"sparkline_days"` // 1 or 7: what the list's small lines cover
+	Loading     *Loading      `json:"loading,omitempty"` // only during the first load
+	Days        int           `json:"days"`              // days that will be loaded (HISTORY_DAYS)
+	LoadedHours float64       `json:"loaded_hours"`      // hours loaded so far
+	Done        bool          `json:"done"`
+	Ranges      []RangeStatus `json:"ranges"` // only ranges within Days
 }
 
 // History returns how much history is loaded and which chart ranges are ready.
 func (t *Tracker) History() History {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
-	h := History{Days: int(t.span / (24 * time.Hour)), Done: t.historyDone, SparklineDays: 1}
+	h := History{Days: int(t.span / (24 * time.Hour)), Done: t.historyDone}
 	if !t.loaded {
 		h.Loading = t.bootLoading()
 	}
@@ -826,9 +831,6 @@ func (t *Tracker) History() History {
 			st.Progress = min(99, int(t.now().Sub(t.coveredFrom)*100/r.Span))
 		}
 		h.Ranges = append(h.Ranges, st)
-		if r.Key == "7D" && st.Ready {
-			h.SparklineDays = 7
-		}
 	}
 	return h
 }

@@ -8,8 +8,13 @@ import { useTokens } from '../useTokens.js'
 import { formatPrice, fullPrice, formatADA, formatCompact, formatTime } from '../format.js'
 import Change from '../components/Change.vue'
 import Sparkline from '../components/Sparkline.vue'
+import LoadingProgress from '../components/LoadingProgress.vue'
 
-const { tokens, error, updatedAt, loading } = useTokens()
+const { tokens, history, error, updatedAt, loading } = useTokens()
+
+// The 7d column and "Last 7 Days" lines appear once 7 days of history are loaded.
+const week = computed(() => tokens.value.some((t) => t.change_7d != null))
+const sparkLabel = computed(() => (history.value.sparkline_days === 7 ? 'Last 7 Days' : 'Last 24h'))
 const route = useRoute()
 const router = useRouter()
 
@@ -93,9 +98,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
     </div>
 
     <p v-if="error" class="notice" role="alert">{{ error }}</p>
-    <p v-else-if="loading" class="notice soft">Loading prices and the last 24 hours of trades. This takes a few minutes after the backend starts.</p>
+    <LoadingProgress v-if="history.loading && !error" :loading="history.loading" />
 
-    <div class="table-wrap">
+    <div v-else class="table-wrap">
       <table>
         <thead>
           <tr>
@@ -104,9 +109,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <th>Price</th>
             <th class="hide-sm">1h</th>
             <th>24h</th>
+            <th v-if="week" class="hide-sm">7d</th>
             <th class="hide-sm">24h Volume</th>
             <th class="hide-md">FDV</th>
-            <th class="hide-sm spark-col">Last 24h</th>
+            <th class="hide-sm spark-col">{{ sparkLabel }}</th>
           </tr>
         </thead>
 
@@ -137,12 +143,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <td class="num price" :title="fullPrice(t.price_ada)">{{ formatPrice(t.price_ada) }}</td>
             <td class="hide-sm"><Change :value="t.change_1h" /></td>
             <td><Change :value="t.change_24h" /></td>
+            <td v-if="week" class="hide-sm"><Change :value="t.change_7d" /></td>
             <td class="hide-sm num">{{ formatADA(t.volume_24h_ada) }}</td>
             <td class="hide-md num" :title="t.fdv_ada ? formatADA(t.fdv_ada) : ''">{{ t.fdv_ada ? formatCompact(t.fdv_ada) : '' }}</td>
             <td class="hide-sm spark-col"><Sparkline :values="t.sparkline || []" :width="130" /></td>
           </tr>
           <tr v-if="!shown.length">
-            <td colspan="8" class="empty muted">{{ emptyText }}</td>
+            <td :colspan="week ? 9 : 8" class="empty muted">{{ emptyText }}</td>
           </tr>
         </tbody>
       </table>
@@ -172,7 +179,6 @@ h1 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.01em; text
 .search kbd { position: absolute; right: 10px; font: inherit; font-size: 12px; color: var(--muted); border: 1px solid #d5dbe5; border-radius: 6px; padding: 0 6px; line-height: 18px; }
 
 .notice { margin: 0 0 16px; padding: 12px 16px; border-radius: 10px; background: #fdecee; color: #a0202c; font-weight: 500; }
-.notice.soft { background: var(--chip); color: var(--muted); }
 
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }

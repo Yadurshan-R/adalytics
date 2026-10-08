@@ -182,21 +182,32 @@ func (c *Client) PoolUTxOs(ctx context.Context, address string, assets []Asset, 
 	return all, nil
 }
 
+// AddressTxsPageSize is the most rows Koios returns in one page.
+const AddressTxsPageSize = 1000
+
+// AddressTxsPage returns one page of the transactions that touched the
+// addresses from a block height on, newest first.
+func (c *Client) AddressTxsPage(ctx context.Context, addresses []string, afterBlockHeight, offset int) ([]AddressTx, error) {
+	body := map[string]any{"_addresses": addresses, "_after_block_height": afterBlockHeight}
+	q := url.Values{}
+	q.Set("order", "block_height.desc,tx_hash.asc")
+	q.Set("limit", strconv.Itoa(AddressTxsPageSize))
+	q.Set("offset", strconv.Itoa(offset))
+	var rows []AddressTx
+	err := c.do(ctx, c.http, http.MethodPost, "/address_txs?"+q.Encode(), body, &rows)
+	return rows, err
+}
+
 // AddressTxs lists every transaction that touched the addresses from a block
 // height on (newest first). Koios returns at most 1000 rows per page, so it
 // pages through; progress, if set, is called after each page.
 func (c *Client) AddressTxs(ctx context.Context, addresses []string, afterBlockHeight int, progress func(rows int)) ([]AddressTx, error) {
-	const page = 1000
-	body := map[string]any{"_addresses": addresses, "_after_block_height": afterBlockHeight}
+	const page = AddressTxsPageSize
 	var all []AddressTx
 	seen := map[string]bool{}
 	for offset := 0; ; offset += page {
-		q := url.Values{}
-		q.Set("order", "block_height.desc,tx_hash.asc")
-		q.Set("limit", strconv.Itoa(page))
-		q.Set("offset", strconv.Itoa(offset))
-		var rows []AddressTx
-		if err := c.do(ctx, c.http, http.MethodPost, "/address_txs?"+q.Encode(), body, &rows); err != nil {
+		rows, err := c.AddressTxsPage(ctx, addresses, afterBlockHeight, offset)
+		if err != nil {
 			return nil, err
 		}
 		for _, r := range rows {

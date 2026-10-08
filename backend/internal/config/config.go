@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -15,6 +16,7 @@ type Config struct {
 	KoiosToken   string
 	Port         string
 	PollInterval time.Duration
+	HistoryDays  int // days of history to load and keep, 1 to 30
 }
 
 // Load reads .env (from the current folder, or the parent folder) and then the
@@ -36,6 +38,12 @@ func Load() (Config, error) {
 		return cfg, errors.New("POLL_INTERVAL must be at least 10s to stay inside the Koios free tier")
 	}
 	cfg.PollInterval = interval
+
+	days, err := strconv.Atoi(getenv("HISTORY_DAYS", "30"))
+	if err != nil || days < 1 || days > 30 {
+		return cfg, fmt.Errorf("HISTORY_DAYS %q must be a whole number from 1 to 30", os.Getenv("HISTORY_DAYS"))
+	}
+	cfg.HistoryDays = days
 
 	if cfg.KoiosToken == "" {
 		return cfg, errors.New("KOIOS_API_TOKEN is missing: add it to the .env file")

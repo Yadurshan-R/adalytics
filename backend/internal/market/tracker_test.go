@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -102,7 +103,7 @@ func (f *fake) serve(w http.ResponseWriter, r *http.Request) {
 	case "/asset_summary":
 		w.Write([]byte(`[{"staked_wallets":38151,"unstaked_addresses":1363}]`))
 	case "/tip":
-		json.NewEncoder(w).Encode([]koios.Tip{{BlockHeight: f.tip}})
+		json.NewEncoder(w).Encode([]koios.Tip{{BlockHeight: f.tip, BlockTime: testNow.Unix()}})
 	case "/address_txs":
 		var req struct {
 			Addresses []string `json:"_addresses"`
@@ -116,8 +117,18 @@ func (f *fake) serve(w http.ResponseWriter, r *http.Request) {
 		var rows []koios.AddressTx
 		for i := len(f.txs) - 1; i >= 0; i-- {
 			if f.txs[i].height >= req.After {
-				rows = append(rows, koios.AddressTx{TxHash: f.txs[i].hash, BlockHeight: f.txs[i].height})
+				rows = append(rows, koios.AddressTx{TxHash: f.txs[i].hash, BlockHeight: f.txs[i].height, BlockTime: f.txs[i].time})
 			}
+		}
+		// Pages, like Koios: offset and limit.
+		offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+		if offset > len(rows) {
+			offset = len(rows)
+		}
+		rows = rows[offset:]
+		if limit > 0 && limit < len(rows) {
+			rows = rows[:limit]
 		}
 		json.NewEncoder(w).Encode(rows)
 	case "/tx_info":
@@ -222,7 +233,7 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 	if math.Abs(q.Volume24hADA-32481.133125) > 1e-6 {
 		t.Errorf("24h volume after swap %v", q.Volume24hADA)
 	}
-	_, points, err := tr.Chart("snek", "24h")
+	_, _, points, _, err := tr.Chart("snek", "24h", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -249,7 +260,8 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 		t.Errorf("rank %d, id %q", q.Rank, q.ID)
 	}
 
-	want := "/tip /asset_utxos /address_txs /tx_info /asset_info /tip /utxo_info /tip /utxo_info /address_txs /tx_info /asset_summary"
+	// SNEK traded in the last 24 hours, so no pool search (asset_utxos) is needed.
+	want := "/tip /address_txs /tx_info /asset_info /tip /utxo_info /tip /utxo_info /address_txs /tx_info /asset_summary"
 	if got := strings.Join(f.calls, " "); got != want {
 		t.Errorf("requests:\n got  %s\n want %s", got, want)
 	}
@@ -281,7 +293,7 @@ func TestQuietTokenIsListed(t *testing.T) {
 	if len(q.Sparkline) != 25 || q.Sparkline[0] != q.PriceADA || q.Sparkline[24] != q.PriceADA {
 		t.Errorf("sparkline should be flat at the price: %v", q.Sparkline)
 	}
-	_, points, _ := tr.Chart("snek", "24H")
+	_, _, points, _, _ := tr.Chart("snek", "24H", false)
 	if len(points) != 289 || points[0].Price != q.PriceADA {
 		t.Errorf("chart should be flat: %d points", len(points))
 	}
@@ -378,7 +390,7 @@ func TestTokenWithoutPoolIsLeftOut(t *testing.T) {
 	if q := tr.Quotes(); len(q) != 0 {
 		t.Fatalf("a token without a Minswap pool should not be listed: %+v", q)
 	}
-	if got := strings.Join(f.calls, " "); got != "/tip /asset_utxos /address_txs" {
+	if got := strings.Join(f.calls, " "); got != "/tip /address_txs /asset_utxos" {
 		t.Errorf("requests: %s", got)
 	}
 }
@@ -388,7 +400,7 @@ func TestFindsAllPoolsInSmallRequests(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(f.serve))
 	t.Cleanup(srv.Close)
 	tr := NewTracker(koios.New(srv.URL, "test-token"), Tokens, time.Minute, log.New(io.Discard, "", 0))
-	if _, err := tr.findPools(context.Background()); err != nil {
+	if _, err := tr.findPools(context.Background(), tr.states); err != nil {
 		t.Fatal(err)
 	}
 	if want := (len(Tokens) + 29) / 30; len(f.bodies) != want {
@@ -459,5 +471,134 @@ func TestFormatADA(t *testing.T) {
 		if got := FormatADA(in); got != want {
 			t.Errorf("FormatADA(%v) = %s, want %s", in, got, want)
 		}
+	}
+}
+
+func TestBackfillLoadsOlderHistory(t *testing.T) {
+	f := &fake{t: t, tip: 14030000}
+	day := 24 * 60 * 60 / secondsPerBlock // blocks in a day
+	f.txs = []fakeTx{
+		{hash: "o1", height: 14030000 - 6*day, time: testNow.Add(-6 * 24 * time.Hour).Unix(), outs: []koios.TxOutput{poolOutput(t, "o1", "1900000000000")}},
+		{hash: "o2", height: 14030000 - 3*day, time: testNow.Add(-3 * 24 * time.Hour).Unix(), outs: []koios.TxOutput{poolOutput(t, "o2", "1950000000000")}},
+		{hash: "a1", height: 14029600, time: testNow.Add(-2 * time.Hour).Unix(), outs: []koios.TxOutput{poolOutput(t, "a1", "2000000000000")}},
+	}
+	tr := newTracker(t, f)
+	tr.SetHistoryDays(7)
+	ctx := context.Background()
+
+	tr.refresh(ctx) // the first 24 hours
+	h := tr.History()
+	if len(h.Ranges) != 2 || h.Ranges[0].Key != "24H" || !h.Ranges[0].Ready || h.Ranges[1].Ready || h.Ranges[1].Progress != 14 {
+		t.Fatalf("after 24h: %+v", h)
+	}
+	if _, _, _, _, err := tr.Chart("snek", "7D", false); err != ErrRangeLoading {
+		t.Errorf("7D before it is loaded: %v", err)
+	}
+	if q := tr.Quotes()[0]; q.Change7d != nil {
+		t.Errorf("7d change before 7 days are loaded: %v", *q.Change7d)
+	}
+
+	before := len(f.calls)
+	tr.backfill(ctx)
+	// One page of the 7 day list, then only the two older transactions are read.
+	if got := strings.Join(f.calls[before:], " "); got != "/tip /address_txs /tx_info" {
+		t.Errorf("backfill requests: %s", got)
+	}
+	h = tr.History()
+	if !h.Done || !h.Ranges[1].Ready || h.Ranges[1].Progress != 100 || h.SparklineDays != 7 {
+		t.Errorf("after backfill: %+v", h)
+	}
+	q := tr.Quotes()[0]
+	if want := (2000000.0/1900000 - 1) * 100; q.Change7d == nil || math.Abs(*q.Change7d-want) > 1e-9 {
+		t.Errorf("7d change %v, want %v", q.Change7d, want)
+	}
+	if len(q.Sparkline) != 85 {
+		t.Errorf("7 day sparkline has %d points, want 85 (every 2 hours)", len(q.Sparkline))
+	}
+	_, r, points, _, err := tr.Chart("snek", "7d", false)
+	if err != nil || r.Key != "7D" || len(points) != 169 || points[0].Price != 1900000.0/744260765 {
+		t.Errorf("7D chart: %v, %d points", err, len(points))
+	}
+	_, _, _, candles, err := tr.Chart("snek", "7D", true)
+	if err != nil || len(candles) != 169 {
+		t.Errorf("7D candles: %v, %d", err, len(candles))
+	}
+	if _, _, _, _, err := tr.Chart("snek", "30D", false); err != ErrRangeLoading {
+		t.Errorf("30D with HISTORY_DAYS=7 should never be ready: %v", err)
+	}
+}
+
+func TestCandles(t *testing.T) {
+	base := time.Unix(1_000_800, 0) // a multiple of 900 seconds
+	pts := []Point{
+		{Time: base.Unix() - 100, Price: 10},
+		{Time: base.Unix() + 60, Price: 12, VolumeADA: 5},
+		{Time: base.Unix() + 120, Price: 8, VolumeADA: 3},
+		{Time: base.Unix() + 600, Price: 9, VolumeADA: 1},
+	}
+	got := candles(pts, base, base.Add(30*time.Minute), 15*time.Minute)
+	want := []Candle{
+		{Time: base.Unix(), Open: 10, High: 12, Low: 8, Close: 9, Volume: 9},
+		{Time: base.Unix() + 900, Open: 9, High: 9, Low: 9, Close: 9},
+		{Time: base.Unix() + 1800, Open: 9, High: 9, Low: 9, Close: 9},
+	}
+	if len(got) != len(want) {
+		t.Fatalf("got %+v", got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("candle %d: got %+v, want %+v", i, got[i], want[i])
+		}
+	}
+}
+
+// The background history load runs while the minute updates and the API read
+// the same tokens; run them together so the race detector can check it.
+func TestBackfillWhileUpdating(t *testing.T) {
+	f := &fake{t: t, tip: 14030000, spent: true}
+	day := 24 * 60 * 60 / secondsPerBlock
+	for i := 0; i < 40; i++ {
+		h := 14030000 - (i+1)*day/8
+		hash := fmt.Sprintf("t%02d", i)
+		f.txs = append([]fakeTx{{hash: hash, height: h, time: testNow.Add(-time.Duration(i+1) * 3 * time.Hour).Unix(),
+			outs: []koios.TxOutput{poolOutput(t, hash, fmt.Sprint(2000000000000+i*1000000))}}}, f.txs...)
+	}
+	tr := newTracker(t, f)
+	tr.SetHistoryDays(7)
+	ctx := context.Background()
+	tr.refresh(ctx)
+
+	done := make(chan struct{})
+	go func() { tr.backfill(ctx); close(done) }()
+	for i := 0; i < 5; i++ {
+		tr.update(ctx)
+		tr.Quotes()
+		tr.History()
+		tr.Chart("snek", "24H", true)
+		tr.Trades("snek", 5)
+	}
+	<-done
+	if h := tr.History(); !h.Done {
+		t.Errorf("history not done: %+v", h)
+	}
+}
+
+func TestLoadingProgress(t *testing.T) {
+	f := &fake{t: t, tip: 14030000}
+	tr := newTracker(t, f)
+
+	h := tr.History()
+	if h.Loading == nil || h.Loading.Percent != 0 || h.Loading.Steps[0].State != "active" || h.Loading.Steps[3].State != "todo" {
+		t.Fatalf("before loading: %+v", h.Loading)
+	}
+	// Half way through reading 2,000 transactions: 10% + 70% / 2.
+	tr.setBoot(func(b *bootProgress) { b.step, b.found, b.read = 1, 2000, 1000 })
+	l := tr.History().Loading
+	if l.Percent != 45 || l.Steps[0].State != "done" || l.Steps[1].State != "active" || l.Steps[1].Done != 1000 || l.Steps[1].Total != 2000 {
+		t.Errorf("while reading: %+v", l)
+	}
+	tr.refresh(context.Background())
+	if l := tr.History().Loading; l != nil {
+		t.Errorf("loading still shown after the first load: %+v", l)
 	}
 }

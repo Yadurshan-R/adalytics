@@ -7,25 +7,47 @@ import { formatPrice, fullPrice, formatUSD, formatCompact, formatAmount, formatA
 import Change from '../components/Change.vue'
 import PriceChart from '../components/PriceChart.vue'
 import RecentTrades from '../components/RecentTrades.vue'
+import { chartType, chartRange } from '../chartPrefs.js'
+import LoadingProgress from '../components/LoadingProgress.vue'
 
 // The route's :ticker is the token's unique id from the backend (usually its ticker in lower case).
 const props = defineProps({ ticker: { type: String, required: true } })
-const { tokens, loading } = useTokens()
+const { tokens, history, loading, reload } = useTokens()
 const token = computed(() => tokens.value.find((t) => t.id === props.ticker.toLowerCase()))
 
+// Range buttons. Every range can be clicked; if its history is still loading,
+// the chart area shows the live loading percentage until the chart is ready.
+const ranges = computed(() => (history.value.ranges?.length ? history.value.ranges : [{ key: '24H', progress: 100, ready: true }]))
+const selected = computed(() => ranges.value.find((r) => r.key === chartRange.value) ?? ranges.value[0])
+const waiting = computed(() => !selected.value.ready)
+const types = [{ key: 'line', label: 'Line' }, { key: 'candles', label: 'Candles' }]
+const setType = (key) => (chartType.value = key)
+const setRange = (key) => (chartRange.value = key)
+
 // Chart data: refreshed every minute, like the list.
-const range = ref('24H')
-const ranges = ['24H'] // more appear here as the backend gets longer history
 const points = ref([])
+const candles = ref([])
 const chartError = ref('')
 let timer = null
 
 async function loadChart() {
+  if (waiting.value) {
+    points.value = []
+    candles.value = []
+    return
+  }
+  const url = `/api/tokens/${encodeURIComponent(props.ticker)}/chart?range=${selected.value.key}&type=${chartType.value}`
   try {
-    const res = await fetch(`/api/tokens/${encodeURIComponent(props.ticker)}/chart?range=${range.value}`, { cache: 'no-store' })
+    const res = await fetch(url, { cache: 'no-store' })
     const data = await res.json()
+    if (res.status === 409) {
+      // Not loaded after all (for example the backend restarted): show the progress.
+      reload()
+      return
+    }
     if (!res.ok) throw new Error(data.error || `The backend answered ${res.status}`)
     points.value = data.points ?? []
+    candles.value = data.candles ?? []
     chartError.value = ''
   } catch (e) {
     chartError.value = e instanceof TypeError ? 'Cannot reach the backend.' : e.message
@@ -36,8 +58,21 @@ onMounted(() => {
   loadChart()
   timer = setInterval(loadChart, 60_000)
 })
-onUnmounted(() => clearInterval(timer))
-watch(() => props.ticker, loadChart)
+onUnmounted(() => {
+  clearInterval(timer)
+  clearInterval(progressTimer)
+})
+watch([() => props.ticker, chartRange, chartType], loadChart)
+
+// While a loading range is selected, ask the backend for the progress every 3
+// seconds (it only reads its own memory; no Koios request), and draw the chart
+// as soon as the range is ready.
+let progressTimer = null
+watch(waiting, (now, before) => {
+  clearInterval(progressTimer)
+  if (now) progressTimer = setInterval(reload, 3000)
+  else if (before) loadChart()
+}, { immediate: true })
 
 // Info box helpers.
 const short = (s) => (s && s.length > 16 ? `${s.slice(0, 8)}…${s.slice(-6)}` : s)
@@ -57,9 +92,12 @@ async function copy(text, key) {
   }
 }
 
-// 24h low / high from the chart points.
-const low = computed(() => (points.value.length ? Math.min(...points.value.map((p) => p.price)) : null))
-const high = computed(() => (points.value.length ? Math.max(...points.value.map((p) => p.price)) : null))
+// Low / high over the chart's range, from the line points or the candles.
+const lows = computed(() => (chartType.value === 'candles' ? candles.value.map((c) => c.low) : points.value.map((p) => p.price)).filter((v) => v > 0))
+const highs = computed(() => (chartType.value === 'candles' ? candles.value.map((c) => c.high) : points.value.map((p) => p.price)).filter((v) => v > 0))
+const low = computed(() => (lows.value.length ? Math.min(...lows.value) : null))
+const high = computed(() => (highs.value.length ? Math.max(...highs.value) : null))
+const rangeLabel = computed(() => ({ '24H': '24h', '7D': '7d', '30D': '30d' })[chartRange.value] + ' Range')
 const rangePos = computed(() => {
   if (!token.value || low.value == null || high.value === low.value) return 50
   return Math.min(100, Math.max(0, ((token.value.price_ada - low.value) / (high.value - low.value)) * 100))
@@ -67,7 +105,8 @@ const rangePos = computed(() => {
 </script>
 
 <template>
-  <p v-if="loading" class="muted">Loading…</p>
+  <LoadingProgress v-if="history.loading" :loading="history.loading" />
+  <p v-else-if="loading" class="muted">Loading…</p>
   <p v-else-if="!token" class="muted">No token called {{ ticker }}. <RouterLink to="/" class="link">See all tokens</RouterLink></p>
 
   <div v-else class="layout">
@@ -90,11 +129,11 @@ const rangePos = computed(() => {
       </div>
       <p v-if="token.price_usd" class="usd muted num" :title="'$' + token.price_usd.toPrecision(6)">≈ {{ formatUSD(token.price_usd) }}</p>
 
-      <div v-if="low != null" class="range">
+      <div v-if="low != null && !waiting" class="range">
         <div class="bar"><span :style="{ width: rangePos + '%' }"></span></div>
         <div class="range-labels num">
           <span>{{ formatPrice(low) }}</span>
-          <span class="label">24h Range</span>
+          <span class="label">{{ rangeLabel }}</span>
           <span>{{ formatPrice(high) }}</span>
         </div>
       </div>
@@ -151,12 +190,21 @@ const rangePos = computed(() => {
 
     <section class="chart-col">
       <div class="toolbar">
+        <div class="ranges" role="group" aria-label="Chart type">
+          <button v-for="t in types" :key="t.key" type="button" :aria-pressed="t.key === chartType" @click="setType(t.key)">{{ t.label }}</button>
+        </div>
         <div class="ranges" role="group" aria-label="Time range">
-          <button v-for="r in ranges" :key="r" type="button" :aria-pressed="r === range" @click="range = r; loadChart()">{{ r }}</button>
+          <button v-for="r in ranges" :key="r.key" type="button" :aria-pressed="r.key === selected.key" @click="setRange(r.key)">{{ r.key }}</button>
         </div>
       </div>
       <p v-if="chartError" class="notice">{{ chartError }}</p>
-      <PriceChart :points="points" />
+      <div v-if="waiting" class="progress" role="progressbar" :aria-label="`${selected.key} loading`"
+           :aria-valuenow="selected.progress" aria-valuemin="0" aria-valuemax="100">
+        <span class="p-key">{{ selected.key }}</span>
+        <span class="p-pct num">{{ selected.progress }}%</span>
+        <span class="p-bar"><span :style="{ width: Math.max(selected.progress, 1) + '%' }"></span></span>
+      </div>
+      <PriceChart v-else :type="chartType" :points="points" :candles="candles" />
       <RecentTrades :id="token.id" :ticker="token.ticker" />
     </section>
   </div>
@@ -191,11 +239,18 @@ const rangePos = computed(() => {
 .stat dt { color: var(--muted); }
 .stat dd { margin: 0; font-weight: 600; text-align: right; }
 
-.toolbar { display: flex; margin-bottom: 12px; }
+.toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .ranges { display: inline-flex; background: var(--chip); border-radius: 10px; padding: 4px; gap: 2px; }
 .ranges button { font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 .ranges button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(13, 20, 33, 0.12); }
 .ranges button:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
+.progress { height: 440px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: 12px; background: #fafbfd; }
+@media (max-width: 700px) { .progress { height: 320px; } }
+.p-key { font-size: 15px; font-weight: 600; color: var(--muted); }
+.p-pct { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; }
+.p-bar { width: min(320px, 70%); height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden; }
+.p-bar span { display: block; height: 100%; border-radius: 4px; background: var(--bull); transition: width 0.6s ease; }
+@media (prefers-reduced-motion: reduce) { .p-bar span { transition: none; } }
 
 .usd { margin: 4px 0 0; font-size: 15px; }
 

@@ -1,6 +1,9 @@
 package market
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Point is the pool price right after one swap.
 type Point struct {
@@ -16,20 +19,45 @@ type ChartPoint struct {
 	Volume float64 `json:"volume"`
 }
 
-// Range is a chart time range and its point spacing.
+// Candle is one candlestick: the first, highest, lowest and last price in a
+// time slot, and the ADA traded in it.
+type Candle struct {
+	Time   int64   `json:"time"`
+	Open   float64 `json:"open"`
+	High   float64 `json:"high"`
+	Low    float64 `json:"low"`
+	Close  float64 `json:"close"`
+	Volume float64 `json:"volume"`
+}
+
+// Range is a chart time range with the spacing of its line points and candles.
 type Range struct {
-	Key      string
-	Span     time.Duration
-	Interval time.Duration
+	Key            string
+	Span           time.Duration
+	Interval       time.Duration // line chart
+	CandleInterval time.Duration // candlestick chart
 }
 
-// Ranges the chart endpoint serves. 7D is added once 7 days are loaded.
-var Ranges = map[string]Range{
-	"24H": {Key: "24H", Span: 24 * time.Hour, Interval: 5 * time.Minute},
+// RangeList is every chart range, shortest first. A range can be shown once
+// that much history has been loaded.
+var RangeList = []Range{
+	{Key: "24H", Span: 24 * time.Hour, Interval: 5 * time.Minute, CandleInterval: 15 * time.Minute},
+	{Key: "7D", Span: 7 * 24 * time.Hour, Interval: time.Hour, CandleInterval: time.Hour},
+	{Key: "30D", Span: 30 * 24 * time.Hour, Interval: 4 * time.Hour, CandleInterval: 4 * time.Hour},
 }
 
-// HistorySpan is how much history is loaded at startup and kept in memory.
-const HistorySpan = 24 * time.Hour
+// RangeByKey finds a range by its key ("24H", "7D", "30D"), ignoring case.
+func RangeByKey(key string) (Range, bool) {
+	for _, r := range RangeList {
+		if strings.EqualFold(r.Key, key) {
+			return r, true
+		}
+	}
+	return Range{}, false
+}
+
+// MaxHistoryDays is the longest history that can be loaded.
+const MaxHistoryDays = 30
 
 // priceAt returns the price at time t: the last swap at or before t. If every
 // swap is after t, the first known price is used.
@@ -104,13 +132,38 @@ func volumeSince(points []Point, t int64) float64 {
 	return v
 }
 
-// trim drops swaps older than the kept history, but keeps the last one before
-// the cut so the price at the start of the window stays known.
-func trim(points []Point, now time.Time) []Point {
-	cut := now.Add(-HistorySpan).Unix()
+// candles groups swaps into candlesticks between from and to. A slot with no
+// swaps is a flat candle at the previous close, and each candle opens at the
+// previous close so the candles join up.
+func candles(points []Point, from, to time.Time, interval time.Duration) []Candle {
+	step := int64(interval / time.Second)
+	start := from.Unix() / step * step
+	end := to.Unix()
+	if start > end {
+		return nil
+	}
+	n := int((end-start)/step) + 1
+	out := make([]Candle, n)
+	price := priceAt(points, start-1)
+
 	i := 0
-	for i+1 < len(points) && points[i+1].Time <= cut {
+	for i < len(points) && points[i].Time < start {
 		i++
 	}
-	return points[i:]
+	for b := 0; b < n; b++ {
+		bStart := start + int64(b)*step
+		bEnd := bStart + step
+		c := Candle{Time: bStart, Open: price, High: price, Low: price, Close: price}
+		for i < len(points) && points[i].Time < bEnd {
+			p := points[i].Price
+			c.High = max(c.High, p)
+			c.Low = min(c.Low, p)
+			c.Close = p
+			c.Volume += points[i].VolumeADA
+			i++
+		}
+		price = c.Close
+		out[b] = c
+	}
+	return out
 }

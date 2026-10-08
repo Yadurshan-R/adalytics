@@ -3,6 +3,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,42 +15,56 @@ import (
 func New(tracker *market.Tracker) http.Handler {
 	mux := http.NewServeMux()
 
-	// The list page: every token with price, changes, volume and a 7-day sparkline.
+	// The list page: every token with price, changes, volume and a small price
+	// line, plus how much history is loaded (for the 7D/30D buttons).
 	mux.HandleFunc("GET /api/tokens", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"currency": "ADA",
 			"tokens":   tracker.Quotes(),
+			"history":  tracker.History(),
 			"now":      time.Now(),
 		})
 	})
 
-	// A token page chart: /api/tokens/SNEK/chart?range=24H (or 7D).
+	// A token page chart: /api/tokens/snek/chart?range=7D&type=candles.
+	// range is 24H, 7D or 30D; type is line (the default) or candles.
 	mux.HandleFunc("GET /api/tokens/{ticker}/chart", func(w http.ResponseWriter, r *http.Request) {
 		rangeKey := r.URL.Query().Get("range")
 		if rangeKey == "" {
 			rangeKey = "24H"
 		}
-		quote, points, err := tracker.Chart(r.PathValue("ticker"), rangeKey)
-		if err != nil {
-			status := http.StatusBadRequest
-			if strings.HasPrefix(err.Error(), "unknown token") {
-				status = http.StatusNotFound
-			}
-			writeJSON(w, status, map[string]string{"error": err.Error()})
+		kind := r.URL.Query().Get("type")
+		if kind == "" {
+			kind = "line"
+		}
+		if kind != "line" && kind != "candles" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "type must be line or candles"})
 			return
 		}
-		rng := market.Ranges[strings.ToUpper(rangeKey)]
-		change := 0.0
-		if len(points) > 0 && points[0].Price > 0 {
-			change = (points[len(points)-1].Price/points[0].Price - 1) * 100
+		quote, rng, points, candles, err := tracker.Chart(r.PathValue("ticker"), rangeKey, kind == "candles")
+		switch {
+		case errors.Is(err, market.ErrRangeLoading):
+			writeJSON(w, http.StatusConflict, map[string]any{"error": err.Error(), "history": tracker.History()})
+			return
+		case err != nil && strings.HasPrefix(err.Error(), "unknown token"):
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+			return
+		case err != nil:
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		interval := rng.Interval
+		if kind == "candles" {
+			interval = rng.CandleInterval
 		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"ticker":           quote.Ticker,
 			"range":            rng.Key,
-			"interval_seconds": int(rng.Interval / time.Second),
-			"change_pct":       change,
+			"type":             kind,
+			"interval_seconds": int(interval / time.Second),
 			"price_ada":        quote.PriceADA,
 			"points":           points,
+			"candles":          candles,
 		})
 	})
 

@@ -29,14 +29,15 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	logger.Printf("Tracking %d verified Cardano tokens, showing the top %d, from Koios (%s) every %s",
-		len(market.Tokens), market.TopN, cfg.KoiosBaseURL, cfg.PollInterval)
+	logger.Printf("Tracking %d verified Cardano tokens, showing the top %d, from Koios (%s) every %s, with %d days of history",
+		len(market.Tokens), market.TopN, cfg.KoiosBaseURL, cfg.PollInterval, cfg.HistoryDays)
 
 	client := koios.New(cfg.KoiosBaseURL, cfg.KoiosToken)
+	tracker := market.NewTracker(client, market.Tokens, cfg.PollInterval, logger)
+	tracker.SetHistoryDays(cfg.HistoryDays)
 	client.OnRetry = func(endpoint string, reason error, wait time.Duration, attempt int) {
 		logger.Printf("Koios %s: %v, retrying in %s (attempt %d of 3)", endpoint, reason, wait, attempt)
 	}
-	tracker := market.NewTracker(client, market.Tokens, cfg.PollInterval, logger)
 	go tracker.Run(ctx)
 
 	srv := &http.Server{

@@ -12,6 +12,7 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 
 * Price, 1 hour, 24 hour and 7 day change, 24 hour volume, fully diluted valuation (FDV) and a small price line for every token
 * A 24h / 7d toggle: Top Gainers, Top Losers and the small lines all follow the same period
+* Tokens with no trades in that period are left out of the top lists; search still finds them
 * Top Volume, Top Gainers and Top Losers views
 * Search by name, ticker or policy ID (press `/` to jump to the search box)
 * Refreshes by itself every minute

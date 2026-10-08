@@ -1,4 +1,5 @@
-<!-- The list page: every token with live price, changes, volume and a small line.
+<!-- The list page: tokens traded in the chosen period (24h or 7d) with live
+     price, changes, volume and a small line; quiet tokens only show up in search.
      Top Volume / Top Gainers / Top Losers views, a 24h / 7d switch and a search
      box, kept in the address (?view=gainers&period=7d&q=snek) so a view can be
      shared or reloaded. The switch decides both what gainers and losers are
@@ -50,14 +51,30 @@ watch([view, period, query], () => {
 // A change that rounds to 0.0% is not a gain or a loss.
 const moved = (v) => Math.abs(v) >= 0.05
 
+// The top lists only show tokens traded in the chosen period: on 24h, tokens
+// with trading volume today; on 7d, tokens whose Minswap pool changed in the
+// last 7 days. Quiet ones still come up when searched for.
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+const active = (t) => (week.value
+  ? !!t.last_swap && Date.now() - new Date(t.last_swap).getTime() < WEEK_MS
+  : t.volume_24h_ada > 0)
+
+// Place in the Top Volume list (the backend's order without the quiet tokens);
+// quiet tokens found by search have no place.
+const place = computed(() => {
+  const m = {}
+  tokens.value.filter((t) => t.price_ada && active(t)).forEach((t, i) => (m[t.id] = i + 1))
+  return m
+})
+
 const shown = computed(() => {
-  let list = tokens.value.filter((t) => t.price_ada)
+  const q = query.value.trim().toLowerCase()
+  let list = tokens.value.filter((t) => t.price_ada && (q || active(t)))
   if (view.value === 'gainers') {
     list = list.filter((t) => changeOf(t) > 0 && moved(changeOf(t))).sort((a, b) => changeOf(b) - changeOf(a))
   } else if (view.value === 'losers') {
     list = list.filter((t) => changeOf(t) < 0 && moved(changeOf(t))).sort((a, b) => changeOf(a) - changeOf(b))
   }
-  const q = query.value.trim().toLowerCase()
   if (q) {
     list = list.filter((t) =>
       t.name.toLowerCase().includes(q) || t.ticker.toLowerCase().includes(q) || t.policy_id.startsWith(q))
@@ -155,7 +172,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         <tbody v-else>
           <tr v-for="(t, i) in shown" :key="t.id" class="row" tabindex="0"
               @click="open(t)" @keydown.enter="open(t)">
-            <td class="rank muted num">{{ view === 'volume' ? t.rank : i + 1 }}</td>
+            <td class="rank muted num">{{ query.trim() || view === 'volume' ? place[t.id] : i + 1 }}</td>
             <td class="left">
               <span class="token" :title="`${t.name} (${t.ticker})`">
                 <img v-if="t.has_logo" :src="`/api/tokens/${t.id}/logo`" alt="" class="logo" width="24" height="24" loading="lazy" />

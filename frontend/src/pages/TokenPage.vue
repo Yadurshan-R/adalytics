@@ -1,7 +1,7 @@
 <!-- Token page, CoinGecko-style: details on the left, live chart on the right. -->
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useTokens } from '../useTokens.js'
 import { formatPrice, fullPrice, formatUSD, formatCompact, formatAmount, formatAgo } from '../format.js'
 import Change from '../components/Change.vue'
@@ -14,6 +14,14 @@ import LoadingProgress from '../components/LoadingProgress.vue'
 const props = defineProps({ ticker: { type: String, required: true } })
 const { tokens, history, loading, reload } = useTokens()
 const token = computed(() => tokens.value.find((t) => t.id === props.ticker.toLowerCase()))
+
+// Back arrow: return to the list as it was (same view, toggle and search) when
+// the visitor came from it, otherwise open the list.
+const router = useRouter()
+function back() {
+  if (window.history.state?.back) router.back()
+  else router.push('/')
+}
 
 // Range buttons. Every range can be clicked; if its history is still loading,
 // the chart area shows the live loading percentage until the chart is ready.
@@ -112,6 +120,9 @@ const rangePos = computed(() => {
   <div v-else class="layout">
     <aside class="info">
       <nav class="crumb">
+        <button type="button" class="back" aria-label="Back to all tokens" @click="back">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.7 4.3 7 10l5.7 5.7-1.1 1.1L4.8 10l6.8-6.8z" /></svg>
+        </button>
         <RouterLink to="/" class="link">Tokens</RouterLink>
         <span class="sep" aria-hidden="true">›</span>
         <span class="muted">{{ token.name }} Price</span>
@@ -216,7 +227,11 @@ const rangePos = computed(() => {
 
 .link { color: var(--fg); }
 .link:hover { text-decoration: underline; }
-.crumb { display: flex; gap: 8px; font-size: 14px; margin-bottom: 16px; }
+.crumb { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 16px; }
+.back { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-left: -6px; border: 0; border-radius: 50%; background: var(--chip); color: var(--fg); cursor: pointer; }
+.back:hover { background: #e3e8ef; }
+.back:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.back svg { width: 18px; height: 18px; fill: currentColor; }
 .sep { color: var(--muted); }
 
 .title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; font-size: 22px; }

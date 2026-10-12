@@ -30,13 +30,21 @@ const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
 // are still loading, 7d cannot be picked yet and shows its live percentage; the
 // list stays on 24h meanwhile.
 const period = ref(route.query.period === '7d' ? '7d' : '24h')
+// weekRange is the backend's loading status of the 7 day history.
 const weekRange = computed(() => history.value.ranges?.find((r) => r.key === '7D'))
+// weekReady is true once 7 days of history are loaded.
 const weekReady = computed(() => !!weekRange.value?.ready)
+// week is true when the list shows 7 day numbers.
 const week = computed(() => weekReady.value && period.value === '7d')
+// setPeriod picks 24h or 7d; 7d only works once it is loaded.
 const setPeriod = (p) => { if (p === '24h' || weekReady.value) period.value = p }
+// changeOf is a token's price change for the chosen period.
 const changeOf = (t) => (week.value ? t.change_7d ?? 0 : t.change_24h)
+// lineOf is a token's small price line for the chosen period.
 const lineOf = (t) => (week.value ? t.sparkline_7d : t.sparkline) || []
+// lineLabel is the title of the small price line column.
 const lineLabel = computed(() => (week.value ? 'Last 7 Days' : 'Last 24h'))
+// periodText is the period in words, for messages like "No token is up in the last 24 hours".
 const periodText = computed(() => (week.value ? 'last 7 days' : 'last 24 hours'))
 
 // Keep the view, period and search in the address without adding history entries.
@@ -55,6 +63,7 @@ const moved = (v) => Math.abs(v) >= 0.05
 // with trading volume today; on 7d, tokens whose Minswap pool changed in the
 // last 7 days. Quiet ones still come up when searched for.
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+// active is true if the token traded in the chosen period.
 const active = (t) => (week.value
   ? !!t.last_swap && Date.now() - new Date(t.last_swap).getTime() < WEEK_MS
   : t.volume_24h_ada > 0)
@@ -67,6 +76,8 @@ const place = computed(() => {
   return m
 })
 
+// shown is the list on screen: the chosen view (volume, gainers or losers),
+// filtered by the search box.
 const shown = computed(() => {
   const q = query.value.trim().toLowerCase()
   let list = tokens.value.filter((t) => t.price_ada && (q || active(t)))
@@ -82,6 +93,7 @@ const shown = computed(() => {
   return list
 })
 
+// emptyText explains why the list is empty.
 const emptyText = computed(() => {
   if (query.value.trim()) return `No token matches “${query.value.trim()}”.`
   if (view.value === 'gainers') return `No token is up in the ${periodText.value}.`
@@ -89,10 +101,12 @@ const emptyText = computed(() => {
   return 'No tokens yet.'
 })
 
+// open goes to a token's page.
 const open = (t) => router.push({ name: 'token', params: { ticker: t.id } })
 
 // Press "/" anywhere on the page to jump to the search box, Esc to clear it.
 const search = ref(null)
+// onKey makes "/" jump to the search box from anywhere on the page.
 function onKey(e) {
   if (e.key === '/' && document.activeElement !== search.value) {
     e.preventDefault()

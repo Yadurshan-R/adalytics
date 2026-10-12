@@ -15,6 +15,7 @@ const flat = computed(() => {
   return v.length >= 2 && Math.max(...v) === Math.min(...v)
 })
 
+// color is green if the price ended higher than it started, red if lower, grey if flat.
 const color = computed(() => {
   const v = props.values
   if (v.length < 2 || flat.value) return '#a6b0c3'
@@ -23,6 +24,7 @@ const color = computed(() => {
   return last > first ? 'var(--bull)' : last < first ? 'var(--bear)' : '#a6b0c3'
 })
 
+// points turns the prices into SVG line coordinates that fill the width and height.
 const points = computed(() => {
   const v = props.values
   if (v.length < 2) return ''

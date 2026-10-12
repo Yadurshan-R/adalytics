@@ -25,6 +25,8 @@ func loadFixture(t *testing.T) []koios.UTxO {
 	return utxos
 }
 
+// TestParseSNEKADAPool reads a real SNEK/ADA pool and checks its assets,
+// reserves and price.
 func TestParseSNEKADAPool(t *testing.T) {
 	utxos := loadFixture(t)
 
@@ -57,6 +59,8 @@ func TestParseSNEKADAPool(t *testing.T) {
 	}
 }
 
+// TestPriceUsesTokenDecimals checks that a token's decimals are applied when
+// working out the price.
 func TestPriceUsesTokenDecimals(t *testing.T) {
 	// 100 ADA against 50 tokens with 6 decimals = 2 ADA per token.
 	utxos := loadFixture(t)

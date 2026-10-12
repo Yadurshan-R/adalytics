@@ -14,6 +14,7 @@ const firstLoad = ref(true)
 let timer = null
 let users = 0
 
+// load fetches /api/tokens once and stores the tokens, history and any error.
 async function load() {
   try {
     const res = await fetch('/api/tokens', { cache: 'no-store' })
@@ -32,6 +33,7 @@ async function load() {
   }
 }
 
+// schedule plans the next refresh: fast during the first load, slower after it.
 function schedule() {
   timer = setTimeout(async () => {
     await load()

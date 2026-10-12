@@ -111,30 +111,44 @@ npm install
 npm run dev
 ```
 
-The list fills in once the backend has finished loading.
+While the backend does its first load, the site shows a loading page with the progress, time left and a live feed of what the backend is doing. The list opens by itself when it is done.
 
 ## Project structure
 
+Every file has one job and is under 300 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together and lists every function in plain words.
+
 ```
 backend/
-  main.go                     starts the tracker and the web server
-  internal/config/            reads settings from .env
-  internal/koios/             small Koios client: rate limit, retries, request size check
-  internal/minswap/           reads a Minswap V2 pool from its datum and works out the price
+  main.go                       starts the tracker and the web server
+  internal/config/              reads settings from .env
+  internal/koios/
+    client.go                   the Koios client; sends every request
+    endpoints.go                one function per Koios endpoint
+    types.go                    the shapes of Koios data
+    retry.go                    retries and the rate limiter
+  internal/minswap/pool.go      reads a Minswap V2 pool and works out the price
   internal/market/
-    tokens.json               the 360 verified tokens from Minswap's token list
-    tracker.go                loads history, follows new swaps, ranks tokens, builds trades
-    history.go                chart ranges (24H, 7D, 30D), line points and candles
-  internal/api/server.go      the JSON API used by the frontend
+    tokens.json                 the 360 verified tokens from Minswap's token list
+    tracker.go                  the Tracker and its main loop
+    startup.go                  the first load (last 24 hours)
+    backfill.go                 older history, loaded in the background
+    update.go                   checks for new swaps every minute
+    pools.go                    turns transactions into prices and trades
+    quotes.go                   the token list, charts and trades for the API
+    details.go                  supply, logos, links and holder counts
+    progress.go, activity.go    loading progress and live activity for the loading page
+    history.go                  chart ranges (24H, 7D, 30D), line points and candles
+  internal/api/server.go        the JSON API used by the frontend
 
 frontend/src/
-  pages/TokenList.vue         the token list
-  pages/TokenPage.vue         the token page
-  components/PriceChart.vue   the price chart (line or candles)
-  components/LoadingProgress.vue the live loading box
-  components/RecentTrades.vue the recent trades table
-  components/Sparkline.vue    the small price lines in the list
-  format.js                   number formats (₳, $, %, K/M/B)
+  pages/TokenList.vue           the token list
+  pages/TokenPage.vue           the token page
+  components/LoadingProgress.vue  the loading page with live progress
+  components/LoadingActivity.vue  the loading page's live activity feed
+  components/PriceChart.vue     the price chart (line or candles)
+  components/RecentTrades.vue   the recent trades table
+  components/Sparkline.vue      the small price lines in the list
+  format.js                     number formats (₳, $, %, K/M/B)
 ```
 
 **API**

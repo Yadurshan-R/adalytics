@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// Config holds every setting the backend needs, read from .env or the environment.
 type Config struct {
 	KoiosBaseURL string
 	KoiosToken   string
@@ -51,6 +52,7 @@ func Load() (Config, error) {
 	return cfg, nil
 }
 
+// getenv returns the environment variable key, or fallback when it is empty or not set.
 func getenv(key, fallback string) string {
 	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
 		return v

@@ -6,6 +6,7 @@ import { formatPct } from '../format.js'
 
 const props = defineProps({ value: { type: Number, default: null } })
 
+// dir decides the colour and arrow: up, down, flat (rounds to 0.0%) or none (no value).
 const dir = computed(() => {
   if (props.value == null || !isFinite(props.value)) return 'none'
   // Shown with one decimal, so anything under 0.05% would read as 0.0%.

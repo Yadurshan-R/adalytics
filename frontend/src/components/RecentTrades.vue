@@ -16,6 +16,7 @@ const error = ref('')
 const now = ref(Date.now())
 let timer = null
 
+// load asks the backend for this token's latest trades and keeps any error to show.
 async function load() {
   try {
     const res = await fetch(`/api/tokens/${encodeURIComponent(props.id)}/trades?limit=${SHOWN}`, { cache: 'no-store' })

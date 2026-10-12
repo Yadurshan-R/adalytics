@@ -22,6 +22,8 @@ const (
 	authAssetName = "4d5350" // "MSP"
 )
 
+// Pool is one Minswap V2 liquidity pool at one moment: which two assets it
+// holds and how much of each. Prices come from the ratio of the reserves.
 type Pool struct {
 	UTxO      string      // tx_hash#index of the current pool output
 	LPAsset   koios.Asset // unique per pool; used to fetch this pool again
@@ -93,10 +95,13 @@ func (p Pool) PriceADA() float64 {
 	return f
 }
 
-// ReserveADA returns reserve A in ADA, and ReserveToken reserve B in whole tokens.
-func (p Pool) ReserveADA() float64   { return scaled(p.ReserveA, 6) }
+// ReserveADA returns reserve A in ADA.
+func (p Pool) ReserveADA() float64 { return scaled(p.ReserveA, 6) }
+
+// ReserveToken returns reserve B in whole tokens (after the token's decimals).
 func (p Pool) ReserveToken() float64 { return scaled(p.ReserveB, p.DecimalsB) }
 
+// asset reads an asset (policy ID and name) from a pool datum field.
 func asset(d koios.PlutusData) (koios.Asset, error) {
 	if len(d.Fields) != 2 || d.Fields[0].Bytes == nil || d.Fields[1].Bytes == nil {
 		return koios.Asset{}, errors.New("unexpected asset shape")
@@ -104,6 +109,8 @@ func asset(d koios.PlutusData) (koios.Asset, error) {
 	return koios.Asset{PolicyID: *d.Fields[0].Bytes, AssetName: *d.Fields[1].Bytes}, nil
 }
 
+// integer reads a whole number from a pool datum field. Reserves can be
+// larger than 64 bits, so it returns a big.Int.
 func integer(d koios.PlutusData) (*big.Int, error) {
 	if d.Int == nil {
 		return nil, errors.New("not an integer")
@@ -115,8 +122,11 @@ func integer(d koios.PlutusData) (*big.Int, error) {
 	return n, nil
 }
 
+// pow10 returns 10 to the power n, used to apply a token's decimals.
 func pow10(n int) *big.Int { return new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(n)), nil) }
 
+// scaled turns an amount in the smallest unit into whole units, e.g.
+// 1,500,000 lovelace with 6 decimals is 1.5 ADA.
 func scaled(n *big.Int, decimals int) float64 {
 	f, _ := new(big.Rat).SetFrac(n, pow10(decimals)).Float64()
 	return f

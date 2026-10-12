@@ -22,6 +22,7 @@ const props = defineProps({
 const BULL = '#16c784'
 const BEAR = '#ea3943'
 const MUTED = '#58667e'
+// rgba turns a colour like #16c784 into rgba() with transparency a (0 to 1).
 const rgba = (hex, a) => {
   const n = parseInt(hex.slice(1), 16)
   return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`
@@ -35,6 +36,7 @@ let rows = [] // line points
 let bars = [] // candles
 let lastIdx = null
 
+// isCandles reports whether the chart shows candles instead of a line.
 const isCandles = () => props.type === 'candles'
 
 // Line mode: colour and bold/faded split for the hovered point (-1 = none).
@@ -52,6 +54,7 @@ function paint(idx) {
   lastLine.applyOptions({ price: rows[rows.length - 1].price, color: col, axisLabelColor: col, axisLabelTextColor: '#ffffff', axisLabelVisible: true })
 }
 
+// load puts the current points or candles into the chart and fits the view.
 function load() {
   if (!chart) return
   lastIdx = null
@@ -140,6 +143,7 @@ watch(() => [props.type, props.points, props.candles], load)
 
 onBeforeUnmount(() => chart && chart.remove())
 
+// pct is how much a candle moved from open to close, in percent, for the tooltip.
 const pct = (c) => (c.open > 0 ? ((c.close / c.open - 1) * 100) : 0)
 </script>
 

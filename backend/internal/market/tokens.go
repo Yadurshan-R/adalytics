@@ -30,6 +30,8 @@ var tokensJSON []byte
 // Tokens is every candidate token, loaded from tokens.json.
 var Tokens = mustLoadTokens()
 
+// mustLoadTokens reads the embedded tokens.json. It stops the program if the
+// file is broken, because nothing can work without the token list.
 func mustLoadTokens() []Token {
 	var raw []struct {
 		PolicyID  string `json:"policy_id"`

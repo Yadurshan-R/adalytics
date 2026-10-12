@@ -124,6 +124,7 @@ func changePct(points []Point, t int64) float64 {
 	return (now/then - 1) * 100
 }
 
+// volumeSince adds up the ADA traded from time t (unix seconds) until now.
 func volumeSince(points []Point, t int64) float64 {
 	v := 0.0
 	for i := len(points) - 1; i >= 0 && points[i].Time > t; i-- {

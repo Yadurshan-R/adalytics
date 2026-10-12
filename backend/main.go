@@ -18,6 +18,8 @@ import (
 	"cardano-analytics/internal/market"
 )
 
+// main loads the settings, starts the Tracker that reads Cardano data from
+// Koios in the background, and serves the API until Ctrl+C is pressed.
 func main() {
 	logger := log.New(os.Stdout, "", log.Ltime)
 
@@ -36,7 +38,8 @@ func main() {
 	tracker := market.NewTracker(client, market.Tokens, cfg.PollInterval, logger)
 	tracker.SetHistoryDays(cfg.HistoryDays)
 	client.OnRetry = func(endpoint string, reason error, wait time.Duration, attempt int) {
-		logger.Printf("Koios %s: %v, retrying in %s (attempt %d of 3)", endpoint, reason, wait, attempt)
+		// Note also shows it on the loading page, so a slow start is explained.
+		tracker.Note("Koios %s: %v, retrying in %s (attempt %d of 3)", endpoint, reason, wait, attempt)
 	}
 	go tracker.Run(ctx)
 

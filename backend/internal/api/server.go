@@ -12,6 +12,8 @@ import (
 	"cardano-analytics/internal/market"
 )
 
+// New builds the HTTP handler with every API route. Each route only reads
+// from the Tracker's memory, so it answers instantly and never calls Koios.
 func New(tracker *market.Tracker) http.Handler {
 	mux := http.NewServeMux()
 
@@ -98,6 +100,8 @@ func New(tracker *market.Tracker) http.Handler {
 	return withCORS(mux)
 }
 
+// writeJSON sends v as JSON with the given HTTP status, and tells the browser
+// not to cache it, so prices are always fresh.
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")

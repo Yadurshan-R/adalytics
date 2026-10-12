@@ -3,7 +3,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useTokens } from '../useTokens.js'
-import { formatPrice, fullPrice, formatUSD, formatCompact, formatAmount, formatAgo } from '../format.js'
+import { formatPrice, fullPrice, formatUSD, formatCompact, formatAmount, formatAgo, short, host, createdDate } from '../format.js'
 import Change from '../components/Change.vue'
 import PriceChart from '../components/PriceChart.vue'
 import RecentTrades from '../components/RecentTrades.vue'
@@ -13,11 +13,13 @@ import LoadingProgress from '../components/LoadingProgress.vue'
 // The route's :ticker is the token's unique id from the backend (usually its ticker in lower case).
 const props = defineProps({ ticker: { type: String, required: true } })
 const { tokens, history, loading, reload } = useTokens()
+// token is the token this page is about, found by the id in the address.
 const token = computed(() => tokens.value.find((t) => t.id === props.ticker.toLowerCase()))
 
 // Back arrow: return to the list as it was (same view, toggle and search) when
 // the visitor came from it, otherwise open the list.
 const router = useRouter()
+// back goes to the previous page if it was the list, otherwise opens the list.
 function back() {
   if (window.history.state?.back) router.back()
   else router.push('/')
@@ -26,10 +28,14 @@ function back() {
 // Range buttons. Every range can be clicked; if its history is still loading,
 // the chart area shows the live loading percentage until the chart is ready.
 const ranges = computed(() => (history.value.ranges?.length ? history.value.ranges : [{ key: '24H', progress: 100, ready: true }]))
+// selected is the chart range picked now (24H, 7D or 30D).
 const selected = computed(() => ranges.value.find((r) => r.key === chartRange.value) ?? ranges.value[0])
+// waiting is true while the picked range is still loading in the backend.
 const waiting = computed(() => !selected.value.ready)
 const types = [{ key: 'line', label: 'Line' }, { key: 'candles', label: 'Candles' }]
+// setType switches the chart between line and candles.
 const setType = (key) => (chartType.value = key)
+// setRange switches the chart to another range.
 const setRange = (key) => (chartRange.value = key)
 
 // Chart data: refreshed every minute, like the list.
@@ -38,6 +44,8 @@ const candles = ref([])
 const chartError = ref('')
 let timer = null
 
+// loadChart fetches the chart for the picked range and type. If the range is
+// not ready it clears the chart, and the loading percentage is shown instead.
 async function loadChart() {
   if (waiting.value) {
     points.value = []
@@ -82,13 +90,11 @@ watch(waiting, (now, before) => {
   else if (before) loadChart()
 }, { immediate: true })
 
-// Info box helpers.
-const short = (s) => (s && s.length > 16 ? `${s.slice(0, 8)}…${s.slice(-6)}` : s)
-const host = (url) => { try { return new URL(url).hostname.replace(/^www\./, '') } catch { return url } }
-const createdDate = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
 const copied = ref('')
 let copiedTimer = null
+// copy puts text (a policy ID or fingerprint) on the clipboard and shows
+// "Copied" next to it for 1.5 seconds.
 async function copy(text, key) {
   try {
     await navigator.clipboard.writeText(text)
@@ -102,10 +108,15 @@ async function copy(text, key) {
 
 // Low / high over the chart's range, from the line points or the candles.
 const lows = computed(() => (chartType.value === 'candles' ? candles.value.map((c) => c.low) : points.value.map((p) => p.price)).filter((v) => v > 0))
+// highs are the highest prices in the chart (candle highs, or line prices).
 const highs = computed(() => (chartType.value === 'candles' ? candles.value.map((c) => c.high) : points.value.map((p) => p.price)).filter((v) => v > 0))
+// low is the lowest price over the chart's range.
 const low = computed(() => (lows.value.length ? Math.min(...lows.value) : null))
+// high is the highest price over the chart's range.
 const high = computed(() => (highs.value.length ? Math.max(...highs.value) : null))
+// rangeLabel is the title of the low/high bar, e.g. "24h Range".
 const rangeLabel = computed(() => ({ '24H': '24h', '7D': '7d', '30D': '30d' })[chartRange.value] + ' Range')
+// rangePos places the current price on the low/high bar, from 0% to 100%.
 const rangePos = computed(() => {
   if (!token.value || low.value == null || high.value === low.value) return 50
   return Math.min(100, Math.max(0, ((token.value.price_ada - low.value) / (high.value - low.value)) * 100))

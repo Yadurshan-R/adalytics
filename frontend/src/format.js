@@ -13,6 +13,8 @@ export function formatUSD(v) {
   return priceWith(v, '$')
 }
 
+// priceWith formats a price with ₳ or $, using 4 significant digits and the
+// small-number style for tiny prices. formatPrice and formatUSD both use it.
 function priceWith(v, symbol) {
   if (v == null || !isFinite(v) || v <= 0) return '—'
   if (v >= 1) return symbol + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
@@ -37,11 +39,14 @@ export function formatADA(v) {
   return '₳' + Math.round(v).toLocaleString('en-US')
 }
 
+// formatPct shows a change as a percentage with one decimal, without its sign:
+// the arrow and colour show the direction.
 export function formatPct(v) {
   if (v == null || !isFinite(v)) return '—'
   return Math.abs(v).toFixed(1) + '%'
 }
 
+// formatTime shows the clock time, e.g. 14:05:09.
 export function formatTime(iso) {
   if (!iso) return ''
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
@@ -90,3 +95,18 @@ export function formatAmount(v) {
   if (abs >= 1e3) return (v / 1e3).toFixed(1) + 'K'
   return Math.round(v).toLocaleString('en-US')
 }
+
+// short shortens a long id for the info box: the first 8 and last 6 characters.
+export const short = (s) => (s && s.length > 16 ? `${s.slice(0, 8)}…${s.slice(-6)}` : s)
+
+// host shows only the website's name, e.g. https://www.snek.com/x → snek.com.
+export function host(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
+
+// createdDate shows a date like Apr 24, 2023.
+export const createdDate = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

@@ -5,16 +5,17 @@
     hover: dashed line + dot; the line stays bold up to the cursor and fades
     after it; the colour compares the hovered price with the first price.
   - Candles: green when a slot closed higher than it opened, red when lower.
-    The tooltip shows open, high, low, close and the change.
+  - The line at the top left (ChartLegend) shows the bar under the mouse.
   - Volume bars underneath (grey for the line, green/red for candles).
   - A drawing toolbar on the left (ChartToolbar), with zoom and scroll.
 -->
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { createChart, AreaSeries, CandlestickSeries, HistogramSeries, LineStyle, CrosshairMode } from 'lightweight-charts'
-import { formatPrice, formatADA, formatDateTime } from '../format.js'
+import { formatPrice } from '../format.js'
 import { useDrawings, SCROLL, SCALE } from '../chart/useDrawings.js'
 import ChartToolbar from './ChartToolbar.vue'
+import ChartLegend from './ChartLegend.vue'
 
 const props = defineProps({
   type: { type: String, default: 'line' }, // 'line' or 'candles'
@@ -27,6 +28,9 @@ const props = defineProps({
 const BULL = '#16c784'
 const BEAR = '#ea3943'
 const MUTED = '#58667e'
+// Candles use TradingView's colours.
+const UP = '#089981'
+const DOWN = '#f23645'
 // rgba turns a colour like #16c784 into rgba() with transparency a (0 to 1).
 const rgba = (hex, a) => {
   const n = parseInt(hex.slice(1), 16)
@@ -34,7 +38,8 @@ const rgba = (hex, a) => {
 }
 
 const el = ref(null)
-const tip = ref({ show: false, x: 0, y: 0, time: 0 })
+const shown = ref(null) // the bar the legend shows
+const base = ref(0) // line: the first price, for the legend's change
 
 let chart, area, candleSeries, volume, lastLine
 let rows = [] // line points
@@ -78,25 +83,32 @@ function load() {
     area.setData([])
     lastLine.applyOptions({ axisLabelVisible: false })
     candleSeries.setData(bars.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })))
-    volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: rgba(c.close >= c.open ? BULL : BEAR, 0.35) })))
-    chart.applyOptions({ crosshair: { mode: CrosshairMode.Normal, vertLine: { color: MUTED } } })
+    volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: rgba(c.close >= c.open ? UP : DOWN, 0.5) })))
+    chart.applyOptions({ crosshair: { mode: CrosshairMode.Normal, vertLine: { color: MUTED }, horzLine: { visible: true, labelVisible: true } } })
   } else {
     bars = []
     rows = props.points.filter((p) => p.price > 0)
     candleSeries.setData([])
     volume.setData(rows.map((p) => ({ time: p.time, value: p.volume, color: '#e3e6eb' })))
-    chart.applyOptions({ crosshair: { mode: CrosshairMode.Magnet } })
+    chart.applyOptions({ crosshair: { mode: CrosshairMode.Magnet, horzLine: { visible: false, labelVisible: false } } })
     if (rows.length) paint(-1)
     else area.setData([])
   }
+  const list = isCandles() ? bars : rows
+  shown.value = list[list.length - 1] || null
+  base.value = rows[0]?.price || 0
   barList = isCandles()
     ? bars.map((c) => ({ time: c.time, values: [c.open, c.high, c.low, c.close] }))
     : rows.map((p) => ({ time: p.time, values: [p.price] }))
   draw.attach()
   draw.setBars(barList.map((b) => b.time))
   // Keep the visitor's zoom when the data refreshes each minute.
-  if (fitted !== props.fitKey) {
-    chart.timeScale().fitContent()
+  // Candles start with the latest 60 shown, wide enough to read, like
+  // TradingView; drag left for older ones.
+  if (fitted !== props.fitKey && barList.length) {
+    const n = bars.length
+    if (n > 60) chart.timeScale().setVisibleLogicalRange({ from: n - 60, to: n - 1 })
+    else chart.timeScale().fitContent()
     fitted = props.fitKey
   }
 }
@@ -123,8 +135,12 @@ onMounted(() => {
     },
     crosshair: {
       mode: CrosshairMode.Magnet,
-      vertLine: { style: LineStyle.Dashed, width: 1, labelVisible: false },
-      horzLine: { visible: false, labelVisible: false },
+      vertLine: { style: LineStyle.Dashed, width: 1, labelBackgroundColor: '#131722' },
+      horzLine: { style: LineStyle.Dashed, width: 1, color: MUTED, labelBackgroundColor: '#131722', visible: false, labelVisible: false },
+    },
+    // The date under the mouse, on the time axis: "Tue 13 Oct, 10:00".
+    localization: {
+      timeFormatter: (t) => new Date(t * 1000).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }),
     },
     handleScroll: SCROLL,
     handleScale: SCALE,
@@ -135,7 +151,7 @@ onMounted(() => {
     crosshairMarkerRadius: 5, crosshairMarkerBorderWidth: 3, priceFormat,
   })
   candleSeries = chart.addSeries(CandlestickSeries, {
-    upColor: BULL, downColor: BEAR, wickUpColor: BULL, wickDownColor: BEAR, borderVisible: false,
+    upColor: UP, downColor: DOWN, borderUpColor: UP, borderDownColor: DOWN, wickUpColor: UP, wickDownColor: DOWN,
     priceLineVisible: false, lastValueVisible: true, priceFormat,
   })
   for (const s of [area, candleSeries]) s.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.22 } })
@@ -145,18 +161,15 @@ onMounted(() => {
 
   chart.subscribeCrosshairMove((param) => {
     const list = isCandles() ? bars : rows
-    if (draw.busy.value || !list.length || !param.point || param.logical == null || param.point.x < 0 || param.point.y < 0) {
-      tip.value = { ...tip.value, show: false }
+    if (!list.length) return
+    if (!param.point || param.logical == null || param.point.x < 0 || param.point.y < 0) {
+      shown.value = list[list.length - 1]
       paint(-1)
       return
     }
     const idx = Math.max(0, Math.min(list.length - 1, Math.round(param.logical)))
-    paint(idx)
-    const w = el.value.clientWidth
-    const tw = 290 // tooltip width
-    const x = param.point.x + 24 + tw > w - 70 ? param.point.x - 24 - tw : param.point.x + 24
-    const y = Math.max(8, Math.min(el.value.clientHeight - 190, param.point.y - 50))
-    tip.value = { show: true, x: Math.max(0, x), y, ...list[idx] }
+    shown.value = list[idx]
+    if (!draw.busy.value) paint(idx)
   })
 
   draw.install(chart, el.value)
@@ -171,9 +184,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
   chart && chart.remove()
 })
-
-// pct is how much a candle moved from open to close, in percent, for the tooltip.
-const pct = (c) => (c.open > 0 ? ((c.close / c.open - 1) * 100) : 0)
 </script>
 
 <template>
@@ -184,24 +194,7 @@ const pct = (c) => (c.open > 0 ? ((c.close / c.open - 1) * 100) : 0)
       <div ref="el" class="chart"></div>
       <input v-if="textBox" v-model="textBox.value" v-focus class="text-input" :style="{ left: textBox.x + 'px', top: textBox.y + 'px' }"
              maxlength="80" aria-label="Text on the chart" @keydown.enter="draw.submitText" @keydown.esc.stop="draw.cancel" @blur="draw.submitText" />
-      <div v-show="tip.show" class="tip" :style="{ left: tip.x + 'px', top: tip.y + 'px' }">
-        <div class="t">{{ formatDateTime(tip.time) }}</div>
-        <template v-if="type === 'candles'">
-          <div class="ohlc num">
-            <span class="k">Open</span><span class="v">{{ formatPrice(tip.open) }}</span>
-            <span class="k">High</span><span class="v">{{ formatPrice(tip.high) }}</span>
-            <span class="k">Low</span><span class="v">{{ formatPrice(tip.low) }}</span>
-            <span class="k">Close</span><span class="v">{{ formatPrice(tip.close) }}</span>
-            <span class="k">Change</span>
-            <span class="v" :class="tip.close >= tip.open ? 'up' : 'down'">{{ pct(tip) >= 0 ? '+' : '' }}{{ pct(tip).toFixed(2) }}%</span>
-            <span class="k">Vol</span><span class="v">{{ formatADA(tip.volume) }}</span>
-          </div>
-        </template>
-        <template v-else>
-          <div><span class="k">Price:</span> <span class="v num">{{ formatPrice(tip.price) }}</span></div>
-          <div><span class="k">Vol:</span> <span class="v num">{{ formatADA(tip.volume) }}</span></div>
-        </template>
-      </div>
+      <ChartLegend :type="type" :bar="shown" :base="base" />
     </div>
   </div>
 </template>
@@ -211,16 +204,8 @@ const pct = (c) => (c.open > 0 ? ((c.close / c.open - 1) * 100) : 0)
 .wrap { position: relative; flex: 1; min-width: 0; }
 .text-input { position: absolute; z-index: 6; transform: translateY(-50%); width: 180px; font: 600 14px Inter, system-ui, sans-serif; color: var(--fg); padding: 4px 8px; border: 1px solid #2962ff; border-radius: 6px; outline: none; background: #fff; }
 @media (max-width: 700px) { .frame { flex-direction: column; } }
-.chart { height: 440px; }
+.chart { height: 480px; }
+/* The TradingView logo in light grey. */
+.chart :deep(a#tv-attr-logo) { --fill: #c5ccd8; }
 @media (max-width: 700px) { .chart { height: 320px; } }
-.tip {
-  position: absolute; z-index: 5; pointer-events: none; width: 290px;
-  background: #fff; border-radius: 12px; padding: 14px 18px; font-size: 14px; line-height: 1.7;
-  box-shadow: 0 6px 24px rgba(13, 20, 33, 0.12), 0 0 0 1px rgba(13, 20, 33, 0.04);
-}
-.t { margin-bottom: 4px; white-space: nowrap; }
-.k { color: var(--muted); }
-.v { font-weight: 700; }
-.ohlc { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; }
-.ohlc .v { text-align: right; }
 </style>

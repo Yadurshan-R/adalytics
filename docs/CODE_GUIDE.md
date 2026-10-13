@@ -3,6 +3,7 @@
 This guide explains how Adalytics is built. Read it to see how the pieces fit together. Every function is listed in plain words in two more files, so no file is too long:
 
 - [Backend functions](BACKEND_FUNCTIONS.md): the Go backend and its tests
+- [Market functions](MARKET_FUNCTIONS.md): the market package (prices, history, candles) and its tests
 - [Frontend functions](FRONTEND_FUNCTIONS.md): the Vue website
 
 Every function in the code also has a comment above it saying the same thing, so you can read the code on its own too.
@@ -43,7 +44,8 @@ The backend serves these routes. Each one reads from memory, so they answer inst
 | Route | What it returns |
 |---|---|
 | `GET /api/tokens` | Every listed token with price, changes, volume and small price lines, plus how much history is loaded (and the loading progress during the first load) |
-| `GET /api/tokens/{id}/chart?range=24H&type=line` | One token's chart. `range` is 24H, 7D or 30D; `type` is line or candles |
+| `GET /api/tokens/{id}/chart?range=24H` | One token's line chart. `range` is 24H, 7D or 30D |
+| `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 15m (7 days back), 1h, 4h or 1D (30 days back) |
 | `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first |
 | `GET /api/tokens/{id}/logo` | The token's logo from the Cardano token registry (PNG) |
 | `GET /api/health` | `{"status": "ok"}` when the backend is running |
@@ -88,13 +90,18 @@ No file is longer than 300 lines. Each one has one job.
 | `src/App.vue` | The top bar and the page frame |
 | `src/useTokens.js` | Loads the token list from the backend and refreshes it |
 | `src/format.js` | Formats prices, percentages, amounts and dates |
-| `src/chartPrefs.js` | Remembers line or candles, and the range, between token pages |
+| `src/chartPrefs.js` | Remembers line or candles, the range and the candle size, between token pages |
 | `src/pages/TokenList.vue` | The token list (Top Volume, Top Gainers, Top Losers, search) |
-| `src/pages/TokenPage.vue` | One token's page: price, chart, stats, info and trades |
+| `src/pages/TokenPage.vue` | One token's page: price, stats, info, chart and trades |
+| `src/components/ChartPanel.vue` | The chart's buttons (Line or Candles, range or candle size), loading box and data |
 | `src/components/LoadingProgress.vue` | The loading box shown during the first load |
 | `src/components/PriceChart.vue` | The line and candle chart (TradingView Lightweight Charts) |
+| `src/components/ChartLegend.vue` | The open, high, low, close line at the top of the chart |
 | `src/components/ChartToolbar.vue` | The drawing toolbar beside the chart |
-| `src/chart/drawingLayer.js` | A chart plugin that draws the drawings and the ruler |
+| `src/components/ToolGroup.vue` | The line tools button and its list |
+| `src/components/ToolIcon.vue` | A drawing tool's icon |
+| `src/chart/drawingLayer.js` | A chart plugin that puts the drawings and the ruler on the chart |
+| `src/chart/shapes.js` | Draws each kind of drawing and the ruler |
 | `src/chart/useDrawings.js` | Turns clicks into drawings, and handles zoom and the magnet |
 | `src/components/RecentTrades.vue` | The recent trades table on a token page |
 | `src/components/Sparkline.vue` | The small price line in the list |

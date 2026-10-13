@@ -119,7 +119,7 @@ While the backend does its first load, the site shows a loading box with the per
 The backend's terminal shows everything that happens, one line each:
 
 ```
-13:20:04 INFO  api     GET  /api/tokens/night/chart?range=7D   200    4ms   18KB  visitor=203.0.113.7  id=a1f40c
+13:20:04 INFO  api     GET  /api/tokens/night/chart            200    4ms   18KB  visitor=203.0.113.7  id=a1f40c
 13:20:09 WARN  api     GET  /api/tokens/xyz/chart              404   <1ms    34B  visitor=203.0.113.7  id=542d80  error="unknown token \"xyz\""
 13:21:00 INFO  market  Checked 61 pools: 2 had new swaps
 13:21:00 INFO  api     last minute: 37 requests from 3 visitors, 0 errors, 612KB sent, slowest 6ms (GET /api/tokens) | koios: 4 requests, 210KB received, today 3,412 of 50,000 (6.8%)
@@ -135,7 +135,7 @@ Logs only go to the terminal; nothing is written to disk.
 
 ## Project structure
 
-Every file has one job and is under 300 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together, and [docs/BACKEND_FUNCTIONS.md](docs/BACKEND_FUNCTIONS.md) and [docs/FRONTEND_FUNCTIONS.md](docs/FRONTEND_FUNCTIONS.md) list every function in plain words.
+Every file has one job and is under 250 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together, and [docs/BACKEND_FUNCTIONS.md](docs/BACKEND_FUNCTIONS.md), [docs/MARKET_FUNCTIONS.md](docs/MARKET_FUNCTIONS.md) and [docs/FRONTEND_FUNCTIONS.md](docs/FRONTEND_FUNCTIONS.md) list every function in plain words.
 
 ```
 backend/
@@ -158,6 +158,7 @@ backend/
     details.go                  supply, logos, links and holder counts
     progress.go, activity.go    loading progress and live activity for the loading page
     history.go                  chart ranges (24H, 7D, 30D), line points and candles
+    candles.go                  candle sizes (15m, 1h, 4h, 1D)
   internal/api/server.go        the JSON API used by the frontend
   internal/api/logging.go       logs every API call; catches crashes
   internal/api/stats.go         the summary line every minute
@@ -166,10 +167,13 @@ backend/
 frontend/src/
   pages/TokenList.vue           the token list
   pages/TokenPage.vue           the token page
+  components/ChartPanel.vue     the chart's buttons, loading box and data
   components/LoadingProgress.vue  the loading box with live progress
   components/PriceChart.vue     the price chart (line or candles)
+  components/ChartLegend.vue    the open, high, low, close line on the chart
   components/ChartToolbar.vue   the drawing toolbar beside the chart
-  chart/drawingLayer.js         draws the drawings and the ruler on the chart
+  chart/drawingLayer.js         puts the drawings and the ruler on the chart
+  chart/shapes.js               draws each kind of drawing
   chart/useDrawings.js          turns clicks into drawings; zoom and magnet
   components/RecentTrades.vue   the recent trades table
   components/Sparkline.vue      the small price lines in the list
@@ -181,7 +185,8 @@ frontend/src/
 | Endpoint | Returns |
 |---|---|
 | `GET /api/tokens` | every listed token with price, changes, volume and details, plus how much history is loaded |
-| `GET /api/tokens/{id}/chart?range=7D&type=candles` | chart for one token: `range` is 24H, 7D or 30D, `type` is line or candles |
+| `GET /api/tokens/{id}/chart?range=7D` | line chart for one token: `range` is 24H, 7D or 30D |
+| `GET /api/tokens/{id}/chart?type=candles&size=1h` | candles for one token: `size` is 15m (7 days back), 1h, 4h or 1D (30 days back) |
 | `GET /api/tokens/{id}/trades?limit=5` | the most recent trades for one token |
 | `GET /api/tokens/{id}/logo` | the token's logo from the Cardano token registry |
 

@@ -1,18 +1,17 @@
 <!-- Token page, CoinGecko-style: details on the left, live chart on the right. -->
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useTokens } from '../useTokens.js'
 import { formatPrice, fullPrice, formatUSD, formatCompact, formatAmount, formatAgo, short, host, createdDate } from '../format.js'
 import Change from '../components/Change.vue'
-import PriceChart from '../components/PriceChart.vue'
+import ChartPanel from '../components/ChartPanel.vue'
 import RecentTrades from '../components/RecentTrades.vue'
-import { chartType, chartRange } from '../chartPrefs.js'
 import LoadingProgress from '../components/LoadingProgress.vue'
 
 // The route's :ticker is the token's unique id from the backend (usually its ticker in lower case).
 const props = defineProps({ ticker: { type: String, required: true } })
-const { tokens, history, loading, reload } = useTokens()
+const { tokens, history, loading } = useTokens()
 // token is the token this page is about, found by the id in the address.
 const token = computed(() => tokens.value.find((t) => t.id === props.ticker.toLowerCase()))
 
@@ -24,72 +23,6 @@ function back() {
   if (window.history.state?.back) router.back()
   else router.push('/')
 }
-
-// Range buttons. Every range can be clicked; if its history is still loading,
-// the chart area shows the live loading percentage until the chart is ready.
-const ranges = computed(() => (history.value.ranges?.length ? history.value.ranges : [{ key: '24H', progress: 100, ready: true }]))
-// selected is the chart range picked now (24H, 7D or 30D).
-const selected = computed(() => ranges.value.find((r) => r.key === chartRange.value) ?? ranges.value[0])
-// waiting is true while the picked range is still loading in the backend.
-const waiting = computed(() => !selected.value.ready)
-const types = [{ key: 'line', label: 'Line' }, { key: 'candles', label: 'Candles' }]
-// setType switches the chart between line and candles.
-const setType = (key) => (chartType.value = key)
-// setRange switches the chart to another range.
-const setRange = (key) => (chartRange.value = key)
-
-// Chart data: refreshed every minute, like the list.
-const points = ref([])
-const candles = ref([])
-const chartError = ref('')
-let timer = null
-
-// loadChart fetches the chart for the picked range and type. If the range is
-// not ready it clears the chart, and the loading percentage is shown instead.
-async function loadChart() {
-  if (waiting.value) {
-    points.value = []
-    candles.value = []
-    return
-  }
-  const url = `/api/tokens/${encodeURIComponent(props.ticker)}/chart?range=${selected.value.key}&type=${chartType.value}`
-  try {
-    const res = await fetch(url, { cache: 'no-store' })
-    const data = await res.json()
-    if (res.status === 409) {
-      // Not loaded after all (for example the backend restarted): show the progress.
-      reload()
-      return
-    }
-    if (!res.ok) throw new Error(data.error || `The backend answered ${res.status}`)
-    points.value = data.points ?? []
-    candles.value = data.candles ?? []
-    chartError.value = ''
-  } catch (e) {
-    chartError.value = e instanceof TypeError ? 'Cannot reach the backend.' : e.message
-  }
-}
-
-onMounted(() => {
-  loadChart()
-  timer = setInterval(loadChart, 60_000)
-})
-onUnmounted(() => {
-  clearInterval(timer)
-  clearInterval(progressTimer)
-})
-watch([() => props.ticker, chartRange, chartType], loadChart)
-
-// While a loading range is selected, ask the backend for the progress every 3
-// seconds (it only reads its own memory; no Koios request), and draw the chart
-// as soon as the range is ready.
-let progressTimer = null
-watch(waiting, (now, before) => {
-  clearInterval(progressTimer)
-  if (now) progressTimer = setInterval(reload, 3000)
-  else if (before) loadChart()
-}, { immediate: true })
-
 
 const copied = ref('')
 let copiedTimer = null
@@ -106,20 +39,13 @@ async function copy(text, key) {
   }
 }
 
-// Low / high over the chart's range, from the line points or the candles.
-const lows = computed(() => (chartType.value === 'candles' ? candles.value.map((c) => c.low) : points.value.map((p) => p.price)).filter((v) => v > 0))
-// highs are the highest prices in the chart (candle highs, or line prices).
-const highs = computed(() => (chartType.value === 'candles' ? candles.value.map((c) => c.high) : points.value.map((p) => p.price)).filter((v) => v > 0))
-// low is the lowest price over the chart's range.
-const low = computed(() => (lows.value.length ? Math.min(...lows.value) : null))
-// high is the highest price over the chart's range.
-const high = computed(() => (highs.value.length ? Math.max(...highs.value) : null))
-// rangeLabel is the title of the low/high bar, e.g. "24h Range".
-const rangeLabel = computed(() => ({ '24H': '24h', '7D': '7d', '30D': '30d' })[chartRange.value] + ' Range')
+// span is the low and high for the range bar, from the chart (ChartPanel).
+const span = ref(null)
 // rangePos places the current price on the low/high bar, from 0% to 100%.
 const rangePos = computed(() => {
-  if (!token.value || low.value == null || high.value === low.value) return 50
-  return Math.min(100, Math.max(0, ((token.value.price_ada - low.value) / (high.value - low.value)) * 100))
+  const r = span.value
+  if (!token.value || !r || r.high === r.low) return 50
+  return Math.min(100, Math.max(0, ((token.value.price_ada - r.low) / (r.high - r.low)) * 100))
 })
 </script>
 
@@ -151,12 +77,12 @@ const rangePos = computed(() => {
       </div>
       <p v-if="token.price_usd" class="usd muted num" :title="'$' + token.price_usd.toPrecision(6)">≈ {{ formatUSD(token.price_usd) }}</p>
 
-      <div v-if="low != null && !waiting" class="range">
+      <div v-if="span" class="range">
         <div class="bar"><span :style="{ width: rangePos + '%' }"></span></div>
         <div class="range-labels num">
-          <span>{{ formatPrice(low) }}</span>
-          <span class="label">{{ rangeLabel }}</span>
-          <span>{{ formatPrice(high) }}</span>
+          <span>{{ formatPrice(span.low) }}</span>
+          <span class="label">{{ span.label }}</span>
+          <span>{{ formatPrice(span.high) }}</span>
         </div>
       </div>
 
@@ -211,23 +137,7 @@ const rangePos = computed(() => {
     </aside>
 
     <section class="chart-col">
-      <div class="toolbar">
-        <div class="ranges" role="group" aria-label="Chart type">
-          <button v-for="t in types" :key="t.key" type="button" :aria-pressed="t.key === chartType" @click="setType(t.key)">{{ t.label }}</button>
-        </div>
-        <div class="ranges" role="group" aria-label="Time range">
-          <button v-for="r in ranges" :key="r.key" type="button" :aria-pressed="r.key === selected.key" @click="setRange(r.key)">{{ r.key }}</button>
-        </div>
-      </div>
-      <p v-if="chartError" class="notice">{{ chartError }}</p>
-      <div v-if="waiting" class="progress" role="progressbar" :aria-label="`${selected.key} loading`"
-           :aria-valuenow="selected.progress" aria-valuemin="0" aria-valuemax="100">
-        <span class="p-key">{{ selected.key }}</span>
-        <span class="p-pct num">{{ selected.progress }}%</span>
-        <span class="p-bar"><span :style="{ width: Math.max(selected.progress, 1) + '%' }"></span></span>
-      </div>
-      <PriceChart v-else :type="chartType" :points="points" :candles="candles"
-                  :fit-key="`${token.id}-${selected.key}-${chartType}`" :token="token.id" />
+      <ChartPanel :id="token.id" @span="span = $event" />
       <RecentTrades :id="token.id" :ticker="token.ticker" />
     </section>
   </div>
@@ -266,19 +176,6 @@ const rangePos = computed(() => {
 .stat dt { color: var(--muted); }
 .stat dd { margin: 0; font-weight: 600; text-align: right; }
 
-.toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-.ranges { display: inline-flex; background: var(--chip); border-radius: 10px; padding: 4px; gap: 2px; }
-.ranges button { font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-.ranges button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(13, 20, 33, 0.12); }
-.ranges button:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
-.progress { height: 440px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: 12px; background: #fafbfd; }
-@media (max-width: 700px) { .progress { height: 320px; } }
-.p-key { font-size: 15px; font-weight: 600; color: var(--muted); }
-.p-pct { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; }
-.p-bar { width: min(320px, 70%); height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden; }
-.p-bar span { display: block; height: 100%; border-radius: 4px; background: var(--bull); transition: width 0.6s ease; }
-@media (prefers-reduced-motion: reduce) { .p-bar span { transition: none; } }
-
 .usd { margin: 4px 0 0; font-size: 15px; }
 
 .info-title { font-size: 18px; font-weight: 700; margin: 32px 0 4px; }
@@ -293,5 +190,4 @@ const rangePos = computed(() => {
 .copy:focus-visible, .pill:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
 .about { margin: 16px 0 0; color: var(--muted); line-height: 1.6; font-size: 14px; overflow-wrap: anywhere; }
 
-.notice { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: #fdecee; color: #a0202c; }
 </style>

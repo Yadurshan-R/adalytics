@@ -103,11 +103,12 @@ function load() {
   draw.attach()
   draw.setBars(barList.map((b) => b.time))
   // Keep the visitor's zoom when the data refreshes each minute.
-  // Candles start with the latest 60 shown, wide enough to read, like
-  // TradingView; drag left for older ones.
+  // Candles start with the latest ones shown, about 14px each so they are wide
+  // enough to read (about 60 on a laptop), like TradingView; drag for older ones.
   if (fitted !== props.fitKey && barList.length) {
     const n = bars.length
-    if (n > 60) chart.timeScale().setVisibleLogicalRange({ from: n - 60, to: n - 1 })
+    const show = Math.max(20, Math.round(el.value.clientWidth / 14))
+    if (n > show) chart.timeScale().setVisibleLogicalRange({ from: n - show, to: n - 1 })
     else chart.timeScale().fitContent()
     fitted = props.fitKey
   }
@@ -128,8 +129,9 @@ onMounted(() => {
       tickMarkFormatter: (t, type) => {
         const d = new Date(t * 1000)
         if (type === 0) return String(d.getFullYear())
-        if (type === 1) return d.toLocaleString('en-GB', { month: 'short' })
-        if (type === 2) return d.toLocaleString('en-GB', { day: 'numeric', month: 'short' })
+        const month = d.toLocaleString('en-US', { month: 'short' })
+        if (type === 1) return month
+        if (type === 2) return `${d.getDate()} ${month}`
         return d.toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
       },
     },

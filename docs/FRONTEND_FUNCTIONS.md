@@ -49,26 +49,55 @@ Every function in the Vue website, file by file. Each one also has the same comm
 | `rgba` | Turns a colour like #16c784 into rgba() with transparency a (0 to 1). |
 | `isCandles` | Reports whether the chart shows candles instead of a line. |
 | `paint` | Line mode: colour and bold/faded split for the hovered point (-1 = none). |
-| `load` | Puts the current points or candles into the chart. The view is fitted only when the token, range or type changes, so a zoom survives the minute refresh. |
-| `pct` | How much a candle moved from open to close, in percent, for the tooltip. |
+| `load` | Puts the current points or candles into the chart. The view is set only when the token, range, size or type changes, so a zoom or scroll survives the minute refresh. Candles open on the latest ones, about 14px wide each. |
 | `onKey` | Esc stops the drawing being placed. |
+
+## `src/components/ChartLegend.vue`
+
+| Function | What it does |
+|---|---|
+| `change` | The move in ADA and percent: open to close for a candle, first price to this price for the line. |
+
+## `src/components/ChartPanel.vue`
+
+| Function | What it does |
+|---|---|
+| `load` | Fetches the chart: the line for the picked range, or the candles at the picked size. Runs again every minute. |
+| `setType` / `setRange` / `setSize` | Switch between line and candles, the line's range, or the candle size. |
+| `waiting` | True while the picked line range is still loading; the loading percentage shows instead. Candles never wait: they show the history loaded so far. |
+| `span` (event) | Tells the page the low and high for the range bar: the line's range, or the last 24 hours of candles. |
 
 ## `src/components/ChartToolbar.vue`
 
 | Function | What it does |
 |---|---|
-| `pick` | Chooses a tool; picking the one already on goes back to the cursor. |
+| `pick` | Chooses a tool; picking the one already on goes back to the cursor. The line tools are grouped under one button (ToolGroup). |
+
+## `src/components/ToolGroup.vue`
+
+| Function | What it does |
+|---|---|
+| `toggle` | Opens the list of line tools beside the button (under it on a phone). |
+| `outside` | Closes the list when the visitor clicks anywhere else. |
+| `choose` | Picks a tool from the list; the button then shows it. |
 
 ## `src/chart/drawingLayer.js`
 
 | Function | What it does |
 |---|---|
-| `DrawingLayer` | A Lightweight Charts plugin that keeps the drawings, the drawing being placed and the ruler, and draws them on top of the chart. |
+| `DrawingLayer` | A Lightweight Charts plugin that keeps the drawings, the drawing being placed and the ruler, and draws them on top of the chart (shapes.js draws each one). |
 | `setBars` | Remembers the first bar's time and the bar spacing, so a time can be turned into a position even when it is scrolled out of view. |
-| `x` / `y` | The position of a time / a price on the chart, in pixels. |
-| `_shape` | Draws one drawing: trend line, horizontal line, rectangle, Fibonacci or text. |
-| `_fib` | Draws the Fibonacci levels (0, 0.236, 0.382, 0.5, 0.618, 0.786, 1) between two points, with their prices. |
-| `_ruler` | Draws the measurement: green if up, red if down, with the % change, the price change, the number of bars and the time. |
+| `x` / `y` / `xy` | The position of a time, a price, or a point on the chart, in pixels. |
+
+## `src/chart/shapes.js`
+
+| Function | What it does |
+|---|---|
+| `drawShape` | Draws one drawing: trend line, ray, extended line, horizontal or vertical line, channel, rectangle, Fibonacci or text. |
+| `channel` | Draws two parallel lines, the space between them and a dashed middle line. |
+| `fib` | Draws the Fibonacci levels (0, 0.236, 0.382, 0.5, 0.618, 0.786, 1) between two points, with their prices. |
+| `drawRuler` | Draws the measurement: teal if up, red if down, with the % change, the price change, the number of bars and the time. |
+| `extend` | Carries a line on to the edge of the chart, for rays and extended lines. |
 | `duration` | Turns seconds into short text: 5400 → "1h 30m". |
 
 ## `src/chart/useDrawings.js`
@@ -78,13 +107,15 @@ Every function in the Vue website, file by file. Each one also has the same comm
 | `useDrawings` | Connects the toolbar to the chart and returns the tool, magnet and hide settings and the actions below. |
 | `attach` | Puts the drawing layer on the series on screen (line or candles). |
 | `pointFrom` | Turns a mouse position into a time and price. With the magnet on, the price snaps to the nearest value of the bar under the mouse. |
-| `onClick` | Places drawings: one click for a horizontal line or text, two clicks for the others. In cursor mode a click clears the ruler. |
-| `onMove` | Moves the second point of the drawing being placed. |
+| `onClick` | Places drawings: one click for a horizontal or vertical line or text, three for a channel, two for the others. In cursor mode a click clears the ruler. |
+| `onMove` | Moves the second point of the drawing being placed, or for a channel's last step, its width. |
 | `finish` | Adds a drawing and goes back to the cursor, like TradingView. |
 | `submitText` | Adds the typed text where it was clicked. |
 | `cancel` | Stops whatever is being drawn. |
+| `recount` | Counts the drawings and the ruler, so the bin is grey only when the chart is empty. |
 | `clearAll` | Removes every drawing and the ruler. |
 | `zoom` | Shows fewer or more bars, keeping the newest bar on the right. |
+| `priceOn` | The price on a line at a given time, for the channel's width. |
 | `install` | Listens to clicks on the chart element directly, because the chart's own click event drops a second click made within half a second of the first. A press that moved more than a few pixels is a drag, not a click. |
 
 ## `src/components/RecentTrades.vue`
@@ -128,16 +159,6 @@ Every function in the Vue website, file by file. Each one also has the same comm
 |---|---|
 | `token` | The token this page is about, found by the id in the address. |
 | `back` | Goes to the previous page if it was the list, otherwise opens the list. |
-| `ranges` | Range buttons. Every range can be clicked; if its history is still loading, the chart area shows the live loading percentage until the chart is ready. |
-| `selected` | The chart range picked now (24H, 7D or 30D). |
-| `waiting` | True while the picked range is still loading in the backend. |
-| `setType` | Switches the chart between line and candles. |
-| `setRange` | Switches the chart to another range. |
-| `loadChart` | Fetches the chart for the picked range and type. If the range is not ready it clears the chart, and the loading percentage is shown instead. |
 | `copy` | Puts text (a policy ID or fingerprint) on the clipboard and shows "Copied" next to it for 1.5 seconds. |
-| `lows` | Low / high over the chart's range, from the line points or the candles. |
-| `highs` | The highest prices in the chart (candle highs, or line prices). |
-| `low` | The lowest price over the chart's range. |
-| `high` | The highest price over the chart's range. |
-| `rangeLabel` | The title of the low/high bar, e.g. "24h Range". |
+| `span` | The low and high for the range bar, sent by the chart (ChartPanel). |
 | `rangePos` | Places the current price on the low/high bar, from 0% to 100%. |

@@ -41,9 +41,14 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 		})
 	})
 
-	// A token page chart: /api/tokens/snek/chart?range=7D&type=candles.
-	// range is 24H, 7D or 30D; type is line (the default) or candles.
+	// A token page chart: /api/tokens/snek/chart?range=7D for the line, or
+	// /api/tokens/snek/chart?type=candles&size=1h for candles. range is 24H,
+	// 7D or 30D; size is 15m, 1h, 4h or 1D (see candleChart).
 	mux.HandleFunc("GET /api/tokens/{ticker}/chart", func(w http.ResponseWriter, r *http.Request) {
+		if size := r.URL.Query().Get("size"); size != "" && r.URL.Query().Get("type") == "candles" {
+			candleChart(w, tracker, r.PathValue("ticker"), size)
+			return
+		}
 		rangeKey := r.URL.Query().Get("range")
 		if rangeKey == "" {
 			rangeKey = "24H"
@@ -113,6 +118,31 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 	s := &Server{stats: &stats{}, log: log}
 	s.handler = withLogging(withCORS(mux), log, s.stats)
 	return s
+}
+
+// candleChart answers a candlestick chart at one candle size, with all the
+// history loaded so far (like TradingView, the visitor scrolls back through it).
+func candleChart(w http.ResponseWriter, tracker *market.Tracker, ticker, sizeKey string) {
+	quote, size, candles, err := tracker.Candles(ticker, sizeKey)
+	switch {
+	case errors.Is(err, market.ErrRangeLoading):
+		writeJSON(w, http.StatusConflict, map[string]any{"error": err.Error(), "history": tracker.History()})
+		return
+	case err != nil && strings.HasPrefix(err.Error(), "unknown token"):
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+		return
+	case err != nil:
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ticker":           quote.Ticker,
+		"size":             size.Key,
+		"type":             "candles",
+		"interval_seconds": int(size.Interval / time.Second),
+		"price_ada":        quote.PriceADA,
+		"candles":          candles,
+	})
 }
 
 // writeJSON sends v as JSON with the given HTTP status, and tells the browser

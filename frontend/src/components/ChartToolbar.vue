@@ -1,6 +1,10 @@
-<!-- The drawing toolbar beside the chart, like TradingView's: drawing tools,
-     the ruler, zoom, the magnet, hide drawings and delete all. -->
+<!-- The drawing toolbar beside the chart, like TradingView's: drawing tools
+     (the line tools grouped under one button), the ruler, zoom, the magnet,
+     hide drawings and delete all. -->
 <script setup>
+import ToolGroup from './ToolGroup.vue'
+import ToolIcon from './ToolIcon.vue'
+
 const props = defineProps({
   tool: { type: String, required: true },
   magnet: { type: Boolean, default: false },
@@ -9,11 +13,18 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:tool', 'update:magnet', 'update:hidden', 'zoom', 'reset', 'clear'])
 
-// TOOLS are the drawing tools, with an SVG path for each icon (20 × 20).
-const TOOLS = [
-  { key: 'cursor', label: 'Cross', icon: 'M10 3v14M3 10h14' },
+// LINES are grouped under one button; TOOLS are the other drawing tools.
+// Each has an SVG path for its icon (20 × 20) and dots for its points.
+const LINES = [
   { key: 'trend', label: 'Trend line', icon: 'M4.5 15.5 15.5 4.5', dots: [[4.5, 15.5], [15.5, 4.5]] },
+  { key: 'ray', label: 'Ray', icon: 'M4.5 15.5 18 2', dots: [[4.5, 15.5], [10.5, 9.5]] },
+  { key: 'extended', label: 'Extended line', icon: 'M2 18 18 2', dots: [[7, 13], [13, 7]] },
   { key: 'hline', label: 'Horizontal line', icon: 'M2 10h16', dots: [[10, 10]] },
+  { key: 'vline', label: 'Vertical line', icon: 'M10 2v16', dots: [[10, 10]] },
+]
+const CURSOR = { key: 'cursor', label: 'Cross', icon: 'M10 3v14M3 10h14' }
+const TOOLS = [
+  { key: 'channel', label: 'Parallel channel', icon: 'M3 12 12 3M8 17 17 8', dots: [[3, 12], [12, 3], [17, 8]] },
   { key: 'rect', label: 'Rectangle', icon: 'M4 5h12v10H4z' },
   { key: 'fib', label: 'Fib retracement', icon: 'M3 4h14M3 8h14M3 12h14M3 16h14' },
   { key: 'text', label: 'Text', icon: 'M4 4h12M10 4v13' },
@@ -26,12 +37,13 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
 
 <template>
   <div class="toolbar" role="toolbar" aria-label="Chart tools">
+    <button type="button" class="btn" :aria-pressed="tool === 'cursor'" :aria-label="CURSOR.label" :title="CURSOR.label" @click="pick('cursor')">
+      <ToolIcon :tool="CURSOR" />
+    </button>
+    <ToolGroup :tools="LINES" :tool="tool" @pick="pick" />
     <button v-for="t in TOOLS" :key="t.key" type="button" class="btn" :aria-pressed="tool === t.key"
             :aria-label="t.label" :title="t.label" @click="pick(t.key)">
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path :d="t.icon" />
-        <circle v-for="(d, i) in t.dots || []" :key="i" :cx="d[0]" :cy="d[1]" r="2" class="dot" />
-      </svg>
+      <ToolIcon :tool="t" />
     </button>
 
     <span class="sep" aria-hidden="true"></span>
@@ -51,7 +63,7 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
     <button type="button" class="btn" :aria-pressed="magnet" aria-label="Magnet" title="Magnet" @click="emit('update:magnet', !magnet)">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3v7a5 5 0 0 0 10 0V3M5 6.5h3.5M11.5 6.5H15M8.5 3v7a1.5 1.5 0 0 0 3 0V3" /></svg>
     </button>
-    <button type="button" class="btn" :aria-pressed="hidden" :disabled="!count" aria-label="Hide drawings" title="Hide drawings"
+    <button type="button" class="btn" :aria-pressed="hidden" aria-label="Hide drawings" title="Hide drawings"
             @click="emit('update:hidden', !hidden)">
       <svg viewBox="0 0 20 20" aria-hidden="true">
         <path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><circle cx="10" cy="10" r="2.5" />
@@ -65,19 +77,19 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
 </template>
 
 <style scoped>
-.toolbar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; border-right: 1px solid var(--line); }
-.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: none; color: var(--fg); cursor: pointer; }
-.btn:hover:not(:disabled) { background: var(--chip); }
-.btn[aria-pressed="true"] { background: #e3ecff; color: #2962ff; }
-.btn:disabled { color: #c5ccd8; cursor: default; }
-.btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
-.btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.btn .dot { fill: #fff; }
-.sep { width: 22px; height: 1px; margin: 4px 0; background: var(--line); flex: none; }
+.toolbar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; border-right: 1px solid var(--line); }
+.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 32px; border: 0; border-radius: 6px; background: none; color: #131722; cursor: pointer; }
+.btn:hover:not(:disabled) { background: #f0f3fa; }
+.btn[aria-pressed="true"] { color: #2962ff; }
+.btn:disabled { color: #b2b5be; cursor: default; }
+.btn:focus-visible { outline: 2px solid #2962ff; outline-offset: 1px; }
+.btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.sep { width: 26px; height: 1px; margin: 3px 0; background: var(--line); flex: none; }
 
 @media (max-width: 700px) {
   .toolbar { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); scrollbar-width: none; }
-  .btn { flex: none; }
-  .sep { width: 1px; height: 22px; margin: 0 4px; }
+  .btn { flex: none; width: 36px; height: 36px; }
+  .btn svg { width: 22px; height: 22px; }
+  .sep { width: 1px; height: 24px; margin: 0 4px; }
 }
 </style>

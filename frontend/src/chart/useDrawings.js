@@ -8,10 +8,10 @@ import { DrawingLayer } from './drawingLayer.js'
 // candles), get.bars() the bars as [{ time, values: [prices] }].
 export function useDrawings(get) {
   const layer = new DrawingLayer()
-  const tool = ref('cursor') // cursor, trend, hline, rect, fib, text, ruler
+  const tool = ref('cursor') // cursor, trend, ray, extended, hline, vline, channel, rect, fib, text, ruler
   const magnet = ref(false)
   const hidden = ref(false)
-  const count = ref(0) // drawings on the chart
+  const count = ref(0) // drawings on the chart, the ruler included
   const textBox = ref(null) // { x, y, point, value } while text is typed
   const placing = ref(false) // first point clicked, second not yet
   const busy = computed(() => tool.value !== 'cursor' || placing.value || !!textBox.value)
@@ -57,8 +57,9 @@ export function useDrawings(get) {
     return { time: layer.t0 + index * layer.step, price }
   }
 
-  // onClick places drawings: one click for a horizontal line or text, two
-  // clicks for the others. In cursor mode a click clears the ruler.
+  // onClick places drawings: one click for a horizontal or vertical line or
+  // text, three for a channel, two for the others. In cursor mode a click
+  // clears the ruler.
   function onClick(param) {
     const p = pointFrom(param)
     if (!p) return
@@ -67,7 +68,7 @@ export function useDrawings(get) {
       if (layer.ruler) clearRuler()
       return
     }
-    if (t === 'hline') return finish({ type: 'hline', p1: p })
+    if (t === 'hline' || t === 'vline') return finish({ type: t, p1: p })
     if (t === 'text') {
       textBox.value = { x: param.point.x, y: param.point.y, point: p, value: '' }
       return
@@ -77,31 +78,40 @@ export function useDrawings(get) {
       placing.value = true
       return layer.update()
     }
-    const d = { ...layer.draft, p2: p }
+    // A channel's second click fixes the first line; the third sets its width.
+    if (t === 'channel' && !layer.draft.stage) {
+      layer.draft = { ...layer.draft, p2: p, stage: 2, offset: 0 }
+      return layer.update()
+    }
+    const d = t === 'channel' ? { ...layer.draft } : { ...layer.draft, p2: p }
+    delete d.stage
     layer.draft = null
     placing.value = false
     if (t === 'ruler') {
       layer.ruler = d
       tool.value = 'cursor'
+      recount()
       return layer.update()
     }
     finish(d)
   }
 
-  // onMove moves the second point of the drawing being placed.
+  // onMove moves the second point of the drawing being placed, or for a
+  // channel's last step, how far the second line is from the first.
   function onMove(param) {
-    if (!layer.draft) return
+    const d = layer.draft
+    if (!d) return
     const p = pointFrom(param)
-    if (p) {
-      layer.draft.p2 = p
-      layer.update()
-    }
+    if (!p) return
+    if (d.stage === 2) d.offset = p.price - priceOn(d, p.time)
+    else d.p2 = p
+    layer.update()
   }
 
   // finish adds a drawing and goes back to the cursor, like TradingView.
   function finish(d) {
     layer.drawings.push(d)
-    count.value = layer.drawings.length
+    recount()
     tool.value = 'cursor'
     layer.update()
   }
@@ -125,13 +135,15 @@ export function useDrawings(get) {
 
   function clearRuler() {
     layer.ruler = null
+    recount()
     layer.update()
   }
+
+  const recount = () => (count.value = layer.drawings.length + (layer.ruler ? 1 : 0))
 
   // clearAll removes every drawing and the ruler.
   function clearAll() {
     layer.drawings = []
-    count.value = 0
     clearRuler()
     cancel()
   }
@@ -148,6 +160,12 @@ export function useDrawings(get) {
 
   const resetView = () => get.chart().timeScale().fitContent()
 
+  // priceOn is the price on the line from d.p1 to d.p2 at a given time.
+  function priceOn(d, time) {
+    const span = d.p2.time - d.p1.time
+    return span ? d.p1.price + ((d.p2.price - d.p1.price) * (time - d.p1.time)) / span : d.p1.price
+  }
+
   // While a tool is picked, dragging must not move the chart, so clicks place points.
   watch(tool, (t) => {
     if (t !== layer.draft?.type) {
@@ -155,6 +173,7 @@ export function useDrawings(get) {
       placing.value = false
     }
     if (t === 'ruler') clearRuler()
+    if (t !== 'cursor') hidden.value = false // a new drawing shows everything again
     get.chart().applyOptions({ handleScroll: t === 'cursor' ? SCROLL : false })
     layer.update()
   })

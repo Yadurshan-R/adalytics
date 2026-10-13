@@ -34,7 +34,7 @@ func TestLogsEveryRequest(t *testing.T) {
 		writeJSON(w, http.StatusOK, map[string]string{"hello": strings.Repeat("x", 2000)})
 	}, r)
 	id := w.Header().Get("X-Request-ID")
-	for _, want := range []string{" INFO ", " api ", "GET  /api/tokens/snek/chart?range=7D", " 200 ", "2KB", "visitor=203.0.113.7", "id=" + id} {
+	for _, want := range []string{" INFO ", " api ", "GET  /api/tokens/snek/chart ", " 200 ", "2KB", "visitor=203.0.113.7", "id=" + id} {
 		if !strings.Contains(log, want) {
 			t.Errorf("log %q has no %q", log, want)
 		}

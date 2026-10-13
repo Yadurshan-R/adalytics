@@ -63,7 +63,7 @@ func withLogging(next http.Handler, log *slog.Logger, st *stats) http.Handler {
 		rec := &recorder{ResponseWriter: w}
 		defer func() {
 			if p := recover(); p != nil {
-				log.Error("request crashed", "path", r.URL.RequestURI(), "error", fmt.Sprint(p), "id", id, "stack", firstLines(debug.Stack(), 8))
+				log.Error("request crashed", "path", r.URL.Path, "error", fmt.Sprint(p), "id", id, "stack", firstLines(debug.Stack(), 8))
 				if !rec.wrote {
 					writeJSON(rec, http.StatusInternalServerError, map[string]string{"error": "internal error, request id " + id})
 				}
@@ -76,7 +76,7 @@ func withLogging(next http.Handler, log *slog.Logger, st *stats) http.Handler {
 			visitor := visitorOf(r)
 			st.add(visitor, rec.status, rec.size, took, r.Method+" "+r.URL.Path)
 
-			msg := fmt.Sprintf("%-4s %-44s %3d %6s %6s", r.Method, r.URL.RequestURI(), rec.status, logx.Duration(took), logx.Size(rec.size))
+			msg := fmt.Sprintf("%-4s %-34s %3d %6s %6s", r.Method, r.URL.Path, rec.status, logx.Duration(took), logx.Size(rec.size))
 			args := []any{"visitor", visitor, "id", id}
 			if reason := errorOf(rec); reason != "" {
 				args = append(args, "error", reason)

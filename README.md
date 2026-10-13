@@ -25,6 +25,7 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 * Price in ADA and USD, low and high over the chosen range, volume, number of trades, buys against sells, holder count, pool liquidity and the time of the last trade
 * Info box with the project website, policy ID and fingerprint (with copy buttons), creation date, a Cardanoscan link and the project description
 * The 50 most recent trades, each with a link to the transaction on Cardanoscan
+* A drawing toolbar beside the chart, like TradingView's: trend line, horizontal line, rectangle, Fibonacci levels, text, a ruler that measures the price change and time between two points, zoom and scroll, a magnet that snaps to prices, hide and delete. Drawings stay in the browser only and are not saved
 
 It also works on phones.
 
@@ -111,11 +112,11 @@ npm install
 npm run dev
 ```
 
-While the backend does its first load, the site shows a loading page with the progress, time left and a live feed of what the backend is doing. The list opens by itself when it is done.
+While the backend does its first load, the site shows a loading box with the percentage and each step as it happens. The list opens by itself when it is done.
 
 ## Project structure
 
-Every file has one job and is under 300 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together and lists every function in plain words.
+Every file has one job and is under 300 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together, and [docs/BACKEND_FUNCTIONS.md](docs/BACKEND_FUNCTIONS.md) and [docs/FRONTEND_FUNCTIONS.md](docs/FRONTEND_FUNCTIONS.md) list every function in plain words.
 
 ```
 backend/
@@ -143,9 +144,11 @@ backend/
 frontend/src/
   pages/TokenList.vue           the token list
   pages/TokenPage.vue           the token page
-  components/LoadingProgress.vue  the loading page with live progress
-  components/LoadingActivity.vue  the loading page's live activity feed
+  components/LoadingProgress.vue  the loading box with live progress
   components/PriceChart.vue     the price chart (line or candles)
+  components/ChartToolbar.vue   the drawing toolbar beside the chart
+  chart/drawingLayer.js         draws the drawings and the ruler on the chart
+  chart/useDrawings.js          turns clicks into drawings; zoom and magnet
   components/RecentTrades.vue   the recent trades table
   components/Sparkline.vue      the small price lines in the list
   format.js                     number formats (₳, $, %, K/M/B)

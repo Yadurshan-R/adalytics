@@ -226,7 +226,8 @@ const rangePos = computed(() => {
         <span class="p-pct num">{{ selected.progress }}%</span>
         <span class="p-bar"><span :style="{ width: Math.max(selected.progress, 1) + '%' }"></span></span>
       </div>
-      <PriceChart v-else :type="chartType" :points="points" :candles="candles" />
+      <PriceChart v-else :type="chartType" :points="points" :candles="candles"
+                  :fit-key="`${token.id}-${selected.key}-${chartType}`" :token="token.id" />
       <RecentTrades :id="token.id" :ticker="token.ticker" />
     </section>
   </div>

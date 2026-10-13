@@ -7,16 +7,21 @@
   - Candles: green when a slot closed higher than it opened, red when lower.
     The tooltip shows open, high, low, close and the change.
   - Volume bars underneath (grey for the line, green/red for candles).
+  - A drawing toolbar on the left (ChartToolbar), with zoom and scroll.
 -->
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { createChart, AreaSeries, CandlestickSeries, HistogramSeries, LineStyle, CrosshairMode } from 'lightweight-charts'
 import { formatPrice, formatADA, formatDateTime } from '../format.js'
+import { useDrawings, SCROLL, SCALE } from '../chart/useDrawings.js'
+import ChartToolbar from './ChartToolbar.vue'
 
 const props = defineProps({
   type: { type: String, default: 'line' }, // 'line' or 'candles'
   points: { type: Array, default: () => [] }, // line: [{ time, price, volume }]
   candles: { type: Array, default: () => [] }, // candles: [{ time, open, high, low, close, volume }]
+  fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, range, type)
+  token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
 
 const BULL = '#16c784'
@@ -35,9 +40,18 @@ let chart, area, candleSeries, volume, lastLine
 let rows = [] // line points
 let bars = [] // candles
 let lastIdx = null
+let barList = [] // [{ time, values }] for the drawing tools' magnet
+let fitted = null // the fitKey the view was last fitted for
 
 // isCandles reports whether the chart shows candles instead of a line.
 const isCandles = () => props.type === 'candles'
+
+const draw = useDrawings({ chart: () => chart, series: () => (isCandles() ? candleSeries : area), bars: () => barList })
+const { tool, magnet, hidden, count, textBox } = draw
+// vFocus puts the cursor in the text box as soon as it appears.
+const vFocus = { mounted: (el) => el.focus() }
+// onKey: Esc stops the drawing being placed.
+const onKey = (e) => e.key === 'Escape' && draw.cancel()
 
 // Line mode: colour and bold/faded split for the hovered point (-1 = none).
 function paint(idx) {
@@ -75,7 +89,16 @@ function load() {
     if (rows.length) paint(-1)
     else area.setData([])
   }
-  chart.timeScale().fitContent()
+  barList = isCandles()
+    ? bars.map((c) => ({ time: c.time, values: [c.open, c.high, c.low, c.close] }))
+    : rows.map((p) => ({ time: p.time, values: [p.price] }))
+  draw.attach()
+  draw.setBars(barList.map((b) => b.time))
+  // Keep the visitor's zoom when the data refreshes each minute.
+  if (fitted !== props.fitKey) {
+    chart.timeScale().fitContent()
+    fitted = props.fitKey
+  }
 }
 
 const priceFormat = { type: 'custom', minMove: 1e-12, formatter: formatPrice }
@@ -103,8 +126,8 @@ onMounted(() => {
       vertLine: { style: LineStyle.Dashed, width: 1, labelVisible: false },
       horzLine: { visible: false, labelVisible: false },
     },
-    handleScroll: false,
-    handleScale: false,
+    handleScroll: SCROLL,
+    handleScale: SCALE,
   })
 
   area = chart.addSeries(AreaSeries, {
@@ -122,7 +145,7 @@ onMounted(() => {
 
   chart.subscribeCrosshairMove((param) => {
     const list = isCandles() ? bars : rows
-    if (!list.length || !param.point || param.logical == null || param.point.x < 0 || param.point.y < 0) {
+    if (draw.busy.value || !list.length || !param.point || param.logical == null || param.point.x < 0 || param.point.y < 0) {
       tip.value = { ...tip.value, show: false }
       paint(-1)
       return
@@ -136,43 +159,58 @@ onMounted(() => {
     tip.value = { show: true, x: Math.max(0, x), y, ...list[idx] }
   })
 
+  draw.install(chart, el.value)
+  window.addEventListener('keydown', onKey)
   load()
 })
 
 watch(() => [props.type, props.points, props.candles], load)
+watch(() => props.token, () => draw.clearAll())
 
-onBeforeUnmount(() => chart && chart.remove())
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  chart && chart.remove()
+})
 
 // pct is how much a candle moved from open to close, in percent, for the tooltip.
 const pct = (c) => (c.open > 0 ? ((c.close / c.open - 1) * 100) : 0)
 </script>
 
 <template>
-  <div class="wrap">
-    <div ref="el" class="chart"></div>
-    <div v-show="tip.show" class="tip" :style="{ left: tip.x + 'px', top: tip.y + 'px' }">
-      <div class="t">{{ formatDateTime(tip.time) }}</div>
-      <template v-if="type === 'candles'">
-        <div class="ohlc num">
-          <span class="k">Open</span><span class="v">{{ formatPrice(tip.open) }}</span>
-          <span class="k">High</span><span class="v">{{ formatPrice(tip.high) }}</span>
-          <span class="k">Low</span><span class="v">{{ formatPrice(tip.low) }}</span>
-          <span class="k">Close</span><span class="v">{{ formatPrice(tip.close) }}</span>
-          <span class="k">Change</span>
-          <span class="v" :class="tip.close >= tip.open ? 'up' : 'down'">{{ pct(tip) >= 0 ? '+' : '' }}{{ pct(tip).toFixed(2) }}%</span>
-          <span class="k">Vol</span><span class="v">{{ formatADA(tip.volume) }}</span>
-        </div>
-      </template>
-      <template v-else>
-        <div><span class="k">Price:</span> <span class="v num">{{ formatPrice(tip.price) }}</span></div>
-        <div><span class="k">Vol:</span> <span class="v num">{{ formatADA(tip.volume) }}</span></div>
-      </template>
+  <div class="frame">
+    <ChartToolbar v-model:tool="tool" v-model:magnet="magnet" v-model:hidden="hidden" :count="count"
+                  @zoom="draw.zoom" @reset="draw.resetView" @clear="draw.clearAll" />
+    <div class="wrap">
+      <div ref="el" class="chart"></div>
+      <input v-if="textBox" v-model="textBox.value" v-focus class="text-input" :style="{ left: textBox.x + 'px', top: textBox.y + 'px' }"
+             maxlength="80" aria-label="Text on the chart" @keydown.enter="draw.submitText" @keydown.esc.stop="draw.cancel" @blur="draw.submitText" />
+      <div v-show="tip.show" class="tip" :style="{ left: tip.x + 'px', top: tip.y + 'px' }">
+        <div class="t">{{ formatDateTime(tip.time) }}</div>
+        <template v-if="type === 'candles'">
+          <div class="ohlc num">
+            <span class="k">Open</span><span class="v">{{ formatPrice(tip.open) }}</span>
+            <span class="k">High</span><span class="v">{{ formatPrice(tip.high) }}</span>
+            <span class="k">Low</span><span class="v">{{ formatPrice(tip.low) }}</span>
+            <span class="k">Close</span><span class="v">{{ formatPrice(tip.close) }}</span>
+            <span class="k">Change</span>
+            <span class="v" :class="tip.close >= tip.open ? 'up' : 'down'">{{ pct(tip) >= 0 ? '+' : '' }}{{ pct(tip).toFixed(2) }}%</span>
+            <span class="k">Vol</span><span class="v">{{ formatADA(tip.volume) }}</span>
+          </div>
+        </template>
+        <template v-else>
+          <div><span class="k">Price:</span> <span class="v num">{{ formatPrice(tip.price) }}</span></div>
+          <div><span class="k">Vol:</span> <span class="v num">{{ formatADA(tip.volume) }}</span></div>
+        </template>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.wrap { position: relative; }
+.frame { display: flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.wrap { position: relative; flex: 1; min-width: 0; }
+.text-input { position: absolute; z-index: 6; transform: translateY(-50%); width: 180px; font: 600 14px Inter, system-ui, sans-serif; color: var(--fg); padding: 4px 8px; border: 1px solid #2962ff; border-radius: 6px; outline: none; background: #fff; }
+@media (max-width: 700px) { .frame { flex-direction: column; } }
 .chart { height: 440px; }
 @media (max-width: 700px) { .chart { height: 320px; } }
 .tip {

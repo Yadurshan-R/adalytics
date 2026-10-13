@@ -4,6 +4,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,9 +13,21 @@ import (
 	"cardano-analytics/internal/market"
 )
 
-// New builds the HTTP handler with every API route. Each route only reads
-// from the Tracker's memory, so it answers instantly and never calls Koios.
-func New(tracker *market.Tracker) http.Handler {
+// Server is the API: every route, wrapped in the request log (logging.go),
+// plus the counts for the minute summary (stats.go).
+type Server struct {
+	handler http.Handler
+	stats   *stats
+	log     *slog.Logger
+}
+
+// ServeHTTP answers one request.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) { s.handler.ServeHTTP(w, r) }
+
+// New builds the API with every route. Each route only reads from the
+// Tracker's memory, so it answers instantly and never calls Koios. Every
+// request is logged to log.
+func New(tracker *market.Tracker, log *slog.Logger) *Server {
 	mux := http.NewServeMux()
 
 	// The list page: every token with price, changes, volume and a small price
@@ -97,7 +110,9 @@ func New(tracker *market.Tracker) http.Handler {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	return withCORS(mux)
+	s := &Server{stats: &stats{}, log: log}
+	s.handler = withLogging(withCORS(mux), log, s.stats)
+	return s
 }
 
 // writeJSON sends v as JSON with the given HTTP status, and tells the browser

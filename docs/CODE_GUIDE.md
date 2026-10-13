@@ -28,6 +28,10 @@ flowchart LR
 3. **Every minute after that.** The Tracker checks which pools were used since the last check and reads only those new swaps. This costs about 3 Koios requests a minute.
 4. **Every 6 hours.** Holder counts are refreshed in the background, because Koios is slow to count them.
 
+### Reading the log
+
+Everything the backend does is written to its terminal, one line each: `api` for every call from the website (status, time, size, visitor, request ID), `market` for the tracker, `koios` for every Koios request and how much data came back (with `LOG_LEVEL=debug`), and one summary line a minute with website traffic and Koios usage for the day. WARN and ERROR lines stand out. The format is set in `internal/logx`, the API log in `internal/api/logging.go` and the summary in `internal/api/stats.go`.
+
 ### How a price is worked out
 
 Each Minswap pool holds ADA and one token. The price is the ratio of the two: if a pool holds 2,000,000 ADA and 744,260,765 SNEK, one SNEK costs about ₳0.0027. When someone swaps, the pool's amounts change. ADA going in and tokens coming out is a buy; the other way round is a sell. That is how the trades list is built (`tradeFrom` in `pools.go`).
@@ -72,6 +76,9 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/tokens.go` | The list of verified tokens (from `tokens.json`) |
 | `internal/market/format.go` | Small number and text helpers for the log |
 | `internal/api/server.go` | The API routes |
+| `internal/api/logging.go` | Logs every API call with a request ID, and catches crashes |
+| `internal/api/stats.go` | Counts traffic and logs a summary every minute |
+| `internal/logx/handler.go` | The log's line format, levels and number formats |
 
 ### Frontend
 

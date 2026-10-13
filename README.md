@@ -114,6 +114,25 @@ npm run dev
 
 While the backend does its first load, the site shows a loading box with the percentage and each step as it happens. The list opens by itself when it is done.
 
+## Watching what the backend does
+
+The backend's terminal shows everything that happens, one line each:
+
+```
+13:20:04 INFO  api     GET  /api/tokens/night/chart?range=7D   200    4ms   18KB  visitor=203.0.113.7  id=a1f40c
+13:20:09 WARN  api     GET  /api/tokens/xyz/chart              404   <1ms    34B  visitor=203.0.113.7  id=542d80  error="unknown token \"xyz\""
+13:21:00 INFO  market  Checked 61 pools: 2 had new swaps
+13:21:00 INFO  api     last minute: 37 requests from 3 visitors, 0 errors, 612KB sent, slowest 6ms (GET /api/tokens) | koios: 4 requests, 210KB received, today 3,412 of 50,000 (6.8%)
+```
+
+* **api** lines: every call from the website, with its status, time, size, the visitor's address and a request ID (also sent back in the `X-Request-ID` header, so a problem a visitor sees can be found in the log)
+* **market** lines: what the tracker is doing with Koios data
+* **koios** lines: every Koios request with how much data came back. These show with `LOG_LEVEL=debug` in `.env`; failed or very slow ones always show
+* one **summary** line a minute: website traffic and Koios usage against the free tier's daily limit
+* **WARN** and **ERROR** lines stand out: missing tokens, slow answers, Koios problems. If a request ever crashes, it is logged with details and the server keeps running
+
+Logs only go to the terminal; nothing is written to disk.
+
 ## Project structure
 
 Every file has one job and is under 300 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together, and [docs/BACKEND_FUNCTIONS.md](docs/BACKEND_FUNCTIONS.md) and [docs/FRONTEND_FUNCTIONS.md](docs/FRONTEND_FUNCTIONS.md) list every function in plain words.
@@ -140,6 +159,9 @@ backend/
     progress.go, activity.go    loading progress and live activity for the loading page
     history.go                  chart ranges (24H, 7D, 30D), line points and candles
   internal/api/server.go        the JSON API used by the frontend
+  internal/api/logging.go       logs every API call; catches crashes
+  internal/api/stats.go         the summary line every minute
+  internal/logx/handler.go      the log's line format and levels
 
 frontend/src/
   pages/TokenList.vue           the token list

@@ -37,9 +37,24 @@ type Client struct {
 	slow    *http.Client // for queries Koios takes minutes to answer
 	limit   *limiter
 	count   atomic.Int64
+	bytes   atomic.Int64 // response bytes received since start
 
 	// OnRetry, if set, is told whenever a request is retried.
 	OnRetry func(endpoint string, reason error, wait time.Duration, attempt int)
+	// OnResponse, if set, is told about every answer from Koios (and every
+	// request that got none), so the backend can log what it downloads.
+	OnResponse func(Call)
+}
+
+// Call describes one request to Koios and its answer, for the log.
+type Call struct {
+	Endpoint string        // e.g. /tx_info
+	Status   int           // HTTP status; 0 if Koios did not answer
+	Sent     int           // request body size in bytes
+	Received int           // response size in bytes
+	Took     time.Duration // from sending to the full answer
+	Attempt  int           // 0 for the first try, 1 to 3 for retries
+	Err      error         // why there was no usable answer, if so
 }
 
 // New creates a Client for the Koios API at baseURL, using the API token.
@@ -58,6 +73,16 @@ func New(baseURL, token string) *Client {
 
 // Requests is the number of requests sent to Koios since start, retries included.
 func (c *Client) Requests() int64 { return c.count.Load() }
+
+// BytesReceived is how much data Koios has sent back since start.
+func (c *Client) BytesReceived() int64 { return c.bytes.Load() }
+
+// report tells OnResponse about one request, if it is set.
+func (c *Client) report(call Call) {
+	if c.OnResponse != nil {
+		c.OnResponse(call)
+	}
+}
 
 // do sends a request and decodes the JSON answer into out. It waits for the
 // rate limiter and retries when Koios is busy (429), slow or briefly down (5xx).
@@ -111,6 +136,7 @@ func (c *Client) do(ctx context.Context, hc *http.Client, method, path string, b
 		}
 
 		c.count.Add(1)
+		sent := time.Now()
 		resp, err := hc.Do(req)
 		if err != nil {
 			if ctx.Err() != nil {
@@ -122,10 +148,13 @@ func (c *Client) do(ctx context.Context, hc *http.Client, method, path string, b
 			} else {
 				lastErr = errors.New("could not reach Koios (check your internet connection)")
 			}
+			c.report(Call{Endpoint: endpoint, Sent: len(payload), Took: time.Since(sent), Attempt: attempt, Err: lastErr})
 			continue
 		}
 		data, readErr := io.ReadAll(io.LimitReader(resp.Body, 64<<20))
 		resp.Body.Close()
+		c.bytes.Add(int64(len(data)))
+		c.report(Call{Endpoint: endpoint, Status: resp.StatusCode, Sent: len(payload), Received: len(data), Took: time.Since(sent), Attempt: attempt, Err: readErr})
 
 		switch {
 		case resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden:

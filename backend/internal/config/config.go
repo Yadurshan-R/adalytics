@@ -5,10 +5,13 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"cardano-analytics/internal/logx"
 )
 
 // Config holds every setting the backend needs, read from .env or the environment.
@@ -17,7 +20,8 @@ type Config struct {
 	KoiosToken   string
 	Port         string
 	PollInterval time.Duration
-	HistoryDays  int // days of history to load and keep, 1 to 30
+	HistoryDays  int        // days of history to load and keep, 1 to 30
+	LogLevel     slog.Level // how much the log shows: debug, info (default), warn or error
 }
 
 // Load reads .env (from the current folder, or the parent folder) and then the
@@ -45,6 +49,12 @@ func Load() (Config, error) {
 		return cfg, fmt.Errorf("HISTORY_DAYS %q must be a whole number from 1 to 30", os.Getenv("HISTORY_DAYS"))
 	}
 	cfg.HistoryDays = days
+
+	level, err := logx.ParseLevel(getenv("LOG_LEVEL", "info"))
+	if err != nil {
+		return cfg, fmt.Errorf("LOG_LEVEL %q must be debug, info, warn or error", os.Getenv("LOG_LEVEL"))
+	}
+	cfg.LogLevel = level
 
 	if cfg.KoiosToken == "" {
 		return cfg, errors.New("KOIOS_API_TOKEN is missing: add it to the .env file")

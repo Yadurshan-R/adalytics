@@ -6,7 +6,18 @@ Every function in the Go backend, file by file. Each one also has the same comme
 
 | Function | What it does |
 |---|---|
-| `main` | Loads the settings, starts the Tracker that reads Cardano data from Koios in the background, and serves the API until Ctrl+C is pressed. |
+| `main` | Loads the settings, starts the Tracker that reads Cardano data from Koios in the background, and serves the API until Ctrl+C is pressed. Every API call, every Koios answer (with LOG_LEVEL=debug) and a summary each minute are written to the log. |
+| `logKoios` | Logs each Koios answer: endpoint, status, time, and how much was sent and received. Failures and very slow answers always show. |
+
+## `internal/logx/handler.go`
+
+| Function | What it does |
+|---|---|
+| `New` | Returns a logger that prints lines like `13:20:04 INFO  api  message  key=value`. |
+| `ParseLevel` | Turns LOG_LEVEL (debug, info, warn, error) into a level. |
+| `StdLogger` | Gives the Tracker, which uses the older log.Logger, a logger that writes through the same format. |
+| `Handle` | Writes one log record as one line: time, level, part of the backend, message, details. |
+| `Size` / `Count` / `Duration` | Show bytes as 18KB, numbers as 50,000, and times as 4ms or 1.2s. |
 
 ## `internal/config/config.go`
 
@@ -22,6 +33,8 @@ Every function in the Go backend, file by file. Each one also has the same comme
 |---|---|
 | `New` | Creates a Client for the Koios API at baseURL, using the API token. |
 | `Requests` | The number of requests sent to Koios since start, retries included. |
+| `BytesReceived` | How much data Koios has sent back since start. |
+| `report` | Tells OnResponse about one request and its answer, for the log. |
 | `do` | Sends a request and decodes the JSON answer into out. It waits for the rate limiter and retries when Koios is busy (429), slow or briefly down (5xx). |
 
 ## `internal/koios/endpoints.go`
@@ -186,6 +199,22 @@ Every function in the Go backend, file by file. Each one also has the same comme
 | `writeJSON` | Sends v as JSON with the given HTTP status, and tells the browser not to cache it, so prices are always fresh. |
 | `withCORS` | Lets the Vue dev server (another port) read the API. Read-only: GET only. |
 
+## `internal/api/logging.go`
+
+| Function | What it does |
+|---|---|
+| `withLogging` | Logs one line per API call (status, time, size, visitor, request ID), sends the ID back in X-Request-ID, and catches a crashing request so the server keeps running. |
+| `levelOf` | Errors and slow answers are louder; logos and health checks only show with LOG_LEVEL=debug. |
+| `visitorOf` | The visitor's IP; behind Nginx and ngrok it is read from X-Forwarded-For, which is only trusted for local requests. |
+| `errorOf` | The reason in an error answer, for the log. |
+
+## `internal/api/stats.go`
+
+| Function | What it does |
+|---|---|
+| `add` / `take` | Count each answered request, and hand over the counts each minute. |
+| `ReportEveryMinute` | Logs one summary line a minute: website traffic and Koios usage today against the free tier's 50,000 a day. |
+
 
 # Backend tests
 
@@ -235,6 +264,16 @@ Run them with `go test ./...` from `backend/`. They use a fake Koios server, so 
 | `TestUSDPriceFromUSDMPool` | Checks USD prices come from the USDM pool, and are left empty when that pool is missing. |
 | `TestSafeURL` | Checks that only plain http(s) website links are kept. |
 | `TestRankingAndIDs` | Checks the ranking by volume then pool size, that small pools are left out, and that tokens sharing a ticker get unique ids. |
+
+## `internal/api/logging_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestLogsEveryRequest` | Checks the log line, the visitor behind Nginx and the request ID. |
+| `TestLogsErrorReason` | Checks that a 404 is a warning with its reason. |
+| `TestCrashIsCaught` | Checks that a crashing request gets a 500 and is logged, and the server keeps running. |
+| `TestVisitorIsOnlyTrustedLocally` | Checks that X-Forwarded-For is ignored unless the request is local. |
+| `TestSummary` | Checks the minute summary line. |
 
 ## `internal/market/tracker_test.go`
 

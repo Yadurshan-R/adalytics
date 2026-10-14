@@ -98,7 +98,10 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/ChartPanel.vue` | The chart's buttons (Line or Candles, range or candle size), loading box and data |
 | `src/components/LoadingProgress.vue` | The loading box shown during the first load |
 | `src/components/PriceChart.vue` | The line and candle chart (TradingView Lightweight Charts) |
-| `src/components/ChartLegend.vue` | The open, high, low, close line at the top of the chart |
+| `src/components/ChartLegend.vue` | The open, high, low, close line at the top of the chart, and the indicator values |
+| `src/components/IndicatorMenu.vue` | The Indicators button and its list |
+| `src/chart/indicators.js` | The indicator math: MA, EMA, Bollinger Bands, VWAP, RSI |
+| `src/chart/useIndicators.js` | Puts the picked indicators on the chart |
 | `src/components/ChartToolbar.vue` | The drawing toolbar beside the chart |
 | `src/components/ToolGroup.vue` | The line tools button and its list |
 | `src/components/ToolIcon.vue` | A drawing tool's icon |

@@ -14,6 +14,7 @@ export function useDrawings(get) {
   const magnet = ref(false)
   const hidden = ref(false)
   const locked = ref(false) // drawings cannot be picked or moved
+  const stay = ref(false) // keep the tool on after a drawing, to draw several in a row
   const count = ref(0) // drawings on the chart, the ruler included
   const textBox = ref(null) // { x, y, point, value } while text is typed
   const placing = ref(false) // first point clicked, second not yet
@@ -115,11 +116,12 @@ export function useDrawings(get) {
     layer.update()
   }
 
-  // finish adds a drawing and goes back to the cursor, like TradingView.
+  // finish adds a drawing and goes back to the cursor, like TradingView, unless
+  // "stay in drawing mode" is on.
   function finish(d) {
     layer.drawings.push(d)
     recount()
-    tool.value = 'cursor'
+    if (!stay.value) tool.value = 'cursor'
     layer.update()
   }
 
@@ -215,7 +217,7 @@ export function useDrawings(get) {
   }
 
   return {
-    tool, magnet, hidden, locked, count, textBox, busy, selected: sel.selected,
+    tool, magnet, hidden, locked, stay, count, textBox, busy, selected: sel.selected,
     install, uninstall: sel.uninstall, removeSelected: sel.remove, deselect: () => sel.select(null), attach, setBars, submitText, cancel, clearAll, zoom, resetView,
   }
 }

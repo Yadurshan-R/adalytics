@@ -173,6 +173,9 @@ frontend/src/
   components/LoadingProgress.vue  the loading box with live progress
   components/PriceChart.vue     the price chart (line or candles)
   components/ChartLegend.vue    the open, high, low, close line on the chart
+  components/IndicatorMenu.vue  the Indicators button
+  chart/indicators.js           indicator math (MA, EMA, Bollinger, VWAP, RSI)
+  chart/useIndicators.js        puts the indicators on the chart
   components/ChartToolbar.vue   the drawing toolbar beside the chart
   chart/drawingLayer.js         puts the drawings and the ruler on the chart
   chart/shapes.js               draws each kind of drawing

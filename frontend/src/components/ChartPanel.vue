@@ -7,8 +7,9 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useTokens } from '../useTokens.js'
-import { chartType, chartRange, candleSize } from '../chartPrefs.js'
+import { chartType, chartRange, candleSize, indicators } from '../chartPrefs.js'
 import PriceChart from './PriceChart.vue'
+import IndicatorMenu from './IndicatorMenu.vue'
 
 const props = defineProps({ id: { type: String, required: true } }) // the token's id
 const emit = defineEmits(['span'])
@@ -94,8 +95,11 @@ watch([points, candles, waiting], () => {
 
 <template>
   <div class="toolbar">
-    <div class="pick" role="group" aria-label="Chart type">
-      <button v-for="t in TYPES" :key="t.key" type="button" :aria-pressed="t.key === chartType" @click="setType(t.key)">{{ t.label }}</button>
+    <div class="left">
+      <div class="pick" role="group" aria-label="Chart type">
+        <button v-for="t in TYPES" :key="t.key" type="button" :aria-pressed="t.key === chartType" @click="setType(t.key)">{{ t.label }}</button>
+      </div>
+      <IndicatorMenu v-model="indicators" />
     </div>
     <div v-if="isCandles" class="pick" role="group" aria-label="Candle size">
       <button v-for="s in SIZES" :key="s" type="button" :aria-pressed="s === candleSize" @click="setSize(s)">{{ s }}</button>
@@ -111,16 +115,17 @@ watch([points, candles, waiting], () => {
     <span class="p-pct num">{{ selected.progress }}%</span>
     <span class="p-bar"><span :style="{ width: Math.max(selected.progress, 1) + '%' }"></span></span>
   </div>
-  <PriceChart v-else :type="chartType" :points="points" :candles="candles" :fit-key="`${id}-${view}`" :token="id" />
+  <PriceChart v-else :type="chartType" :points="points" :candles="candles" :indicators="indicators" :fit-key="`${id}-${view}`" :token="id" />
 </template>
 
 <style scoped>
 .toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.left { display: flex; gap: 8px; }
 .pick { display: inline-flex; background: var(--chip); border-radius: 10px; padding: 4px; gap: 2px; }
 .pick button { font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 .pick button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(13, 20, 33, 0.12); }
 .pick button:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
-.progress { height: 480px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: 12px; background: #fafbfd; }
+.progress { height: 520px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: 12px; background: #fafbfd; }
 @media (max-width: 700px) { .progress { height: 320px; } }
 .p-key { font-size: 15px; font-weight: 600; color: var(--muted); }
 .p-pct { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; }

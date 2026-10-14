@@ -14,6 +14,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { createChart, AreaSeries, CandlestickSeries, HistogramSeries, LineStyle, CrosshairMode } from 'lightweight-charts'
 import { formatPrice } from '../format.js'
 import { useDrawings, SCROLL, SCALE } from '../chart/useDrawings.js'
+import { useIndicators } from '../chart/useIndicators.js'
 import ChartToolbar from './ChartToolbar.vue'
 import ChartLegend from './ChartLegend.vue'
 
@@ -21,6 +22,7 @@ const props = defineProps({
   type: { type: String, default: 'line' }, // 'line' or 'candles'
   points: { type: Array, default: () => [] }, // line: [{ time, price, volume }]
   candles: { type: Array, default: () => [] }, // candles: [{ time, open, high, low, close, volume }]
+  indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma', 'rsi']
   fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, range, type)
   token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
@@ -52,7 +54,7 @@ let fitted = null // the fitKey the view was last fitted for
 const isCandles = () => props.type === 'candles'
 
 const draw = useDrawings({ chart: () => chart, series: () => (isCandles() ? candleSeries : area), bars: () => barList })
-const { tool, magnet, hidden, locked, count, textBox, selected } = draw
+const { tool, magnet, hidden, locked, stay, count, textBox, selected } = draw
 // vFocus puts the cursor in the text box as soon as it appears.
 const vFocus = { mounted: (el) => el.focus() }
 // onKey: Esc stops the drawing being placed or unselects; Delete or Backspace
@@ -112,6 +114,7 @@ function load() {
     : rows.map((p) => ({ time: p.time, values: [p.price] }))
   draw.attach()
   draw.setBars(barList.map((b) => b.time))
+  ind.set(props.indicators, isCandles() ? bars : rows.map((p) => ({ time: p.time, close: p.price, volume: p.volume })))
   // Keep the visitor's zoom when the data refreshes each minute.
   // Candles start with the latest ones shown, about 14px each so they are wide
   // enough to read (about 60 on a laptop), like TradingView; drag for older ones.
@@ -125,6 +128,7 @@ function load() {
 }
 
 const priceFormat = { type: 'custom', minMove: 1e-12, formatter: formatPrice }
+const ind = useIndicators(() => chart, priceFormat)
 
 onMounted(() => {
   chart = createChart(el.value, {
@@ -189,7 +193,7 @@ onMounted(() => {
   load()
 })
 
-watch(() => [props.type, props.points, props.candles], load)
+watch(() => [props.type, props.points, props.candles, props.indicators], load)
 watch(() => props.token, () => draw.clearAll())
 
 onBeforeUnmount(() => {
@@ -201,13 +205,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="frame">
-    <ChartToolbar v-model:tool="tool" v-model:magnet="magnet" v-model:hidden="hidden" v-model:locked="locked" :count="count"
-                  @zoom="draw.zoom" @reset="draw.resetView" @clear="draw.clearAll" />
+    <ChartToolbar v-model:tool="tool" v-model:magnet="magnet" v-model:hidden="hidden" v-model:locked="locked" v-model:stay="stay"
+                  :count="count" @zoom="draw.zoom" @reset="draw.resetView" @clear="draw.clearAll" />
     <div class="wrap">
       <div ref="el" class="chart"></div>
       <input v-if="textBox" v-model="textBox.value" v-focus class="text-input" :style="{ left: textBox.x + 'px', top: textBox.y + 'px' }"
              maxlength="80" aria-label="Text on the chart" @keydown.enter="draw.submitText" @keydown.esc.stop="draw.cancel" @blur="draw.submitText" />
-      <ChartLegend :type="type" :bar="shown" :base="base" />
+      <ChartLegend :type="type" :bar="shown" :base="base" :extras="shown ? ind.at(shown.time) : []" />
       <button v-if="selected != null" type="button" class="remove" title="Delete drawing (Del)" @click="draw.removeSelected">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l1 11h7l1-11M8.5 8.5v5M11.5 8.5v5" /></svg>
         Delete
@@ -224,7 +228,7 @@ onBeforeUnmount(() => {
 .remove { position: absolute; z-index: 6; top: 40px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 6px; background: #fff; color: #131722; font: 500 13px Inter, system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(19, 23, 34, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12); }
 .remove:hover { background: #f0f3fa; color: #f23645; }
 .remove svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
-.chart { height: 480px; }
+.chart { height: 520px; }
 /* The TradingView logo in light grey. */
 .chart :deep(a#tv-attr-logo) { --fill: #c5ccd8; }
 @media (max-width: 700px) { .chart { height: 320px; } }

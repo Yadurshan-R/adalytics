@@ -10,6 +10,7 @@ const props = defineProps({
   type: { type: String, default: 'line' }, // 'line' or 'candles'
   bar: { type: Object, default: null }, // a candle or a line point
   base: { type: Number, default: 0 }, // line: the first price of the range
+  extras: { type: Array, default: () => [] }, // indicators: [{ name, color, value, price }]
 })
 
 // change is the move in ADA and percent: open to close for a candle, first
@@ -40,6 +41,12 @@ const sign = (v) => (v < 0 ? '−' : '+')
       {{ sign(change.diff) }}{{ formatPrice(Math.abs(change.diff)).slice(1) }} ({{ sign(change.pct) }}{{ Math.abs(change.pct).toFixed(2) }}%)
     </span>
     <span class="vol">Vol<b>{{ formatADA(bar.volume) }}</b></span>
+    <template v-if="extras.length">
+      <span class="break"></span>
+      <span v-for="x in extras" :key="x.name" class="extra">
+        {{ x.name }}<b :style="{ color: x.color }">{{ x.value == null ? '—' : x.price ? formatPrice(x.value) : x.value.toFixed(1) }}</b>
+      </span>
+    </template>
   </div>
 </template>
 
@@ -55,5 +62,7 @@ b { font-weight: 500; margin-left: 3px; }
 .tv .up { color: #089981; }
 .tv .down { color: #f23645; }
 .vol b { color: #131722; }
+.break { flex-basis: 100%; height: 0; }
+.extra { color: #58667e; }
 @media (max-width: 700px) { .legend { font-size: 12px; gap: 2px 10px; } }
 </style>

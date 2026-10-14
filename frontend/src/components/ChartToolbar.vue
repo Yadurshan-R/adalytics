@@ -1,6 +1,6 @@
 <!-- The drawing toolbar beside the chart, like TradingView's: drawing tools
      (the line tools grouped under one button), the ruler, zoom, the magnet,
-     lock, hide drawings and delete all. -->
+     stay in drawing mode, lock, hide drawings and delete all. -->
 <script setup>
 import ToolGroup from './ToolGroup.vue'
 import ToolIcon from './ToolIcon.vue'
@@ -10,9 +10,10 @@ const props = defineProps({
   magnet: { type: Boolean, default: false },
   hidden: { type: Boolean, default: false },
   locked: { type: Boolean, default: false },
+  stay: { type: Boolean, default: false },
   count: { type: Number, default: 0 },
 })
-const emit = defineEmits(['update:tool', 'update:magnet', 'update:hidden', 'update:locked', 'zoom', 'reset', 'clear'])
+const emit = defineEmits(['update:tool', 'update:magnet', 'update:hidden', 'update:locked', 'update:stay', 'zoom', 'reset', 'clear'])
 
 // LINES are grouped under one button; TOOLS are the other drawing tools.
 // Each has an SVG path for its icon (20 × 20) and dots for its points.
@@ -64,6 +65,13 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
     <button type="button" class="btn" :aria-pressed="magnet" aria-label="Magnet" title="Magnet" @click="emit('update:magnet', !magnet)">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3v7a5 5 0 0 0 10 0V3M5 6.5h3.5M11.5 6.5H15M8.5 3v7a1.5 1.5 0 0 0 3 0V3" /></svg>
     </button>
+    <button type="button" class="btn" :aria-pressed="stay" aria-label="Stay in drawing mode" title="Stay in drawing mode"
+            @click="emit('update:stay', !stay)">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M3 15l.8-3.2 7-7 2.4 2.4-7 7zM9.4 6.2l2.4 2.4" />
+        <rect x="12" y="13" width="6" height="4.5" rx="1" /><path d="M13.5 13v-1.2a1.5 1.5 0 0 1 3 0V13" />
+      </svg>
+    </button>
     <button type="button" class="btn" :aria-pressed="locked" :aria-label="locked ? 'Unlock drawings' : 'Lock drawings'"
             :title="locked ? 'Unlock drawings' : 'Lock drawings'" @click="emit('update:locked', !locked)">
       <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -86,7 +94,7 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
 
 <style scoped>
 .toolbar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; border-right: 1px solid var(--line); }
-.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 32px; border: 0; border-radius: 6px; background: none; color: #131722; cursor: pointer; }
+.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 30px; border: 0; border-radius: 6px; background: none; color: #131722; cursor: pointer; }
 .btn:hover:not(:disabled) { background: #f0f3fa; }
 .btn[aria-pressed="true"] { color: #2962ff; }
 .btn:disabled { color: #b2b5be; cursor: default; }

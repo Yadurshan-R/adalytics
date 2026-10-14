@@ -58,6 +58,30 @@ Every function in the Vue website, file by file. Each one also has the same comm
 |---|---|
 | `change` | The move in ADA and percent: open to close for a candle, first price to this price for the line. |
 
+## `src/components/IndicatorMenu.vue`
+
+| Function | What it does |
+|---|---|
+| `toggle` | Switches one indicator on or off. |
+| `show` / `close` | Opens and closes the list; a click anywhere else closes it. |
+
+## `src/chart/indicators.js`
+
+| Function | What it does |
+|---|---|
+| `sma` | Simple moving average: the average close of the last n bars. |
+| `ema` | Exponential moving average: recent bars count more, so it turns sooner. |
+| `bollinger` | The n-bar average with a band two standard deviations above and below it. |
+| `vwap` | Volume weighted average price of each day so far; starts again every day (UTC). |
+| `rsi` | Relative strength index, 0 to 100 (Wilder's smoothing): above 70 overbought, below 30 oversold. |
+
+## `src/chart/useIndicators.js`
+
+| Function | What it does |
+|---|---|
+| `set` | Shows the picked indicators for the bars on the chart and removes the rest. RSI goes in its own panel under the chart. |
+| `at` | Each indicator's value at the bar under the mouse, for the legend. |
+
 ## `src/components/ChartPanel.vue`
 
 | Function | What it does |
@@ -128,7 +152,7 @@ Every function in the Vue website, file by file. Each one also has the same comm
 | `pointFrom` | Turns a mouse position into a time and price. With the magnet on, the price snaps to the nearest value of the bar under the mouse. |
 | `onClick` | Places drawings: one click for a horizontal or vertical line or text, three for a channel, two for the others. In cursor mode a click clears the ruler. |
 | `onMove` | Moves the second point of the drawing being placed, or for a channel's last step, its width. |
-| `finish` | Adds a drawing and goes back to the cursor, like TradingView. |
+| `finish` | Adds a drawing and goes back to the cursor, like TradingView, unless "stay in drawing mode" is on. |
 | `submitText` | Adds the typed text where it was clicked. |
 | `cancel` | Stops whatever is being drawn. |
 | `recount` | Counts the drawings and the ruler, so the bin is grey only when the chart is empty. |

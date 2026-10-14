@@ -45,7 +45,7 @@ The backend serves these routes. Each one reads from memory, so they answer inst
 |---|---|
 | `GET /api/tokens` | Every listed token with price, changes, volume and small price lines, plus how much history is loaded (and the loading progress during the first load) |
 | `GET /api/tokens/{id}/chart?range=24H` | One token's line chart. `range` is 24H, 7D or 30D |
-| `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 15m (7 days back), 1h, 4h or 1D (30 days back) |
+| `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
 | `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first |
 | `GET /api/tokens/{id}/logo` | The token's logo from the Cardano token registry (PNG) |
 | `GET /api/health` | `{"status": "ok"}` when the backend is running |
@@ -101,6 +101,7 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/PriceChart.vue` | The line and candle chart (TradingView Lightweight Charts) |
 | `src/components/ChartLegend.vue` | The open, high, low, close line at the top of the chart, and the indicator values |
 | `src/components/IndicatorMenu.vue` | The Indicators button and its list |
+| `src/components/CandleSizePicker.vue` | The candle size buttons and list, with loading progress |
 | `src/chart/indicators.js` | The indicator math: MA, EMA, Bollinger Bands, VWAP, RSI |
 | `src/chart/useIndicators.js` | Puts the picked indicators on the chart |
 | `src/components/ChartToolbar.vue` | The drawing toolbar beside the chart |

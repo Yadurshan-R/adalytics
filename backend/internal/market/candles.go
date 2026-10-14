@@ -15,17 +15,22 @@ type CandleSize struct {
 	Span     time.Duration // how far back the chart goes
 }
 
-// CandleSizes is every candle size, shortest first. 15 minute candles stop at
-// 7 days so the chart stays a sensible size (about 670 candles).
+// CandleSizes is every candle size, shortest first. Short candles stop sooner
+// so a chart never has more than about 720 candles: 5 minutes go back 2 days,
+// 15 and 30 minutes 7 days, the others 30 days.
 var CandleSizes = []CandleSize{
+	{Key: "5m", Interval: 5 * time.Minute, Span: 2 * 24 * time.Hour},
 	{Key: "15m", Interval: 15 * time.Minute, Span: 7 * 24 * time.Hour},
+	{Key: "30m", Interval: 30 * time.Minute, Span: 7 * 24 * time.Hour},
 	{Key: "1h", Interval: time.Hour, Span: 30 * 24 * time.Hour},
+	{Key: "2h", Interval: 2 * time.Hour, Span: 30 * 24 * time.Hour},
 	{Key: "4h", Interval: 4 * time.Hour, Span: 30 * 24 * time.Hour},
+	{Key: "12h", Interval: 12 * time.Hour, Span: 30 * 24 * time.Hour},
 	{Key: "1D", Interval: 24 * time.Hour, Span: 30 * 24 * time.Hour},
 }
 
-// CandleSizeByKey finds a candle size by its key ("15m", "1h", "4h", "1D"),
-// ignoring case.
+// CandleSizeByKey finds a candle size by its key ("5m", "15m", "1h", "1D"
+// and so on), ignoring case.
 func CandleSizeByKey(key string) (CandleSize, bool) {
 	for _, c := range CandleSizes {
 		if strings.EqualFold(c.Key, key) {
@@ -41,7 +46,7 @@ func CandleSizeByKey(key string) (CandleSize, bool) {
 func (t *Tracker) Candles(id, sizeKey string) (Quote, CandleSize, []Candle, error) {
 	size, ok := CandleSizeByKey(sizeKey)
 	if !ok {
-		return Quote{}, CandleSize{}, nil, fmt.Errorf("unknown candle size %q: use 15m, 1h, 4h or 1D", sizeKey)
+		return Quote{}, CandleSize{}, nil, fmt.Errorf("unknown candle size %q: use 5m, 15m, 30m, 1h, 2h, 4h, 12h or 1D", sizeKey)
 	}
 	t.mu.RLock()
 	defer t.mu.RUnlock()

@@ -1,7 +1,7 @@
 <!-- The chart on a token page: Line or Candles, the buttons above it, and the
      loading box while a range's history is still coming in.
      - Line: 24H, 7D or 30D, CoinGecko style.
-     - Candles: the candle size (15m, 1h, 4h, 1D), TradingView style. Each size
+     - Candles: the candle size (CandleSizePicker), TradingView style. Each size
        loads all the history there is, so the visitor can scroll back in time.
      It tells the page the low and high for the range bar (event "span"). -->
 <script setup>
@@ -10,16 +10,15 @@ import { useTokens } from '../useTokens.js'
 import { chartType, chartRange, candleSize, indicators } from '../chartPrefs.js'
 import PriceChart from './PriceChart.vue'
 import IndicatorMenu from './IndicatorMenu.vue'
+import CandleSizePicker from './CandleSizePicker.vue'
 
 const props = defineProps({ id: { type: String, required: true } }) // the token's id
 const emit = defineEmits(['span'])
 const { history, reload } = useTokens()
 
 const TYPES = [{ key: 'line', label: 'Line' }, { key: 'candles', label: 'Candles' }]
-const SIZES = ['15m', '1h', '4h', '1D']
 const isCandles = computed(() => chartType.value === 'candles')
 const setType = (key) => (chartType.value = key)
-const setSize = (key) => (candleSize.value = key)
 const setRange = (key) => (chartRange.value = key)
 
 // Range buttons for the line. Every range can be clicked; if its history is
@@ -101,9 +100,7 @@ watch([points, candles, waiting], () => {
       </div>
       <IndicatorMenu v-model="indicators" />
     </div>
-    <div v-if="isCandles" class="pick" role="group" aria-label="Candle size">
-      <button v-for="s in SIZES" :key="s" type="button" :aria-pressed="s === candleSize" @click="setSize(s)">{{ s }}</button>
-    </div>
+    <CandleSizePicker v-if="isCandles" v-model="candleSize" :history="history" />
     <div v-else class="pick" role="group" aria-label="Time range">
       <button v-for="r in ranges" :key="r.key" type="button" :aria-pressed="r.key === selected.key" @click="setRange(r.key)">{{ r.key }}</button>
     </div>

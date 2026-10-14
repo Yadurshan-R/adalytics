@@ -82,12 +82,20 @@ Every function in the Vue website, file by file. Each one also has the same comm
 | `set` | Shows the picked indicators for the bars on the chart and removes the rest. RSI goes in its own panel under the chart. |
 | `at` | Each indicator's value at the bar under the mouse, for the legend. |
 
+## `src/components/CandleSizePicker.vue`
+
+| Function | What it does |
+|---|---|
+| `buttons` | The quick sizes (15m, 1h, 4h, 1D), plus the picked size when it came from the list. |
+| `progress` | How much of a size's history is loaded, 0 to 100; shown in green until it is all there. |
+| `pick` | Chooses a size and closes the list. |
+
 ## `src/components/ChartPanel.vue`
 
 | Function | What it does |
 |---|---|
 | `load` | Fetches the chart: the line for the picked range, or the candles at the picked size. Runs again every minute. |
-| `setType` / `setRange` / `setSize` | Switch between line and candles, the line's range, or the candle size. |
+| `setType` / `setRange` | Switch between line and candles, or the line's range. |
 | `waiting` | True while the picked line range is still loading; the loading percentage shows instead. Candles never wait: they show the history loaded so far. |
 | `span` (event) | Tells the page the low and high for the range bar: the line's range, or the last 24 hours of candles. |
 

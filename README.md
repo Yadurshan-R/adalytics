@@ -158,7 +158,7 @@ backend/
     details.go                  supply, logos, links and holder counts
     progress.go, activity.go    loading progress and live activity for the loading page
     history.go                  chart ranges (24H, 7D, 30D), line points and candles
-    candles.go                  candle sizes (15m, 1h, 4h, 1D)
+    candles.go                  candle sizes (5m to 1D)
   internal/api/server.go        the JSON API used by the frontend
   internal/api/logging.go       logs every API call; catches crashes
   internal/api/stats.go         the summary line every minute
@@ -175,6 +175,7 @@ frontend/src/
   components/PriceChart.vue     the price chart (line or candles)
   components/ChartLegend.vue    the open, high, low, close line on the chart
   components/IndicatorMenu.vue  the Indicators button
+  components/CandleSizePicker.vue  the candle size buttons and list
   chart/indicators.js           indicator math (MA, EMA, Bollinger, VWAP, RSI)
   chart/useIndicators.js        puts the indicators on the chart
   components/ChartToolbar.vue   the drawing toolbar beside the chart
@@ -194,7 +195,7 @@ frontend/src/
 |---|---|
 | `GET /api/tokens` | every listed token with price, changes, volume and details, plus how much history is loaded |
 | `GET /api/tokens/{id}/chart?range=7D` | line chart for one token: `range` is 24H, 7D or 30D |
-| `GET /api/tokens/{id}/chart?type=candles&size=1h` | candles for one token: `size` is 15m (7 days back), 1h, 4h or 1D (30 days back) |
+| `GET /api/tokens/{id}/chart?type=candles&size=1h` | candles for one token: `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
 | `GET /api/tokens/{id}/trades?limit=5` | the most recent trades for one token |
 | `GET /api/tokens/{id}/logo` | the token's logo from the Cardano token registry |
 

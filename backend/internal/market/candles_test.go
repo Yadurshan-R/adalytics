@@ -33,7 +33,10 @@ func TestCandleSizes(t *testing.T) {
 	}
 
 	tr.backfill(ctx) // 7 days
-	want := map[string]int{"15m": 7*24*4 + 1, "1h": 7*24 + 1, "4h": 7*6 + 1, "1D": 7 + 1}
+	want := map[string]int{
+		"5m": 2*24*12 + 1, "15m": 7*24*4 + 1, "30m": 7*24*2 + 1, "1h": 7*24 + 1,
+		"2h": 7*12 + 1, "4h": 7*6 + 1, "12h": 7*2 + 1, "1D": 7 + 1,
+	}
 	for key, n := range want {
 		_, _, got, err := tr.Candles("snek", key)
 		if err != nil || len(got) != n {
@@ -46,8 +49,8 @@ func TestCandleSizes(t *testing.T) {
 		}
 	}
 
-	if _, _, _, err := tr.Candles("snek", "5m"); err == nil {
-		t.Error("5m should be an unknown size")
+	if _, _, _, err := tr.Candles("snek", "3m"); err == nil {
+		t.Error("3m should be an unknown size")
 	}
 	if _, _, _, err := tr.Candles("nope", "1h"); err == nil {
 		t.Error("an unknown token should be an error")

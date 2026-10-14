@@ -22,7 +22,7 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 
 | Function | What it does |
 |---|---|
-| `CandleSizeByKey` | Finds a candle size by its key ("15m", "1h", "4h", "1D"), ignoring case. 15 minute candles go back 7 days, the others 30 days. |
+| `CandleSizeByKey` | Finds a candle size by its key (5m, 15m, 30m, 1h, 2h, 4h, 12h, 1D), ignoring case. 5 minute candles go back 2 days, 15 and 30 minutes 7 days, the others 30 days. |
 | `Candles` | Returns one token's candles at the given size, oldest first. While older history is still loading it returns what is loaded so far, so the chart grows instead of waiting for all 30 days. |
 
 ## `internal/market/details.go`

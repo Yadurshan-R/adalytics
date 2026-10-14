@@ -80,6 +80,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/api/server.go` | The API routes |
 | `internal/api/logging.go` | Logs every API call with a request ID, and catches crashes |
 | `internal/api/stats.go` | Counts traffic and logs a summary every minute |
+| `internal/api/gzip.go` | Compresses JSON answers so pages load faster |
 | `internal/logx/handler.go` | The log's line format, levels and number formats |
 
 ### Frontend

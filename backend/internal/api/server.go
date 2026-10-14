@@ -116,7 +116,7 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 	})
 
 	s := &Server{stats: &stats{}, log: log}
-	s.handler = withLogging(withCORS(mux), log, s.stats)
+	s.handler = withLogging(withGzip(withCORS(mux)), log, s.stats)
 	return s
 }
 

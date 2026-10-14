@@ -162,6 +162,7 @@ backend/
   internal/api/server.go        the JSON API used by the frontend
   internal/api/logging.go       logs every API call; catches crashes
   internal/api/stats.go         the summary line every minute
+  internal/api/gzip.go          compresses answers so pages load faster
   internal/logx/handler.go      the log's line format and levels
 
 frontend/src/

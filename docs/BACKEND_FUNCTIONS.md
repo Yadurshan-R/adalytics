@@ -107,6 +107,14 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 | `add` / `take` | Count each answered request, and hand over the counts each minute. |
 | `ReportEveryMinute` | Logs one summary line a minute: website traffic and Koios usage today against the free tier's 50,000 a day. |
 
+## `internal/api/gzip.go`
+
+| Function | What it does |
+|---|---|
+| `withGzip` | Compresses JSON answers for browsers that accept gzip, so pages load faster. |
+| `WriteHeader` | Decides whether to compress: only successful JSON answers; logos and errors are sent as they are. |
+| `Write` / `close` | Send the bytes (compressed when chosen) and finish the answer. |
+
 
 # Backend tests
 
@@ -129,3 +137,10 @@ Run them with `go test ./...` from `backend/`. They use a fake Koios server, so 
 | `TestCrashIsCaught` | Checks that a crashing request gets a 500 and is logged, and the server keeps running. |
 | `TestVisitorIsOnlyTrustedLocally` | Checks that X-Forwarded-For is ignored unless the request is local. |
 | `TestSummary` | Checks the minute summary line. |
+
+## `internal/api/gzip_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestGzipJSON` | Checks that JSON is compressed for browsers that accept gzip, unpacks to the same answer, and is sent plain to others. |
+| `TestGzipSkipsLogosAndErrors` | Checks that logos and error answers are not compressed. |

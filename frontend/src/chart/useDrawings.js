@@ -1,8 +1,10 @@
 // useDrawings connects the drawing toolbar to the chart: it turns clicks into
 // drawings, follows the mouse while a drawing is placed, snaps to prices when
-// the magnet is on, and zooms. Nothing is saved: drawings live in memory.
+// the magnet is on, and zooms. Picking and moving a drawing is in useSelect.
+// Nothing is saved: drawings live in memory.
 import { ref, computed, watch } from 'vue'
 import { DrawingLayer } from './drawingLayer.js'
+import { useSelect } from './useSelect.js'
 
 // get.chart() is the chart, get.series() the series on screen (line or
 // candles), get.bars() the bars as [{ time, values: [prices] }].
@@ -11,11 +13,16 @@ export function useDrawings(get) {
   const tool = ref('cursor') // cursor, trend, ray, extended, hline, vline, channel, rect, fib, text, ruler
   const magnet = ref(false)
   const hidden = ref(false)
+  const locked = ref(false) // drawings cannot be picked or moved
   const count = ref(0) // drawings on the chart, the ruler included
   const textBox = ref(null) // { x, y, point, value } while text is typed
   const placing = ref(false) // first point clicked, second not yet
   const busy = computed(() => tool.value !== 'cursor' || placing.value || !!textBox.value)
   let series = null
+  // editable is true when a click may pick a drawing: no tool picked, and the
+  // drawings are shown and not locked.
+  const editable = () => tool.value === 'cursor' && !hidden.value && !locked.value
+  const sel = useSelect(layer, get, editable, () => recount())
 
   // attach puts the layer on the series on screen; call after switching
   // between line and candles.
@@ -144,6 +151,7 @@ export function useDrawings(get) {
   // clearAll removes every drawing and the ruler.
   function clearAll() {
     layer.drawings = []
+    sel.select(null)
     clearRuler()
     cancel()
   }
@@ -181,12 +189,18 @@ export function useDrawings(get) {
     layer.hidden = h
     layer.update()
   })
+  // Nothing can be picked while a tool is on or the drawings are hidden or locked.
+  watch([tool, hidden, locked], () => {
+    layer.movable = editable()
+    if (!layer.movable) sel.select(null)
+  })
 
   // install listens to clicks on the chart element directly: the chart's own
   // click event drops a second click made within half a second of the first,
   // which happens all the time when placing a two-point drawing. A press that
   // moved more than a few pixels was a drag (scrolling the chart), not a click.
   function install(chart, el) {
+    sel.install(el)
     let down = null
     el.addEventListener('pointerdown', (e) => (down = { x: e.clientX, y: e.clientY }))
     el.addEventListener('pointerup', (e) => {
@@ -200,7 +214,10 @@ export function useDrawings(get) {
     chart.subscribeCrosshairMove(onMove)
   }
 
-  return { tool, magnet, hidden, count, textBox, busy, install, attach, setBars, submitText, cancel, clearAll, zoom, resetView }
+  return {
+    tool, magnet, hidden, locked, count, textBox, busy, selected: sel.selected,
+    install, uninstall: sel.uninstall, removeSelected: sel.remove, deselect: () => sel.select(null), attach, setBars, submitText, cancel, clearAll, zoom, resetView,
+  }
 }
 
 // SCROLL lets the chart be dragged sideways (but not scrolled with the mouse

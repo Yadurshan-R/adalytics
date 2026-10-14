@@ -176,7 +176,9 @@ frontend/src/
   components/ChartToolbar.vue   the drawing toolbar beside the chart
   chart/drawingLayer.js         puts the drawings and the ruler on the chart
   chart/shapes.js               draws each kind of drawing
-  chart/useDrawings.js          turns clicks into drawings; zoom and magnet
+  chart/useDrawings.js          turns clicks into drawings; zoom, magnet and lock
+  chart/useSelect.js            select, move and delete one drawing
+  chart/hitTest.js              finds the drawing under the mouse
   components/RecentTrades.vue   the recent trades table
   components/Sparkline.vue      the small price lines in the list
   format.js                     number formats (₳, $, %, K/M/B)

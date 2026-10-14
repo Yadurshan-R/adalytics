@@ -1,6 +1,6 @@
 <!-- The drawing toolbar beside the chart, like TradingView's: drawing tools
      (the line tools grouped under one button), the ruler, zoom, the magnet,
-     hide drawings and delete all. -->
+     lock, hide drawings and delete all. -->
 <script setup>
 import ToolGroup from './ToolGroup.vue'
 import ToolIcon from './ToolIcon.vue'
@@ -9,9 +9,10 @@ const props = defineProps({
   tool: { type: String, required: true },
   magnet: { type: Boolean, default: false },
   hidden: { type: Boolean, default: false },
+  locked: { type: Boolean, default: false },
   count: { type: Number, default: 0 },
 })
-const emit = defineEmits(['update:tool', 'update:magnet', 'update:hidden', 'zoom', 'reset', 'clear'])
+const emit = defineEmits(['update:tool', 'update:magnet', 'update:hidden', 'update:locked', 'zoom', 'reset', 'clear'])
 
 // LINES are grouped under one button; TOOLS are the other drawing tools.
 // Each has an SVG path for its icon (20 × 20) and dots for its points.
@@ -62,6 +63,13 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
 
     <button type="button" class="btn" :aria-pressed="magnet" aria-label="Magnet" title="Magnet" @click="emit('update:magnet', !magnet)">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3v7a5 5 0 0 0 10 0V3M5 6.5h3.5M11.5 6.5H15M8.5 3v7a1.5 1.5 0 0 0 3 0V3" /></svg>
+    </button>
+    <button type="button" class="btn" :aria-pressed="locked" :aria-label="locked ? 'Unlock drawings' : 'Lock drawings'"
+            :title="locked ? 'Unlock drawings' : 'Lock drawings'" @click="emit('update:locked', !locked)">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <rect x="4.5" y="9" width="11" height="8" rx="1.5" />
+        <path :d="locked ? 'M7 9V6.5a3 3 0 0 1 6 0V9' : 'M7 9V6.5a3 3 0 0 1 5.8-1.1'" />
+      </svg>
     </button>
     <button type="button" class="btn" :aria-pressed="hidden" aria-label="Hide drawings" title="Hide drawings"
             @click="emit('update:hidden', !hidden)">

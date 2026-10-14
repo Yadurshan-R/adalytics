@@ -104,7 +104,9 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/ToolIcon.vue` | A drawing tool's icon |
 | `src/chart/drawingLayer.js` | A chart plugin that puts the drawings and the ruler on the chart |
 | `src/chart/shapes.js` | Draws each kind of drawing and the ruler |
-| `src/chart/useDrawings.js` | Turns clicks into drawings, and handles zoom and the magnet |
+| `src/chart/useDrawings.js` | Turns clicks into drawings, and handles zoom, the magnet and the lock |
+| `src/chart/useSelect.js` | Select, move, reshape and delete one drawing |
+| `src/chart/hitTest.js` | Finds the drawing under the mouse |
 | `src/components/RecentTrades.vue` | The recent trades table on a token page |
 | `src/components/Sparkline.vue` | The small price line in the list |
 | `src/components/Change.vue` | A green ▲ or red ▼ percentage |

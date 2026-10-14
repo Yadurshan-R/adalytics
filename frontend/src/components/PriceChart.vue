@@ -52,11 +52,21 @@ let fitted = null // the fitKey the view was last fitted for
 const isCandles = () => props.type === 'candles'
 
 const draw = useDrawings({ chart: () => chart, series: () => (isCandles() ? candleSeries : area), bars: () => barList })
-const { tool, magnet, hidden, count, textBox } = draw
+const { tool, magnet, hidden, locked, count, textBox, selected } = draw
 // vFocus puts the cursor in the text box as soon as it appears.
 const vFocus = { mounted: (el) => el.focus() }
-// onKey: Esc stops the drawing being placed.
-const onKey = (e) => e.key === 'Escape' && draw.cancel()
+// onKey: Esc stops the drawing being placed or unselects; Delete or Backspace
+// removes the selected drawing (not while typing in a box).
+function onKey(e) {
+  if (e.key === 'Escape') {
+    draw.cancel()
+    draw.deselect()
+  }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selected.value != null && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName)) {
+    e.preventDefault()
+    draw.removeSelected()
+  }
+}
 
 // Line mode: colour and bold/faded split for the hovered point (-1 = none).
 function paint(idx) {
@@ -184,19 +194,24 @@ watch(() => props.token, () => draw.clearAll())
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
+  draw.uninstall()
   chart && chart.remove()
 })
 </script>
 
 <template>
   <div class="frame">
-    <ChartToolbar v-model:tool="tool" v-model:magnet="magnet" v-model:hidden="hidden" :count="count"
+    <ChartToolbar v-model:tool="tool" v-model:magnet="magnet" v-model:hidden="hidden" v-model:locked="locked" :count="count"
                   @zoom="draw.zoom" @reset="draw.resetView" @clear="draw.clearAll" />
     <div class="wrap">
       <div ref="el" class="chart"></div>
       <input v-if="textBox" v-model="textBox.value" v-focus class="text-input" :style="{ left: textBox.x + 'px', top: textBox.y + 'px' }"
              maxlength="80" aria-label="Text on the chart" @keydown.enter="draw.submitText" @keydown.esc.stop="draw.cancel" @blur="draw.submitText" />
       <ChartLegend :type="type" :bar="shown" :base="base" />
+      <button v-if="selected != null" type="button" class="remove" title="Delete drawing (Del)" @click="draw.removeSelected">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l1 11h7l1-11M8.5 8.5v5M11.5 8.5v5" /></svg>
+        Delete
+      </button>
     </div>
   </div>
 </template>
@@ -206,6 +221,9 @@ onBeforeUnmount(() => {
 .wrap { position: relative; flex: 1; min-width: 0; }
 .text-input { position: absolute; z-index: 6; transform: translateY(-50%); width: 180px; font: 600 14px Inter, system-ui, sans-serif; color: var(--fg); padding: 4px 8px; border: 1px solid #2962ff; border-radius: 6px; outline: none; background: #fff; }
 @media (max-width: 700px) { .frame { flex-direction: column; } }
+.remove { position: absolute; z-index: 6; top: 40px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 6px; background: #fff; color: #131722; font: 500 13px Inter, system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(19, 23, 34, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12); }
+.remove:hover { background: #f0f3fa; color: #f23645; }
+.remove svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 .chart { height: 480px; }
 /* The TradingView logo in light grey. */
 .chart :deep(a#tv-attr-logo) { --fill: #c5ccd8; }

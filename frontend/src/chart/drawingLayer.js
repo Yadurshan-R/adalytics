@@ -4,6 +4,7 @@
 //
 // A point is { time, price }: time is a bar's unix time, price is in ADA.
 import { drawShape, drawRuler } from './shapes.js'
+import { hitDrawing } from './hitTest.js'
 
 export class DrawingLayer {
   constructor() {
@@ -11,6 +12,9 @@ export class DrawingLayer {
     this.draft = null // the drawing being placed right now
     this.ruler = null // the measurement, if any
     this.hidden = false
+    this.selected = null // index of the selected drawing
+    this.movable = true // false while drawings are locked or a tool is picked
+    this.size = { width: 0, height: 0 } // the chart pane, from the last draw
     this.t0 = 0 // time of the first bar
     this.step = 1 // seconds between bars
     this._chart = null
@@ -58,6 +62,15 @@ export class DrawingLayer {
     return this._series?.priceToCoordinate(price) ?? null
   }
 
+  // hitTest tells the chart which cursor to show over a drawing: a hand over a
+  // drawing, a move cursor over one of its points.
+  hitTest(x, y) {
+    if (!this.movable || this.hidden) return null
+    const hit = hitDrawing(this, x, y, this.size)
+    if (!hit) return null
+    return { cursorStyle: hit.part === 'body' ? 'pointer' : 'move', externalId: `drawing-${hit.index}`, zOrder: 'top' }
+  }
+
   // xy is the position of a point, or null when it cannot be placed.
   xy(p) {
     if (!p) return null
@@ -69,11 +82,12 @@ export class DrawingLayer {
   _draw(target) {
     if (!this._chart || !this._series) return
     target.useMediaCoordinateSpace(({ context: ctx, mediaSize }) => {
+      this.size = mediaSize
       ctx.save()
       ctx.font = '12px Inter, system-ui, sans-serif'
       ctx.lineCap = 'round'
       if (!this.hidden) {
-        for (const d of this.drawings) drawShape(ctx, this, d, mediaSize, false)
+        this.drawings.forEach((d, i) => drawShape(ctx, this, d, mediaSize, i === this.selected))
         if (this.draft && this.draft.type !== 'ruler') drawShape(ctx, this, this.draft, mediaSize, true)
         if (this.ruler) drawRuler(ctx, this, this.ruler)
       }

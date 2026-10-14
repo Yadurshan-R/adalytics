@@ -8,8 +8,9 @@ const BULL = '#089981'
 const BEAR = '#f23645'
 const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1]
 
-// drawShape draws one drawing. A draft (still being placed) shows its handles.
-export function drawShape(ctx, layer, d, size, draft) {
+// drawShape draws one drawing. A drawing being placed or selected (marked)
+// shows its handles.
+export function drawShape(ctx, layer, d, size, marked) {
   const a = layer.xy(d.p1)
   const b = d.p2 ? layer.xy(d.p2) : null
   if (!a) return
@@ -31,9 +32,11 @@ export function drawShape(ctx, layer, d, size, draft) {
     case 'hline':
       line(ctx, 0, a.y, size.width, a.y)
       label(ctx, formatPrice(d.p1.price), size.width - 6, a.y)
+      if (marked) handle(ctx, { x: size.width / 2, y: a.y })
       break
     case 'vline':
       line(ctx, a.x, 0, a.x, size.height)
+      if (marked) handle(ctx, { x: a.x, y: size.height / 2 })
       break
     case 'channel':
       if (b) channel(ctx, layer, d, a, b)
@@ -44,11 +47,13 @@ export function drawShape(ctx, layer, d, size, draft) {
       ctx.fillStyle = 'rgba(41, 98, 255, 0.10)'
       ctx.fillRect(x, y, w, h)
       ctx.strokeRect(x, y, w, h)
-      if (draft) [a, b].forEach((p) => handle(ctx, p))
+      if (marked) [a, b].forEach((p) => handle(ctx, p))
       break
     }
     case 'fib':
-      if (b) fib(ctx, layer, d, a, b)
+      if (!b) return
+      fib(ctx, layer, d, a, b)
+      if (marked) [a, b].forEach((p) => handle(ctx, p))
       break
     case 'text':
       ctx.font = '600 14px Inter, system-ui, sans-serif'
@@ -59,6 +64,11 @@ export function drawShape(ctx, layer, d, size, draft) {
       ctx.strokeText(d.text, a.x, a.y)
       ctx.fillStyle = '#131722'
       ctx.fillText(d.text, a.x, a.y)
+      if (marked) {
+        ctx.lineWidth = 1
+        ctx.strokeStyle = BLUE
+        ctx.strokeRect(a.x - 4, a.y - 11, ctx.measureText(d.text).width + 8, 22)
+      }
       break
   }
 }

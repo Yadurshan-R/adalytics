@@ -50,7 +50,7 @@ Every function in the Vue website, file by file. Each one also has the same comm
 | `isCandles` | Reports whether the chart shows candles instead of a line. |
 | `paint` | Line mode: colour and bold/faded split for the hovered point (-1 = none). |
 | `load` | Puts the current points or candles into the chart. The view is set only when the token, range, size or type changes, so a zoom or scroll survives the minute refresh. Candles open on the latest ones, about 14px wide each. |
-| `onKey` | Esc stops the drawing being placed. |
+| `onKey` | Esc stops the drawing being placed and unselects; Delete or Backspace removes the selected drawing. |
 
 ## `src/components/ChartLegend.vue`
 
@@ -88,6 +88,25 @@ Every function in the Vue website, file by file. Each one also has the same comm
 | `DrawingLayer` | A Lightweight Charts plugin that keeps the drawings, the drawing being placed and the ruler, and draws them on top of the chart (shapes.js draws each one). |
 | `setBars` | Remembers the first bar's time and the bar spacing, so a time can be turned into a position even when it is scrolled out of view. |
 | `x` / `y` / `xy` | The position of a time, a price, or a point on the chart, in pixels. |
+| `hitTest` | Tells the chart which cursor to show over a drawing: a hand over the drawing, a move cursor over one of its points. |
+
+## `src/chart/hitTest.js`
+
+| Function | What it does |
+|---|---|
+| `hitDrawing` | Finds the topmost drawing under the mouse, and which part: one of its points, a channel's width handle, or the drawing itself. |
+| `toSegment` | The distance from the mouse to a line, in pixels. |
+| `inQuad` | Whether the mouse is inside a channel. |
+
+## `src/chart/useSelect.js`
+
+| Function | What it does |
+|---|---|
+| `select` | Marks a drawing as selected, or none. |
+| `pointAt` | Turns a position on the chart into a time and price. |
+| `moved` | The drawing shifted by the drag: the whole drawing, one of its points, or a channel's width. |
+| `remove` | Deletes the selected drawing. |
+| `install` | Listens before the chart does, so pressing on a drawing drags the drawing instead of scrolling the chart. |
 
 ## `src/chart/shapes.js`
 

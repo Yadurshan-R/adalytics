@@ -154,6 +154,7 @@ backend/
     backfill.go                 older history, loaded in the background
     update.go                   checks for new swaps every minute
     pools.go                    turns transactions into prices and trades
+    periods.go                  trading over 5m, 1h, 4h and 24h
     quotes.go                   the token list, charts and trades for the API
     details.go                  supply, logos, links and holder counts
     progress.go, activity.go    loading progress and live activity for the loading page
@@ -185,6 +186,7 @@ frontend/src/
   chart/useSelect.js            select, move and delete one drawing
   chart/hitTest.js              finds the drawing under the mouse
   components/RecentTrades.vue   the recent trades table
+  components/ActivityBox.vue    the 5m / 1h / 4h / 24h activity box
   components/Sparkline.vue      the small price lines in the list
   format.js                     number formats (₳, $, %, K/M/B)
 ```
@@ -197,6 +199,7 @@ frontend/src/
 | `GET /api/tokens/{id}/chart?range=7D` | line chart for one token: `range` is 24H, 7D or 30D |
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | candles for one token: `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
 | `GET /api/tokens/{id}/trades?limit=5` | the most recent trades for one token |
+| `GET /api/tokens/{id}/activity` | trading over 5m, 1h, 4h and 24h: change, volume, buys and sells |
 | `GET /api/tokens/{id}/logo` | the token's logo from the Cardano token registry |
 
 ## Current limits

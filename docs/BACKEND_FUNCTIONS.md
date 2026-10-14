@@ -86,7 +86,7 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 
 | Function | What it does |
 |---|---|
-| `New` | Builds the HTTP handler with every API route. Each route only reads from the Tracker's memory, so it answers instantly and never calls Koios. |
+| `New` | Builds the HTTP handler with every API route (tokens, chart, trades, activity, logo, health). Each route only reads from the Tracker's memory, so it answers instantly and never calls Koios. |
 | `candleChart` | Answers a candlestick chart at one candle size (`?type=candles&size=1h`), with all the history loaded so far. |
 | `writeJSON` | Sends v as JSON with the given HTTP status, and tells the browser not to cache it, so prices are always fresh. |
 | `withCORS` | Lets the Vue dev server (another port) read the API. Read-only: GET only. |

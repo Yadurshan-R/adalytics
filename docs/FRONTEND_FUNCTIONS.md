@@ -169,6 +169,15 @@ Every function in the Vue website, file by file. Each one also has the same comm
 | `priceOn` | The price on a line at a given time, for the channel's width. |
 | `install` | Listens to clicks on the chart element directly, because the chart's own click event drops a second click made within half a second of the first. A press that moved more than a few pixels is a drag, not a click. |
 
+## `src/components/ActivityBox.vue`
+
+| Function | What it does |
+|---|---|
+| `load` | Asks the backend for the token's activity, and again every minute. |
+| `net` | ADA spent buying minus ADA received selling, for the picked period. |
+| `buyShare` | The buyers' part of the green and red bar, in percent. |
+| `pct` | Shows a change like +8.54% or −2.49%. |
+
 ## `src/components/RecentTrades.vue`
 
 | Function | What it does |

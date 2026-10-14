@@ -7,6 +7,7 @@ import { formatPrice, fullPrice, formatUSD, formatCompact, formatAmount, formatA
 import Change from '../components/Change.vue'
 import ChartPanel from '../components/ChartPanel.vue'
 import RecentTrades from '../components/RecentTrades.vue'
+import ActivityBox from '../components/ActivityBox.vue'
 import LoadingProgress from '../components/LoadingProgress.vue'
 
 // The route's :ticker is the token's unique id from the backend (usually its ticker in lower case).
@@ -86,20 +87,11 @@ const rangePos = computed(() => {
         </div>
       </div>
 
+      <ActivityBox :id="token.id" />
+
       <dl class="stats">
         <div v-if="token.fdv_ada" class="stat"><dt>Fully Diluted Valuation</dt><dd class="num">{{ formatCompact(token.fdv_ada) }}</dd></div>
         <div class="stat"><dt>24 Hour Trading Vol</dt><dd class="num">{{ formatCompact(token.volume_24h_ada) }}</dd></div>
-        <template v-if="token.trades_24h">
-          <div class="stat"><dt>24h Trades</dt><dd class="num">{{ token.trades_24h.toLocaleString('en-US') }}</dd></div>
-          <div class="stat">
-            <dt>24h Buys / Sells</dt>
-            <dd class="num"><span class="up">{{ token.buys_24h.toLocaleString('en-US') }}</span> / <span class="down">{{ token.sells_24h.toLocaleString('en-US') }}</span></dd>
-          </div>
-          <div class="stat">
-            <dt>24h Buy / Sell Vol</dt>
-            <dd class="num"><span class="up">{{ formatCompact(token.buy_volume_24h_ada) }}</span> / <span class="down">{{ formatCompact(token.sell_volume_24h_ada) }}</span></dd>
-          </div>
-        </template>
         <div v-if="token.total_supply" class="stat"><dt>Total Supply</dt><dd class="num">{{ formatAmount(token.total_supply) }} {{ token.ticker }}</dd></div>
         <div v-if="token.holders" class="stat"><dt>Holders</dt><dd class="num">{{ token.holders.toLocaleString('en-US') }}</dd></div>
         <div class="stat"><dt>Pool Liquidity</dt><dd class="num">{{ formatCompact(token.reserve_ada * 2) }}</dd></div>

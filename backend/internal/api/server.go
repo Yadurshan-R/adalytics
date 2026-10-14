@@ -99,6 +99,17 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 		writeJSON(w, http.StatusOK, map[string]any{"ticker": quote.Ticker, "trades": trades})
 	})
 
+	// A token's trading over the last 5m, 1h, 4h and 24h: price change, volume,
+	// buys and sells, for the activity box: /api/tokens/snek/activity.
+	mux.HandleFunc("GET /api/tokens/{ticker}/activity", func(w http.ResponseWriter, r *http.Request) {
+		quote, periods, err := tracker.Periods(r.PathValue("ticker"))
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ticker": quote.Ticker, "periods": periods})
+	})
+
 	// A token's logo from the Cardano token registry (PNG). Browsers cache it for a day.
 	mux.HandleFunc("GET /api/tokens/{ticker}/logo", func(w http.ResponseWriter, r *http.Request) {
 		png, ok := tracker.Logo(r.PathValue("ticker"))

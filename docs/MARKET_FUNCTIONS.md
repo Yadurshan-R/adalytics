@@ -55,6 +55,12 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | `volumeSince` | Adds up the ADA traded from time t (unix seconds) until now. |
 | `candles` | Groups swaps into candlesticks between from and to. A slot with no swaps is a flat candle at the previous close, and each candle opens at the previous close so the candles join up. |
 
+## `internal/market/periods.go`
+
+| Function | What it does |
+|---|---|
+| `Periods` | One token's trading over the last 5 minutes, hour, 4 hours and 24 hours: price change, volume, buys and sells and the ADA on each side, from the trades already in memory. |
+
 ## `internal/market/pools.go`
 
 | Function | What it does |
@@ -156,6 +162,12 @@ Run them with `go test ./internal/market/` from `backend/`. They use a fake Koio
 | `TestBackfillLoadsOlderHistory` | Checks that 7 days of history are loaded in the background, and that the 7D chart and change appear only once they are. |
 | `TestBackfillWhileUpdating` | The background history load runs while the minute updates and the API read the same tokens; run them together so the race detector can check it. |
 | `TestLoadingProgress` | Checks the loading screen's steps and percentage. |
+
+## `internal/market/periods_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestPeriods` | Checks buys, sells, ADA and the price change for each period, and that an unknown token is an error. |
 
 ## `internal/market/quotes_test.go`
 

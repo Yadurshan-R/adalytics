@@ -47,6 +47,7 @@ The backend serves these routes. Each one reads from memory, so they answer inst
 | `GET /api/tokens/{id}/chart?range=24H` | One token's line chart. `range` is 24H, 7D or 30D |
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
 | `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first |
+| `GET /api/tokens/{id}/activity` | One token's trading over 5m, 1h, 4h and 24h: price change, volume, buys and sells |
 | `GET /api/tokens/{id}/logo` | The token's logo from the Cardano token registry (PNG) |
 | `GET /api/health` | `{"status": "ok"}` when the backend is running |
 
@@ -70,6 +71,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/backfill.go` | Older history, loaded in the background |
 | `internal/market/update.go` | The check for new swaps every minute |
 | `internal/market/pools.go` | Turns transactions into pool states, prices and trades |
+| `internal/market/periods.go` | Trading over 5m, 1h, 4h and 24h for the activity box |
 | `internal/market/quotes.go` | What the API reads: token list, charts, trades, logos |
 | `internal/market/details.go` | Supply, logos, links and holder counts |
 | `internal/market/progress.go` | Loading progress for the loading page |
@@ -113,5 +115,6 @@ No file is longer than 300 lines. Each one has one job.
 | `src/chart/useSelect.js` | Select, move, reshape and delete one drawing |
 | `src/chart/hitTest.js` | Finds the drawing under the mouse |
 | `src/components/RecentTrades.vue` | The recent trades table on a token page |
+| `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, volume, buys, sells, net buy |
 | `src/components/Sparkline.vue` | The small price line in the list |
 | `src/components/Change.vue` | A green ▲ or red ▼ percentage |

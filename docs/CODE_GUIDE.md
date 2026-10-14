@@ -92,6 +92,8 @@ No file is longer than 300 lines. Each one has one job.
 | `src/format.js` | Formats prices, percentages, amounts and dates |
 | `src/chartPrefs.js` | Remembers line or candles, the range and the candle size, between token pages |
 | `src/pages/TokenList.vue` | The token list (Top Volume, Top Gainers, Top Losers, search) |
+| `src/components/ListToolbar.vue` | The bar above the list: views, the 24h / 7d switch and the search box |
+| `src/components/TokenTable.vue` | The token table, with loading rows and the empty message |
 | `src/pages/TokenPage.vue` | One token's page: price, stats, info, chart and trades |
 | `src/components/ChartPanel.vue` | The chart's buttons (Line or Candles, range or candle size), loading box and data |
 | `src/components/LoadingProgress.vue` | The loading box shown during the first load |

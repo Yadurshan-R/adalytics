@@ -142,16 +142,27 @@ Every function in the Vue website, file by file. Each one also has the same comm
 | `week` | True when the list shows 7 day numbers. |
 | `setPeriod` | Picks 24h or 7d; 7d only works once it is loaded. |
 | `changeOf` | A token's price change for the chosen period. |
-| `lineOf` | A token's small price line for the chosen period. |
-| `lineLabel` | The title of the small price line column. |
 | `periodText` | The period in words, for messages like "No token is up in the last 24 hours". |
 | `moved` | A change that rounds to 0.0% is not a gain or a loss. |
 | `active` | True if the token traded in the chosen period. |
 | `place` | Place in the Top Volume list (the backend's order without the quiet tokens); quiet tokens found by search have no place. |
+| `ranks` | Numbers the rows by their Top Volume place when searching or on Top Volume; gainers and losers are numbered 1, 2, 3 instead. |
 | `shown` | The list on screen: the chosen view (volume, gainers or losers), filtered by the search box. |
 | `emptyText` | Explains why the list is empty. |
-| `open` | Goes to a token's page. |
+
+## `src/components/ListToolbar.vue`
+
+| Function | What it does |
+|---|---|
 | `onKey` | Makes "/" jump to the search box from anywhere on the page. |
+
+## `src/components/TokenTable.vue`
+
+| Function | What it does |
+|---|---|
+| `open` | Goes to a token's page. |
+| `lineOf` | A token's small price line for the chosen period. |
+| `lineLabel` | The title of the small price line column. |
 
 ## `src/pages/TokenPage.vue`
 

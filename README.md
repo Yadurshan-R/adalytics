@@ -166,6 +166,8 @@ backend/
 
 frontend/src/
   pages/TokenList.vue           the token list
+  components/ListToolbar.vue    the views, 24h / 7d switch and search above it
+  components/TokenTable.vue     the token table
   pages/TokenPage.vue           the token page
   components/ChartPanel.vue     the chart's buttons, loading box and data
   components/LoadingProgress.vue  the loading box with live progress

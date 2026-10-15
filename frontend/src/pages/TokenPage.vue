@@ -129,7 +129,7 @@ const rangePos = computed(() => {
     </aside>
 
     <section class="chart-col">
-      <ChartPanel :id="token.id" :ticker="token.ticker" :supply="token.total_supply || 0" @span="span = $event" />
+      <ChartPanel :id="token.id" :supply="token.total_supply || 0" @span="span = $event" />
       <RecentTrades :id="token.id" :ticker="token.ticker" />
     </section>
   </div>

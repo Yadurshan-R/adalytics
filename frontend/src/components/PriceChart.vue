@@ -21,7 +21,6 @@ const props = defineProps({
   candles: { type: Array, default: () => [] }, // [{ time, open, high, low, close, volume }], oldest first
   indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma', 'rsi']
   fmt: { type: Function, default: formatPrice }, // writes a value: a price, or a compact FDV
-  title: { type: String, default: '' }, // the pair and candle size for the legend, e.g. NIGHT/ADA · 15m
   fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, size, unit)
   token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
@@ -180,7 +179,7 @@ onBeforeUnmount(() => {
       <div ref="el" class="chart"></div>
       <input v-if="textBox" v-model="textBox.value" v-focus class="text-input" :style="{ left: textBox.x + 'px', top: textBox.y + 'px' }"
              maxlength="80" aria-label="Text on the chart" @keydown.enter="draw.submitText" @keydown.esc.stop="draw.cancel" @blur="draw.submitText" />
-      <ChartLegend :type="type" :bar="shown" :base="base" :fmt="fmt" :title="title" :extras="shown ? ind.at(shown.time) : []" />
+      <ChartLegend :type="type" :bar="shown" :base="base" :fmt="fmt" :extras="shown ? ind.at(shown.time) : []" />
       <button v-if="selected != null" type="button" class="remove" title="Delete drawing (Del)" @click="draw.removeSelected">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l1 11h7l1-11M8.5 8.5v5M11.5 8.5v5" /></svg>
         Delete

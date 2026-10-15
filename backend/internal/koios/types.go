@@ -116,6 +116,14 @@ type AssetInfo struct {
 	} `json:"token_registry_metadata"`
 }
 
+// ScriptInfo is one script from script_info. A token's policy ID is the hash
+// of the script that mints it, so this tells how a token can be minted.
+type ScriptInfo struct {
+	ScriptHash string          `json:"script_hash"`
+	Type       string          `json:"type"`  // "timelock" or "multisig" (native), "plutusV1"…"plutusV3"
+	Value      json.RawMessage `json:"value"` // a native script as JSON; empty for Plutus
+}
+
 // AssetSummary counts a token's holders. Koios takes a minute or more for big tokens.
 type AssetSummary struct {
 	StakedWallets     int `json:"staked_wallets"`

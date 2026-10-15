@@ -103,6 +103,9 @@ func (f *fake) serve(w http.ResponseWriter, r *http.Request) {
 	case "/asset_info":
 		// 76,715,880,000 SNEK (0 decimals) and a tiny PNG logo.
 		w.Write([]byte(`[{"policy_id":"279c909f348e533da5808898f87f9a14bb2c3dfbbacccd631d927a3f","asset_name":"534e454b","fingerprint":"asset108xu02ckwrfc8qs9d97mgyh4kn8gdu9w8f5sxk","creation_time":1682340000,"total_supply":"76715880000","token_registry_metadata":{"decimals":0,"logo":"iVBORw0KGgo=","description":"  The snek token.  ","url":"https://snek.com"}}]`))
+	case "/script_info":
+		// SNEK's policy: one key, but only before slot 100 (long past), so locked.
+		w.Write([]byte(`[{"script_hash":"279c909f348e533da5808898f87f9a14bb2c3dfbbacccd631d927a3f","type":"timelock","value":{"type":"all","scripts":[{"type":"sig","keyHash":"aa"},{"type":"before","slot":100}]}}]`))
 	case "/asset_summary":
 		w.Write([]byte(`[{"staked_wallets":38151,"unstaked_addresses":1363}]`))
 	case "/tip":

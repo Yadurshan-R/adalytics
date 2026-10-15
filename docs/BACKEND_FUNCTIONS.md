@@ -47,6 +47,7 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 | `AddressTxsPage` | Returns one page of the transactions that touched the addresses from a block height on, newest first. |
 | `AddressTxs` | Lists every transaction that touched the addresses from a block height on (newest first). Koios returns at most 1000 rows per page, so it pages through; progress, if set, is called after each page. |
 | `AssetInfos` | Returns supply and registry details for several tokens in one request. |
+| `ScriptInfos` | Reads scripts by hash, 25 per call. A token's policy ID is the hash of its minting script, so this tells whether more can be minted. |
 | `AssetSummary` | Asks Koios how many wallets hold a token. It uses the slow HTTP client, because Koios can take minutes to count big tokens. |
 | `TxInfo` | Returns transactions with their inputs and outputs, assets and inline datums. The inputs show which wallets' orders a batch swapped. |
 

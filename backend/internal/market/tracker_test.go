@@ -82,6 +82,10 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 		t.Errorf("logo not served: %q", logo)
 	}
 
+	if q.PolicyState != "locked" {
+		t.Errorf("policy %q, want locked", q.PolicyState)
+	}
+
 	tr.loadHolders(ctx)
 	if h := tr.Quotes()[0].Holders; h != 39514 {
 		t.Errorf("holders %d, want 39514", h)
@@ -93,8 +97,8 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 
 	// SNEK traded in the last hour, so no pool search (asset_utxos) is needed.
 	// The newest hour is read first (tx_info), the list opens after the token
-	// details (asset_info), then the rest of the 24 hours is read (tx_info).
-	want := "/tip /address_txs /tx_info /asset_info /tx_info /tip /utxo_info /tip /utxo_info /address_txs /tx_info /asset_summary"
+	// details (asset_info, script_info), then the rest of the 24 hours is read (tx_info).
+	want := "/tip /address_txs /tx_info /asset_info /script_info /tx_info /tip /utxo_info /tip /utxo_info /address_txs /tx_info /asset_summary"
 	if got := strings.Join(f.calls, " "); got != want {
 		t.Errorf("requests:\n got  %s\n want %s", got, want)
 	}

@@ -30,12 +30,6 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `host` | Shows only the website's name, e.g. https://www.snek.com/x → snek.com. |
 | `createdDate` | Shows a date like Apr 24, 2023. |
 
-## `src/components/Change.vue`
-
-| Function | What it does |
-|---|---|
-| `dir` | Decides the colour and arrow: up, down, flat (rounds to 0.0%) or none (no value). |
-
 ## `src/components/LoadingProgress.vue`
 
 | Function | What it does |
@@ -48,10 +42,25 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | `load` | Asks the backend for the token's activity, and again every minute. |
-| `net` | ADA spent buying minus ADA received selling, for the picked period. |
-| `buyShare` | The buyers' part of the green and red bar, in percent. |
-| `pct` | Shows a change like +8.54% or −2.49%. |
+| `rows` | The two lines under the tabs, like Birdeye's: volume in ADA and number of trades, each with buys, sells and net. |
+| `share` | The buyers' part of a green and red bar, in percent (50 when nothing traded). |
 | `ready` | True once a period's history is fully loaded; until then its tab shows the loading % and its numbers are faded. |
+
+## `src/components/TokenOverview.vue`
+
+| Function | What it does |
+|---|---|
+| (template) | The top of the left column, like Birdeye's token panel: logo, ticker and name, website and Cardanoscan links, the short policy ID, and boxes for price (ADA and USD), liquidity, FDV and 24h volume. |
+| `copy` | Puts the policy ID on the clipboard and shows a tick for 1.5 seconds. |
+
+## `src/components/TokenInfo.vue`
+
+| Function | What it does |
+|---|---|
+| `security` | The policy box: Locked (no more tokens can be made), Open, Smart contract or Unknown, with a short explanation on hover. |
+| `minswap` | The link for the Trade on Minswap button: the token's swap page on Minswap. |
+| `pos` | Places the price now between the 24h low and high, for the price performance bar. |
+| `copy` | Puts a policy ID or fingerprint on the clipboard and shows "Copied" for 1.5 seconds. |
 
 ## `src/components/RecentTrades.vue`
 
@@ -126,6 +135,5 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `token` | The token this page is about, found by the id in the address. |
 | `back` | Goes to the previous page if it was the list, otherwise opens the list. |
-| `copy` | Puts text (a policy ID or fingerprint) on the clipboard and shows "Copied" next to it for 1.5 seconds. |
-| `span` | The low and high for the range bar, sent by the chart (ChartPanel). |
-| `rangePos` | Places the current price on the low/high bar, from 0% to 100%. |
+| (layout) | Laptop: token panel on the left, chart and trades on the right. Phone: price boxes, then the chart and trades, then activity, the Minswap button and Token Info, like Birdeye's app. |
+| `span` | The low and high of the last 24 hours, sent by the chart (ChartPanel), for the price performance bar. |

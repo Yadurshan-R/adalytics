@@ -82,6 +82,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/periods.go` | Trading over 5m, 1h, 4h and 24h for the activity box |
 | `internal/market/quotes.go` | What the API reads: token list, charts, trades, logos |
 | `internal/market/details.go` | Supply, logos, links and holder counts |
+| `internal/market/policy.go` | Whether a token's minting policy is locked or open |
 | `internal/market/progress.go` | Loading progress for the loading page |
 | `internal/market/activity.go` | The live activity feed for the loading page |
 | `internal/market/history.go` | Chart ranges, chart points, candles and price changes |
@@ -106,7 +107,9 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/ListToolbar.vue` | The bar above the list: tabs, the 5m / 1h / 4h / 24h bar and the search box |
 | `src/listSort.js` | The list's columns, periods and sorting |
 | `src/components/TokenTable.vue` | The token table: sortable columns, faded numbers while loading, the empty message |
-| `src/pages/TokenPage.vue` | One token's page: price, stats, info, chart and trades |
+| `src/pages/TokenPage.vue` | One token's page: the token panel, chart and trades |
+| `src/components/TokenOverview.vue` | The token panel: name, links, policy ID and the main numbers in boxes |
+| `src/components/TokenInfo.vue` | Trade on Minswap, 24h traders, holders, policy, price performance, links and IDs |
 | `src/components/ChartPanel.vue` | The chart and its data: the candles at the picked size, refreshed every minute |
 | `src/components/ChartHeader.vue` | The slim bar on top of the chart: candle size, candles or line, indicators, Price / FDV |
 | `src/components/LoadingProgress.vue` | The loading box shown during the first load |
@@ -127,5 +130,4 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/RecentTrades.vue` | The recent trades table on a token page, with filters and Show more |
 | `src/components/TraderCell.vue` | The Trader cell: short address and filter icon |
 | `src/components/WalletCard.vue` | The summary of the trader picked |
-| `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, volume, buys, sells, net buy |
-| `src/components/Change.vue` | A green ▲ or red ▼ percentage |
+| `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, then volume and trades with buys, sells and net |

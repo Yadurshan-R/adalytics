@@ -39,6 +39,7 @@ type Quote struct {
 
 	// The last 24 hours of trades (MinTradeADA and up).
 	Trades24h     int      `json:"trades_24h"`
+	Traders24h    int      `json:"traders_24h"` // different wallets that traded (wallets we could tell)
 	Buys24h       int      `json:"buys_24h"`
 	Sells24h      int      `json:"sells_24h"`
 	BuyVol24hADA  float64  `json:"buy_volume_24h_ada"`
@@ -50,6 +51,7 @@ type Quote struct {
 	Created     *time.Time `json:"created,omitempty"`
 	Description string     `json:"description,omitempty"`
 	Website     string     `json:"website,omitempty"`
+	PolicyState string     `json:"policy_state,omitempty"` // "locked", "open", "script" or "unknown" (policy.go)
 }
 
 // Trade is one swap against a token's pool, worked out from how the pool's
@@ -83,10 +85,14 @@ func (t *Tracker) Quotes() []Quote {
 		q := s.quote
 		q.PriceUSD = q.PriceADA * usdPerADA
 		q.Fingerprint, q.Created, q.Description, q.Website = s.info.Fingerprint, s.info.Created, s.info.Description, s.info.Website
+		traders := map[string]bool{}
 		for i := len(s.trades) - 1; i >= 0; i-- {
 			tr := s.trades[i]
 			if tr.Time.Before(cut) {
 				break
+			}
+			if tr.Wallet != "" {
+				traders[tr.Wallet] = true
 			}
 			q.Trades24h++
 			if tr.Side == "buy" {
@@ -101,6 +107,8 @@ func (t *Tracker) Quotes() []Quote {
 			q.TotalSupply = scaled(s.supply, q.Decimals)
 			q.FDVADA = q.PriceADA * q.TotalSupply
 		}
+		q.Traders24h = len(traders)
+		q.PolicyState = s.mint.state(now)
 		q.Periods = periodsOf(s, now)
 		q.HasLogo = len(s.logo) > 0
 		q.Holders = s.holders

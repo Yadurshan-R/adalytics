@@ -29,10 +29,18 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 
 | Function | What it does |
 |---|---|
-| `loadInfo` | Reads total supply, ticker and logo for every tracked token with asset_info, 25 tokens per request. If it fails, prices still work and it is tried again next minute. |
+| `loadInfo` | Reads total supply, ticker and logo for every tracked token with asset_info, and each minting policy with script_info, 25 tokens per request. If it fails, prices still work and it is tried again next minute. |
 | `holdersLoop` | Counts holders now, then again every HoldersEvery, until ctx ends. |
 | `loadHolders` | Counts the holders of each token in the current top list: wallets with a stake key plus addresses without one. One slow asset_summary request per token. |
 | `safeURL` | Keeps a registry website only if it is a plain http(s) link, so a token's metadata cannot put another kind of link on the page. |
+
+## `internal/market/policy.go`
+
+| Function | What it does |
+|---|---|
+| `canMint` | Says whether a native script could still allow a mint now or later: a key can always sign, "before" closes at its slot, "after" opens at its slot; all, any and atLeast combine their parts. |
+| `state` | The policy as the page shows it: "locked" (no more can be minted), "open", "script" (Plutus) or "unknown". Worked out at each request, so a time lock that passes turns into "locked" without reading again. |
+| `readPolicies` | Reads the minting script of each policy with script_info, 25 per request. |
 
 ## `internal/market/format.go`
 

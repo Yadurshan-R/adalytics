@@ -22,8 +22,8 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 
 * Live price chart (TradingView Lightweight Charts) as candles or a line, with volume bars. One slim bar on top, like Birdeye's: candle size (5m to 1 day), candles or line, indicators, and Price / FDV
 * Scroll back through up to 30 days of history; while older history is still loading, the chart shows what is loaded so far
-* Price in ADA (and USD for reference), low and high over the last 24 hours, volume, number of trades, buys against sells, holder count, pool liquidity and the time of the last trade
-* Info box with the project website, policy ID and fingerprint (with copy buttons), creation date, a Cardanoscan link and the project description
+* A token panel like Birdeye's: price in ADA and USD, liquidity, FDV and holders in boxes, then 5m / 1h / 4h / 24h volume and trades with buys, sells and net
+* Price performance (24h low and high), links and IDs with copy buttons, supply, pool reserves, last trade and the project description, like CoinMarketCap's info list
 * Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (trades of at least 1% of the pool)
 * Click a trader to see only its trades, what it bought and sold in this token, and which other tokens it traded in the last 24 hours. Minswap swaps several people's orders in one transaction; Adalytics splits them into one trade per wallet
 * A drawing toolbar beside the chart, like TradingView's: trend line, horizontal line, rectangle, Fibonacci levels, text, a ruler that measures the price change and time between two points, zoom and scroll, a magnet that snaps to prices, hide and delete. Drawings stay in the browser only and are not saved
@@ -164,6 +164,7 @@ backend/
     periods.go                  trading over 5m, 1h, 4h and 24h
     quotes.go                   the token list, charts and trades for the API
     details.go                  supply, logos, links and holder counts
+    policy.go                   whether a token's minting policy is locked or open
     progress.go, activity.go    loading progress and live activity for the loading page
     history.go                  chart ranges (24H, 7D, 30D), line points and candles
     candles.go                  candle sizes (5m to 1D)
@@ -179,6 +180,8 @@ frontend/src/
   listSort.js                   the list's columns, periods and sorting
   components/TokenTable.vue     the token table
   pages/TokenPage.vue           the token page
+  components/TokenOverview.vue  the token panel: name, links and the main numbers
+  components/TokenInfo.vue      Minswap button, traders, holders, policy, price performance, links
   components/ChartPanel.vue     the chart and its data
   components/ChartHeader.vue    the bar on top of the chart
   components/LoadingProgress.vue  the loading box with live progress

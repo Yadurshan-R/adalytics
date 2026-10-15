@@ -68,6 +68,7 @@ type tokenState struct {
 	supply     *big.Int        // total supply in the smallest unit, from asset_info
 	logo       []byte          // PNG from the token registry
 	holders    int             // from asset_summary, loaded in the background
+	mint       *mintPolicy     // the minting policy from script_info; nil until read
 	info       Quote           // fingerprint, created, description and website from asset_info
 	quote      Quote
 }

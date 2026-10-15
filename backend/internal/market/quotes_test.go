@@ -130,3 +130,21 @@ func TestRankingAndIDs(t *testing.T) {
 		t.Errorf("ranking: %s", got)
 	}
 }
+
+// TestTradersCount checks that 24h traders counts each wallet once and skips
+// trades whose wallet is not known.
+func TestTradersCount(t *testing.T) {
+	f := &fake{t: t, tip: 14030000}
+	f.txs = []fakeTx{{hash: "s0", height: 14029000, time: testNow.Add(-time.Hour).Unix(), outs: []koios.TxOutput{swapOutput(t, "s0", "1000", "2000000000000", "750000000")}}}
+	tr := newTracker(t, f)
+	tr.refresh(context.Background())
+	tr.mu.Lock()
+	for i, w := range []string{"stake1a", "stake1b", "stake1a", ""} {
+		tr.states[0].trades = append(tr.states[0].trades, Trade{Time: testNow.Add(-time.Duration(i+1) * time.Minute), Side: "buy", AmountADA: 10, Wallet: w})
+	}
+	tr.states[0].trades = append([]Trade{{Time: testNow.Add(-25 * time.Hour), Side: "buy", Wallet: "stake1old"}}, tr.states[0].trades...)
+	tr.mu.Unlock()
+	if q := tr.Quotes()[0]; q.Traders24h != 2 {
+		t.Errorf("24h traders %d, want 2", q.Traders24h)
+	}
+}

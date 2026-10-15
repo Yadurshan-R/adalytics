@@ -13,8 +13,9 @@ import (
 )
 
 // loadInfo reads total supply, ticker and logo for every tracked token with
-// asset_info, 25 tokens per request. If it fails, prices still work and it is
-// tried again next minute.
+// asset_info, and each token's minting policy with script_info (policy.go),
+// 25 tokens per request. If it fails, prices still work and it is tried again
+// next minute.
 func (t *Tracker) loadInfo(ctx context.Context) {
 	t.mu.RLock()
 	act := t.tracked()
@@ -38,10 +39,27 @@ func (t *Tracker) loadInfo(ctx context.Context) {
 		}
 		infos = append(infos, batch...)
 	}
+	seen := map[string]bool{}
+	var policies []string
+	for _, s := range act {
+		if p := s.token.Asset.PolicyID; !seen[p] {
+			seen[p] = true
+			policies = append(policies, p)
+		}
+	}
+	mints, err := t.readPolicies(ctx, policies)
+	if err != nil && !errors.Is(err, context.Canceled) {
+		t.log.Printf("Could not read minting policies: %v (trying again in %s)", err, t.interval)
+	}
 
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	logos := 0
+	for _, s := range act {
+		if m := mints[s.token.Asset.PolicyID]; m != nil {
+			s.mint = m
+		}
+	}
 	for _, info := range infos {
 		for _, s := range act {
 			if s.token.Asset.PolicyID != info.PolicyID || s.token.Asset.AssetName != info.AssetName {
@@ -68,7 +86,7 @@ func (t *Tracker) loadInfo(ctx context.Context) {
 			}
 		}
 	}
-	t.infoReady = true
+	t.infoReady = err == nil
 	t.log.Printf("Token details loaded: total supply for %d tokens, %d logos", len(infos), logos)
 }
 

@@ -127,6 +127,15 @@ func (c *Client) AssetInfos(ctx context.Context, assets []Asset) ([]AssetInfo, e
 	return out, err
 }
 
+// ScriptInfos reads the scripts with the given hashes (up to 25 per call).
+// Hashes Koios does not know are left out of the answer.
+func (c *Client) ScriptInfos(ctx context.Context, hashes []string) ([]ScriptInfo, error) {
+	body := map[string]any{"_script_hashes": hashes}
+	var out []ScriptInfo
+	err := c.do(ctx, c.http, http.MethodPost, "/script_info?select=script_hash,type,value", body, &out)
+	return out, err
+}
+
 // AssetSummary asks Koios how many wallets hold a token. It uses the slow
 // HTTP client, because Koios can take minutes to count big tokens.
 func (c *Client) AssetSummary(ctx context.Context, asset Asset) (AssetSummary, error) {

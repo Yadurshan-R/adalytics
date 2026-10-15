@@ -14,7 +14,7 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 
 | Function | What it does |
 |---|---|
-| `backfillLoop` | Waits for the first load, then loads the rest of the history. |
+| `backfillLoop` | Waits for the first 24 hours, then loads the rest of the history. |
 | `backfill` | Loads the history older than the first 24 hours, newest first, one page of 1,000 transactions at a time, so 7 days are ready long before 30. A page that fails is tried again a minute later. |
 | `finishHistory` | Marks the whole history span as loaded, so every chart range is ready. |
 
@@ -60,14 +60,16 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | Function | What it does |
 |---|---|
 | `Periods` | One token's trading over the last 5 minutes, hour, 4 hours and 24 hours: price change, volume, buys and sells and the ADA on each side, from the trades already in memory. |
+| `periodsOf` | Works the periods out for one token; the token list (Quotes) and the activity box both use it. |
 
 ## `internal/market/pools.go`
 
 | Function | What it does |
 |---|---|
-| `readPools` | Reads transactions with tx_info (50 per request) and returns, for each token, the pool state after each of its transactions, oldest first. |
+| `readPools` | Reads transactions with tx_info (50 per request, three requests at a time) and returns, for each token, the pool state after each of its transactions, oldest first. |
 | `merge` | Adds pool states to a token's history (skipping ones it already has), keeps the history in chain order and rebuilds prices, volume and trades. It returns how many states were new. Call with t.mu held. |
 | `rebuild` | Works out a token's price points, volume and trades from its pool history, drops history older than the kept span (keeping the last state before it, so the price at the start is known) and updates the quote from the newest pool state. Call with t.mu held. |
+| `replaceCurrent` | Swaps a pool state found at startup (as the pool is now) for the same pool output read from its transaction, which has the wallets and its place in the block. |
 | `tradesFrom` | Turns a swap into trades: one per wallet when the transaction was split into fills, otherwise one trade without a wallet from the change in the pool's reserves. |
 | `tradeFrom` | Makes one trade from ADA into the pool and tokens to the trader: both positive is a buy, both negative a sell. Dust below MinTradeADA is left out. |
 
@@ -99,7 +101,7 @@ Minswap does not swap each order on its own: a batcher swaps several people's or
 |---|---|
 | `History` | Returns how much history is loaded and which chart ranges are ready. |
 | `setBoot` | Changes the first load's progress safely while other code reads it. |
-| `bootLoading` | Turns the first load's progress into steps and one percentage: listing 0-10%, reading 10-80%, quiet tokens 80-95%, details 95-100%. Call with t.mu held. |
+| `bootLoading` | Turns the first load's progress into steps and one percentage: listing 0-20%, the newest hour 20-35%, other tokens' pools 35-90%, details 90-100%. Call with t.mu held. |
 | `rangeReady` | Reports whether the whole range is loaded. Call with t.mu held. |
 
 ## `internal/market/quotes.go`
@@ -117,8 +119,14 @@ Minswap does not swap each order on its own: a batcher swaps several people's or
 
 | Function | What it does |
 |---|---|
-| `loadHistory` | The first load, kept short so the site is usable within a few minutes: 1. every Minswap V2 transaction of the last 24 hours (address_txs, then tx_info 50 at a time): prices, volume and trades, and the pool of every token that traded; 2. the current pool of each token that did not trade in 24 hours (asset_utxos, 30 tokens per request). Older history is loaded afterwards in the background (backfill). |
+| `loadHistory` | The first load, kept short so the site opens within about half a minute: 1. list every Minswap V2 transaction of the last 24 hours (address_txs, newest first); 2. read the newest hour of them (tx_info): prices, 5m and 1h numbers; 3. the current pool of every other token (asset_utxos, 30 per request); 4. supply, logos and links. The list opens here; the rest of the 24 hours is read in the background (readDay), then the older history (backfill). |
 | `findPools` | Asks Koios which UTxOs at the Minswap pool address hold each token's LP token: that UTxO is the token's pool, as it is now. |
+
+## `internal/market/day.go`
+
+| Function | What it does |
+|---|---|
+| `readDay` | Reads the rest of the first 24 hours after the list has opened, newest first, 300 transactions at a time (DayChunk). After each chunk the site has more of the day: 4h numbers after a few chunks, 24h at the end. A chunk that fails is tried again a minute later. Then the older history starts. |
 
 ## `internal/market/tokens.go`
 
@@ -206,6 +214,12 @@ Run them with `go test ./internal/market/` from `backend/`. They use a fake Koio
 | Function | What it does |
 |---|---|
 | `TestLoadsHistoryThenFollowsSwaps` | Checks the first 24 hour load (price, volume, change, chart), then that a new swap is picked up a minute later. |
+
+## `internal/market/day_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestListOpensAfterTheNewestHour` | The list opens with the newest hour read: the price is right at once and the 24H range waits. Once the rest of the day is read, the 24h volume is complete and the pool found at startup is not counted twice. |
 | `TestQuietTokenIsListed` | Checks that a token with a pool but no trades today is still listed, with a flat price line. |
 | `TestTokenWithoutPoolIsLeftOut` | Checks that a token with no Minswap pool is not listed. |
 | `TestFindsAllPoolsInSmallRequests` | Checks that the pool search is split into requests small enough for the Koios free tier. |

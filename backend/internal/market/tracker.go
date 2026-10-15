@@ -79,6 +79,7 @@ type poolState struct {
 	order   int64  // sorts states in chain order: block height, then position in the block
 	address string // address the pool output was at
 	fills   []fill // each wallet's part of the swap; nil if it could not be split
+	current bool   // found as the pool is now (asset_utxos), not read from its transaction
 }
 
 // chainOrder gives one number for sorting transactions in the order they
@@ -99,6 +100,8 @@ type Tracker struct {
 	mu          sync.RWMutex
 	states      []*tokenState
 	loaded      bool
+	dayDone     bool         // the whole first 24 hours are read (see day.go)
+	async       func(func()) // runs the rest of the first day; tests run it in place
 	infoReady   bool         // supply and logos loaded
 	lastCheck   int          // chain block height at the previous check
 	firstHeight int          // block the first (24 hour) load started from
@@ -111,7 +114,8 @@ type Tracker struct {
 
 // NewTracker prepares a Tracker for the given tokens. Nothing is loaded until Run is called.
 func NewTracker(client *koios.Client, tokens []Token, interval time.Duration, logger *log.Logger) *Tracker {
-	t := &Tracker{client: client, interval: interval, log: logger, now: time.Now, span: MaxHistoryDays * 24 * time.Hour}
+	t := &Tracker{client: client, interval: interval, log: logger, now: time.Now, span: MaxHistoryDays * 24 * time.Hour,
+		async: func(f func()) { go f() }}
 	for _, tok := range tokens {
 		t.states = append(t.states, &tokenState{
 			token: tok,

@@ -8,8 +8,8 @@ const props = defineProps({
 // LABELS are the step names shown in the box, by the key the backend sends.
 const LABELS = {
   trades_found: 'Trades found',
-  reading: 'Reading trades',
-  quiet: 'Quiet tokens',
+  reading: 'Reading the last hour',
+  quiet: 'Other tokens',
   details: 'Token details',
 }
 

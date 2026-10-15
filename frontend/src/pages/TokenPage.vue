@@ -12,7 +12,7 @@ import LoadingProgress from '../components/LoadingProgress.vue'
 
 // The route's :ticker is the token's unique id from the backend (usually its ticker in lower case).
 const props = defineProps({ ticker: { type: String, required: true } })
-const { tokens, history, loading } = useTokens()
+const { tokens, history, day, loading } = useTokens()
 // token is the token this page is about, found by the id in the address.
 const token = computed(() => tokens.value.find((t) => t.id === props.ticker.toLowerCase()))
 
@@ -74,7 +74,7 @@ const rangePos = computed(() => {
 
       <div class="price-row">
         <span class="price num" :title="fullPrice(token.price_ada)">{{ formatPrice(token.price_ada) }}</span>
-        <span class="chg"><Change :value="token.change_24h" /> <span :class="token.change_24h >= 0 ? 'up' : 'down'">(24h)</span></span>
+        <span class="chg" :class="{ partial: !day.ready }"><Change :value="token.change_24h" /> <span :class="token.change_24h >= 0 ? 'up' : 'down'">(24h)</span></span>
       </div>
       <p v-if="token.price_usd" class="usd muted num" :title="'$' + token.price_usd.toPrecision(6)">≈ {{ formatUSD(token.price_usd) }}</p>
 
@@ -91,7 +91,7 @@ const rangePos = computed(() => {
 
       <dl class="stats">
         <div v-if="token.fdv_ada" class="stat"><dt>Fully Diluted Valuation</dt><dd class="num">{{ formatCompact(token.fdv_ada) }}</dd></div>
-        <div class="stat"><dt>24 Hour Trading Vol</dt><dd class="num">{{ formatCompact(token.volume_24h_ada) }}</dd></div>
+        <div class="stat"><dt>24 Hour Trading Vol</dt><dd class="num" :class="{ partial: !day.ready }">{{ formatCompact(token.volume_24h_ada) }}</dd></div>
         <div v-if="token.total_supply" class="stat"><dt>Total Supply</dt><dd class="num">{{ formatAmount(token.total_supply) }} {{ token.ticker }}</dd></div>
         <div v-if="token.holders" class="stat"><dt>Holders</dt><dd class="num">{{ token.holders.toLocaleString('en-US') }}</dd></div>
         <div class="stat"><dt>Pool Liquidity</dt><dd class="num">{{ formatCompact(token.reserve_ada * 2) }}</dd></div>
@@ -169,6 +169,7 @@ const rangePos = computed(() => {
 .stat dd { margin: 0; font-weight: 600; text-align: right; }
 
 .usd { margin: 4px 0 0; font-size: 15px; }
+.partial { opacity: 0.4; } /* the last 24 hours are still loading */
 
 .info-title { font-size: 18px; font-weight: 700; margin: 32px 0 4px; }
 .info-list { margin-top: 0; }

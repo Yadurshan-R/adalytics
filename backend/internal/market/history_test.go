@@ -108,10 +108,10 @@ func TestLoadingProgress(t *testing.T) {
 	if h.Loading == nil || h.Loading.Percent != 0 || h.Loading.Steps[0].State != "active" || h.Loading.Steps[3].State != "todo" {
 		t.Fatalf("before loading: %+v", h.Loading)
 	}
-	// Half way through reading 2,000 transactions: 10% + 70% / 2.
-	tr.setBoot(func(b *bootProgress) { b.step, b.found, b.read = 1, 2000, 1000 })
+	// Half way through reading the newest hour's 200 transactions: 20% + 15% / 2.
+	tr.setBoot(func(b *bootProgress) { b.step, b.found, b.read = 1, 200, 100 })
 	l := tr.History().Loading
-	if l.Percent != 45 || l.Steps[0].State != "done" || l.Steps[1].State != "active" || l.Steps[1].Done != 1000 || l.Steps[1].Total != 2000 {
+	if l.Percent != 27 || l.Steps[0].State != "done" || l.Steps[1].State != "active" || l.Steps[1].Done != 100 || l.Steps[1].Total != 200 {
 		t.Errorf("while reading: %+v", l)
 	}
 	tr.Note("Listed %d transactions", 2000)

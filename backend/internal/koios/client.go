@@ -1,12 +1,13 @@
 // Package koios is a small read-only client for the Koios REST API
 // (https://koios.rest), which serves Cardano blockchain data.
 //
-// The package is split over four files:
+// The package is split over five files:
 //
 //	client.go     the Client, and do(), which sends every request
 //	types.go      the shapes of the data Koios returns
 //	endpoints.go  one function per Koios endpoint we use
 //	retry.go      retry timing and the rate limiter
+//	parallel.go   runs batches of requests a few at a time
 package koios
 
 import (

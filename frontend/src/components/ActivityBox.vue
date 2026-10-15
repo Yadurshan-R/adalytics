@@ -1,12 +1,18 @@
 <!-- The activity box on a token page, like Birdeye's: pick 5m, 1h, 4h or 24h
      and see the price change, volume, buys and sells, and whether buyers or
      sellers were stronger (net buy and the green/red bar). Refreshed every
-     minute from the trades the backend already holds. -->
+     minute from the trades the backend already holds. Right after the backend
+     starts, a period that is not fully loaded yet shows its numbers faded. -->
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { formatCompact } from '../format.js'
+import { useTokens } from '../useTokens.js'
 
 const props = defineProps({ id: { type: String, required: true } }) // the token's id
+const { day } = useTokens()
+// HOURS is each period's length; ready is true once that much history is loaded.
+const HOURS = { '5m': 1 / 12, '1h': 1, '4h': 4, '24h': 24 }
+const ready = (key) => day.value.ready || day.value.hours >= HOURS[key]
 
 const periods = ref([])
 const picked = ref('24h')
@@ -46,10 +52,11 @@ const pct = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}%`
     <div class="tabs" role="tablist">
       <button v-for="x in periods" :key="x.key" type="button" role="tab" :aria-selected="x.key === picked" @click="picked = x.key">
         <span class="k">{{ x.key }}</span>
-        <span class="num" :class="x.change_pct > 0 ? 'up' : x.change_pct < 0 ? 'down' : 'muted'">{{ pct(x.change_pct) }}</span>
+        <span v-if="ready(x.key)" class="num" :class="x.change_pct > 0 ? 'up' : x.change_pct < 0 ? 'down' : 'muted'">{{ pct(x.change_pct) }}</span>
+        <span v-else class="num muted" title="Still loading">{{ day.progress }}%</span>
       </button>
     </div>
-    <dl v-if="p" class="grid num">
+    <dl v-if="p" class="grid num" :class="{ partial: !ready(p.key) }">
       <div><dt>Volume</dt><dd>{{ formatCompact(p.volume_ada) }}</dd></div>
       <div><dt>Buys</dt><dd class="up">{{ p.buys.toLocaleString('en-US') }}</dd></div>
       <div><dt>Sells</dt><dd class="down">{{ p.sells.toLocaleString('en-US') }}</dd></div>
@@ -75,6 +82,7 @@ const pct = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}%`
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; margin: 0; padding: 14px 16px 12px; }
 .grid dt { font-size: 12px; color: var(--muted); }
 .grid dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; }
+.partial { opacity: 0.4; }
 .bar { height: 6px; margin: 0 16px 16px; border-radius: 3px; background: var(--bear); overflow: hidden; }
 .buy { display: block; height: 100%; background: var(--bull); }
 </style>

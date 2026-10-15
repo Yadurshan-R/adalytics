@@ -1,23 +1,22 @@
-<!-- The bar above the token list: Top Volume / Top Gainers / Top Losers, the
-     24h / 7d switch and the search box. Press "/" anywhere to jump to the
-     search box, Esc to clear it. -->
+<!-- The bar above the token list, like Birdeye's: Top Volume / Gainers /
+     Losers as underlined tabs, the period (5m, 1h, 4h, 24h) and the search
+     box. Press "/" anywhere to jump to the search box, Esc to clear it. -->
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
 defineProps({
   views: { type: Array, required: true }, // [{ key, label }]
   view: { type: String, required: true },
+  periods: { type: Array, required: true }, // ['5m', '1h', '4h', '24h']
+  period: { type: String, required: true },
   query: { type: String, required: true },
-  week: { type: Boolean, default: false }, // the list shows 7 day numbers
-  weekRange: { type: Object, default: null }, // the 7 day history's loading status
-  weekReady: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:view', 'update:query', 'period'])
+const emit = defineEmits(['update:view', 'update:period', 'update:query'])
 
 const search = ref(null)
 // onKey makes "/" jump to the search box from anywhere on the page.
 function onKey(e) {
-  if (e.key === '/' && document.activeElement !== search.value) {
+  if (e.key === '/' && document.activeElement !== search.value && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName)) {
     e.preventDefault()
     search.value?.focus()
   }
@@ -28,67 +27,39 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 <template>
   <div class="toolbar">
-    <div class="pickers">
-      <div class="views" role="group" aria-label="Order the list">
-        <button v-for="v in views" :key="v.key" type="button" :aria-pressed="view === v.key" @click="emit('update:view', v.key)">
-          {{ v.label }}
-        </button>
-      </div>
-      <div v-if="weekRange" class="period">
-        <button type="button" class="side" :class="{ on: !week }" @click="emit('period', '24h')">24h</button>
-        <button type="button" class="toggle" role="switch" aria-label="Show 7 days" :aria-checked="week"
-                :disabled="!weekReady" @click="emit('period', week ? '24h' : '7d')"><span class="knob"></span></button>
-        <button type="button" class="side" :class="{ on: week }" :disabled="!weekReady" @click="emit('period', '7d')">
-          7d<span v-if="!weekReady" class="pct num">{{ weekRange.progress }}%</span>
-        </button>
-      </div>
+    <nav class="tabs" aria-label="Order the list">
+      <button v-for="v in views" :key="v.key" type="button" :aria-pressed="view === v.key" @click="emit('update:view', v.key)">{{ v.label }}</button>
+    </nav>
+    <div class="periods" role="group" aria-label="Period">
+      <button v-for="p in periods" :key="p" type="button" :aria-pressed="period === p" @click="emit('update:period', p)">{{ p }}</button>
     </div>
     <label class="search">
-      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 3a5.5 5.5 0 1 0 3.4 9.8l3.6 3.7 1.1-1.1-3.7-3.6A5.5 5.5 0 0 0 8.5 3Zm0 1.5a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" /></svg>
-      <input ref="search" :value="query" type="search" placeholder="Search token" aria-label="Search token by name or ticker"
-             autocomplete="off" spellcheck="false" @input="emit('update:query', $event.target.value)" @keydown.esc="emit('update:query', '')" />
-      <kbd v-if="!query" aria-hidden="true">/</kbd>
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" /><path d="M13 13l4 4" /></svg>
+      <input ref="search" :value="query" type="search" placeholder="Search token or policy ID" aria-label="Search token"
+             @input="emit('update:query', $event.target.value)" @keydown.esc="emit('update:query', '')" />
+      <kbd>/</kbd>
     </label>
   </div>
 </template>
 
 <style scoped>
-.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-.pickers { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.views { display: inline-flex; background: var(--chip); border-radius: 10px; padding: 4px; gap: 2px; }
-.views button { font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 7px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
-.views button:hover { color: var(--fg); }
-.views button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(13, 20, 33, 0.12); }
-.views button:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
-
-.search { position: relative; display: flex; align-items: center; width: 260px; }
-.search svg { position: absolute; left: 12px; width: 16px; height: 16px; fill: var(--muted); pointer-events: none; }
-.search input { width: 100%; font: inherit; font-size: 14px; color: var(--fg); background: var(--chip); border: 1px solid transparent; border-radius: 10px; padding: 9px 36px; outline: none; }
-.search input::placeholder { color: var(--muted); }
-.search input:focus { background: var(--bg); border-color: #cfd6e4; }
-.search input::-webkit-search-cancel-button { display: none; }
-.search kbd { position: absolute; right: 10px; font: inherit; font-size: 12px; color: var(--muted); border: 1px solid #d5dbe5; border-radius: 6px; padding: 0 6px; line-height: 18px; }
-
-.period { display: inline-flex; align-items: center; gap: 8px; }
-.side { font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 4px 2px; cursor: pointer; display: inline-flex; align-items: baseline; gap: 6px; }
-.side.on { color: var(--fg); }
-.side:disabled { cursor: default; color: #a6b0c3; }
-.pct { font-size: 12px; font-weight: 600; color: var(--bull); }
-.toggle { position: relative; width: 40px; height: 22px; border-radius: 11px; border: 0; padding: 0; background: #cfd6e4; cursor: pointer; transition: background 0.2s; }
-.toggle[aria-checked="true"] { background: var(--fg); }
-.toggle:disabled { cursor: default; background: var(--chip); }
-.knob { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(13, 20, 33, 0.2); transition: transform 0.2s; }
-.toggle[aria-checked="true"] .knob { transform: translateX(18px); }
-.toggle:focus-visible, .side:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .toggle, .knob { transition: none; } }
-
+.toolbar { display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+.tabs { display: flex; gap: 20px; }
+.tabs button { padding: 10px 0 11px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--muted); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.tabs button:hover { color: var(--fg); }
+.tabs button[aria-pressed="true"] { color: var(--fg); border-bottom-color: #2962ff; }
+.periods { display: inline-flex; padding: 2px; border: 1px solid var(--line); border-radius: 6px; }
+.periods button { height: 26px; padding: 0 10px; border: 0; border-radius: 4px; background: none; color: #6a6d78; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.periods button:hover { color: #131722; }
+.periods button[aria-pressed="true"] { background: #f0f3fa; color: #131722; font-weight: 600; }
+button:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
+.search { margin-left: auto; display: flex; align-items: center; gap: 8px; width: min(300px, 100%); height: 34px; padding: 0 10px; margin-bottom: 6px; border: 1px solid var(--line); border-radius: 6px; }
+.search:focus-within { border-color: #2962ff; }
+.search svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round; }
+.search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font: inherit; font-size: 13px; color: var(--fg); }
+kbd { padding: 0 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font: 11px ui-monospace, monospace; }
 @media (max-width: 700px) {
-  .toolbar { flex-direction: column; align-items: stretch; }
-  .pickers { flex-direction: column; align-items: stretch; gap: 10px; }
-  .period { align-self: flex-start; }
-  .views { display: flex; }
-  .views button { flex: 1; padding-inline: 6px; }
-  .search { width: 100%; }
-  .search kbd { display: none; }
+  .search { margin-left: 0; width: 100%; }
+  .tabs { gap: 16px; }
 }
 </style>

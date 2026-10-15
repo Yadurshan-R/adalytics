@@ -28,7 +28,7 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 	tr := newTracker(t, f)
 	ctx := context.Background()
 
-	tr.refresh(ctx) // finds the pool, then loads 24 hours
+	tr.refresh(ctx) // the newest hour, then the rest of the 24 hours (in place in tests)
 	q := tr.Quotes()[0]
 	if q.Status != "live" {
 		t.Fatalf("status %s (%s)", q.Status, q.Error)
@@ -91,8 +91,10 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 		t.Errorf("rank %d, id %q", q.Rank, q.ID)
 	}
 
-	// SNEK traded in the last 24 hours, so no pool search (asset_utxos) is needed.
-	want := "/tip /address_txs /tx_info /asset_info /tip /utxo_info /tip /utxo_info /address_txs /tx_info /asset_summary"
+	// SNEK traded in the last hour, so no pool search (asset_utxos) is needed.
+	// The newest hour is read first (tx_info), the list opens after the token
+	// details (asset_info), then the rest of the 24 hours is read (tx_info).
+	want := "/tip /address_txs /tx_info /asset_info /tx_info /tip /utxo_info /tip /utxo_info /address_txs /tx_info /asset_summary"
 	if got := strings.Join(f.calls, " "); got != want {
 		t.Errorf("requests:\n got  %s\n want %s", got, want)
 	}

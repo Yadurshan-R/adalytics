@@ -7,8 +7,9 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | `load` | Fetches /api/tokens once and stores the tokens, history and any error. |
+| `day` | How much of the last 24 hours is loaded: the list opens after the newest hour, and 4h and 24h numbers fill in over the next minute or two. |
 | `schedule` | Plans the next refresh: fast during the first load, slower after it. |
-| `useTokens` | Loads the list when the first page using it opens and refreshes it while any page using it is open: every 3 seconds during the first load, every 15 seconds while 7D / 30D load, and every minute after that. |
+| `useTokens` | Loads the list when the first page using it opens and refreshes it while any page using it is open: every 3 seconds during the first load, every 5 seconds while the rest of the 24 hours loads, every 15 seconds while 7D / 30D load, and every minute after that. |
 
 ## `src/format.js`
 
@@ -50,6 +51,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `net` | ADA spent buying minus ADA received selling, for the picked period. |
 | `buyShare` | The buyers' part of the green and red bar, in percent. |
 | `pct` | Shows a change like +8.54% or −2.49%. |
+| `ready` | True once a period's history is fully loaded; until then its tab shows the loading % and its numbers are faded. |
 
 ## `src/components/RecentTrades.vue`
 
@@ -78,29 +80,25 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `copy` | Puts the address on the clipboard and shows "Copied" for 1.5 seconds. |
 | (Cardanoscan link) | Opens the stake key page for a stake1… wallet, or the address page for a wallet without a stake key (addr1…). |
 
-## `src/components/Sparkline.vue`
+## `src/listSort.js`
 
 | Function | What it does |
 |---|---|
-| `flat` | No trades in the period: every value is the same price. |
-| `color` | Green if the price ended higher than it started, red if lower, grey if flat. |
-| `points` | Turns the prices into SVG line coordinates that fill the width and height. |
+| `periodOf` | A token's trading over one period (5m, 1h, 4h or 24h): change, volume, buys and sells. |
+| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns follow the period picked. |
+| `sortRows` | Sorts the rows by a column, either way; equal values (often quiet tokens) keep the bigger pool first. |
+| `signedPct` | Shows a change like +3.65% or −0.64%. |
 
 ## `src/pages/TokenList.vue`
 
 | Function | What it does |
 |---|---|
-| `weekRange` | The backend's loading status of the 7 day history. |
-| `weekReady` | True once 7 days of history are loaded. |
-| `week` | True when the list shows 7 day numbers. |
-| `setPeriod` | Picks 24h or 7d; 7d only works once it is loaded. |
-| `changeOf` | A token's price change for the chosen period. |
-| `periodText` | The period in words, for messages like "No token is up in the last 24 hours". |
-| `moved` | A change that rounds to 0.0% is not a gain or a loss. |
-| `active` | True if the token traded in the chosen period. |
-| `place` | Place in the Top Volume list (the backend's order without the quiet tokens); quiet tokens found by search have no place. |
-| `ranks` | Numbers the rows by their Top Volume place when searching or on Top Volume; gainers and losers are numbered 1, 2, 3 instead. |
-| `shown` | The list on screen: the chosen view (volume, gainers or losers), filtered by the search box. |
+| `setSort` | Sorts by a column title: highest first, then lowest first on a second click. |
+| `setView` | Picks Top Volume, Gainers or Losers and drops the column sort. |
+| `periodReady` | True once the picked period's history is fully loaded; until then Vol and Txns are faded. |
+| `changeOf` | A token's price change for the picked period. |
+| `moved` | A change that rounds to 0.00% is not a gain or a loss. |
+| `shown` | The list on screen: every listed token, quiet ones too, filtered by the search box and the view, in the view's order or the column picked. |
 | `emptyText` | Explains why the list is empty. |
 
 ## `src/components/ListToolbar.vue`
@@ -114,8 +112,13 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | `open` | Goes to a token's page. |
-| `lineOf` | A token's small price line for the chosen period. |
-| `lineLabel` | The title of the small price line column. |
+| `sortedBy` | Which way the rows are in order of a column (1 up, -1 down, 0 not that column), for the ▲▼ arrows. |
+| `title` | A column's heading; Vol and Txns name the period. |
+| `hidden` | Hides a column on a phone: only price, volume and the period's change stay. |
+| `faded` | True for numbers whose history is not fully loaded yet. |
+| `cell` / `tone` | Write one number in its column's style, and colour a change green or red. |
+| `age` | How long ago a token was created: 4d, 8mo, 2y. |
+| `copy` | Puts a policy ID on the clipboard without opening the row. |
 
 ## `src/pages/TokenPage.vue`
 

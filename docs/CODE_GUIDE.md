@@ -25,7 +25,7 @@ flowchart LR
 
 ### What happens when the backend starts
 
-1. **First load (about 3 to 5 minutes).** The Tracker lists every Minswap transaction of the last 24 hours, reads each one to get pool sizes (which give prices and trades), finds the pools of tokens that did not trade, and loads supply, logos and links. While this runs, the website shows the loading box with live progress (`LoadingProgress.vue`).
+1. **First load (about half a minute).** The Tracker lists every Minswap transaction of the last 24 hours, reads the newest hour of them to get pool sizes (which give prices and trades), finds the pools of the other tokens, and loads supply, logos and links. While this runs, the website shows the loading box with live progress (`LoadingProgress.vue`). Then the list opens, and the rest of the 24 hours is read in the background (`day.go`); the 4h and 24h numbers are faded until they are complete. Batches of transactions are read three at a time.
 2. **Background history.** After the first load, older history (up to 30 days) loads in the background, so the 7D and 30D charts become available a few minutes later. The site can be used meanwhile.
 3. **Every minute after that.** The Tracker checks which pools were used since the last check and reads only those new swaps. This costs about 3 Koios requests a minute.
 4. **Every 6 hours.** Holder counts are refreshed in the background, because Koios is slow to count them.
@@ -46,7 +46,7 @@ The backend serves these routes. Each one reads from memory, so they answer inst
 
 | Route | What it returns |
 |---|---|
-| `GET /api/tokens` | Every listed token with price, changes, volume and small price lines, plus how much history is loaded (and the loading progress during the first load) |
+| `GET /api/tokens` | Every listed token with price, FDV, liquidity and its 5m, 1h, 4h and 24h change, volume, buys and sells, plus how much history is loaded (and the loading progress during the first load) |
 | `GET /api/tokens/{id}/chart?range=24H` | One token's line chart. `range` is 24H, 7D or 30D |
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
 | `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first, each with its wallet, and the whale level |
@@ -69,9 +69,11 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/koios/endpoints.go` | One function per Koios endpoint used |
 | `internal/koios/types.go` | The shapes of the data Koios returns |
 | `internal/koios/retry.go` | Retry timing and the rate limiter (stays under the free tier's limit) |
+| `internal/koios/parallel.go` | Runs batches of requests three at a time |
 | `internal/minswap/pool.go` | Reads a Minswap pool and its price from a Koios UTxO |
 | `internal/market/tracker.go` | The Tracker type, its settings and the main loop |
-| `internal/market/startup.go` | The first load (last 24 hours) |
+| `internal/market/startup.go` | The first load: the newest hour, then the list opens |
+| `internal/market/day.go` | The rest of the first 24 hours, in the background |
 | `internal/market/backfill.go` | Older history, loaded in the background |
 | `internal/market/update.go` | The check for new swaps every minute |
 | `internal/market/pools.go` | Turns transactions into pool states, prices and trades |
@@ -100,9 +102,10 @@ No file is longer than 300 lines. Each one has one job.
 | `src/useTokens.js` | Loads the token list from the backend and refreshes it |
 | `src/format.js` | Formats prices, percentages, amounts and dates |
 | `src/chartPrefs.js` | Remembers candles or line, the candle size, indicators and Price / FDV, between token pages |
-| `src/pages/TokenList.vue` | The token list (Top Volume, Top Gainers, Top Losers, search) |
-| `src/components/ListToolbar.vue` | The bar above the list: views, the 24h / 7d switch and the search box |
-| `src/components/TokenTable.vue` | The token table, with loading rows and the empty message |
+| `src/pages/TokenList.vue` | The token list (Top Volume, Gainers, Losers, period, sort, search) |
+| `src/components/ListToolbar.vue` | The bar above the list: tabs, the 5m / 1h / 4h / 24h bar and the search box |
+| `src/listSort.js` | The list's columns, periods and sorting |
+| `src/components/TokenTable.vue` | The token table: sortable columns, faded numbers while loading, the empty message |
 | `src/pages/TokenPage.vue` | One token's page: price, stats, info, chart and trades |
 | `src/components/ChartPanel.vue` | The chart and its data: the candles at the picked size, refreshed every minute |
 | `src/components/ChartHeader.vue` | The slim bar on top of the chart: candle size, candles or line, indicators, Price / FDV |
@@ -125,5 +128,4 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/TraderCell.vue` | The Trader cell: short address and filter icon |
 | `src/components/WalletCard.vue` | The summary of the trader picked |
 | `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, volume, buys, sells, net buy |
-| `src/components/Sparkline.vue` | The small price line in the list |
 | `src/components/Change.vue` | A green ▲ or red ▼ percentage |

@@ -5,6 +5,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 const REFRESH_MS = 60_000
 const REFRESH_FIRST_LOAD_MS = 3_000 // first load: the loading box moves live
 const REFRESH_WHILE_LOADING_MS = 15_000 // 7D / 30D still loading
+const REFRESH_WHILE_DAY_MS = 5_000 // the rest of the first 24 hours is loading: numbers fill in
 
 const tokens = ref([])
 const history = ref({ days: 0, done: false, ranges: [], sparkline_days: 1 })
@@ -33,17 +34,28 @@ async function load() {
   }
 }
 
+// day is how much of the last 24 hours is loaded: the list opens after the
+// newest hour, and the 4h and 24h numbers fill in over the next minute or two.
+const day = computed(() => {
+  const r = history.value.ranges?.find((x) => x.key === '24H')
+  return { ready: !r || r.ready, progress: r?.progress ?? 0, hours: history.value.loaded_hours ?? 0 }
+})
+
 // schedule plans the next refresh: fast during the first load, slower after it.
 function schedule() {
+  const ms = history.value.loading || firstLoad.value ? REFRESH_FIRST_LOAD_MS
+    : !day.value.ready ? REFRESH_WHILE_DAY_MS
+      : history.value.done ? REFRESH_MS : REFRESH_WHILE_LOADING_MS
   timer = setTimeout(async () => {
     await load()
     if (users > 0) schedule()
-  }, history.value.loading || firstLoad.value ? REFRESH_FIRST_LOAD_MS : history.value.done ? REFRESH_MS : REFRESH_WHILE_LOADING_MS)
+  }, ms)
 }
 
 // useTokens loads the list when the first page using it opens and refreshes it
 // while any page using it is open: every 3 seconds during the first load, every
-// 15 seconds while 7D / 30D load, and every minute after that.
+// 5 seconds while the rest of the 24 hours loads, every 15 seconds while 7D /
+// 30D load, and every minute after that.
 export function useTokens() {
   onMounted(() => {
     users++
@@ -60,5 +72,5 @@ export function useTokens() {
   // The backend is still reading history from Koios.
   const loading = computed(() => firstLoad.value || (tokens.value.length > 0 && tokens.value.every((t) => t.status === 'loading')))
 
-  return { tokens, history, error, updatedAt, loading, reload: load }
+  return { tokens, history, day, error, updatedAt, loading, reload: load }
 }

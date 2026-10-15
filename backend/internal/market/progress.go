@@ -6,11 +6,11 @@ import (
 	"cardano-analytics/internal/koios"
 )
 
-// bootProgress tracks the four steps of the first load.
+// bootProgress tracks the four steps of the first load, until the list opens.
 type bootProgress struct {
-	step       int // 0 listing trades, 1 reading them, 2 quiet tokens, 3 token details
-	found      int // transactions listed
-	read       int // transactions read
+	step       int // 0 listing trades, 1 reading the newest hour, 2 other tokens, 3 token details
+	found      int // transactions listed (then: in the newest hour)
+	read       int // transactions of the newest hour read
 	quietDone  int // quiet tokens checked
 	quietTotal int
 }
@@ -83,7 +83,8 @@ func (t *Tracker) setBoot(f func(b *bootProgress)) {
 }
 
 // bootLoading turns the first load's progress into steps and one percentage:
-// listing 0-10%, reading 10-80%, quiet tokens 80-95%, details 95-100%.
+// listing 0-20%, the newest hour 20-35%, other tokens' pools 35-90%,
+// details 90-100%.
 // Call with t.mu held.
 func (t *Tracker) bootLoading() *Loading {
 	b := t.boot
@@ -105,11 +106,11 @@ func (t *Tracker) bootLoading() *Loading {
 	var pct float64
 	switch b.step {
 	case 0:
-		pct = 9 * frac(b.found, 3*koios.AddressTxsPageSize) // about 3 pages a day
+		pct = 19 * frac(b.found, 3*koios.AddressTxsPageSize) // about 3 pages a day
 	case 1:
-		pct = 10 + 70*frac(b.read, b.found)
+		pct = 20 + 15*frac(b.read, b.found)
 	case 2:
-		pct = 80 + 15*frac(b.quietDone, b.quietTotal)
+		pct = 35 + 55*frac(b.quietDone, b.quietTotal)
 	default:
 		pct = 97
 	}

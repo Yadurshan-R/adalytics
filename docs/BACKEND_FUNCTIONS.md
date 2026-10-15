@@ -43,12 +43,18 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 |---|---|
 | `Tip` | Returns the newest block Koios knows about: its height and time. |
 | `UTxOInfo` | Looks up UTxOs by reference ("tx_hash#index") and says if each is spent. |
-| `PoolUTxOs` | Returns the unspent outputs at address that hold any of the given assets. Each Minswap pool holds its own LP token, so asking for the LP tokens at the pool address returns exactly those pools, traded recently or not. Requests are split so each body stays under Koios's size limit. |
+| `PoolUTxOs` | Returns the unspent outputs at address that hold any of the given assets. Each Minswap pool holds its own LP token, so asking for the LP tokens at the pool address returns exactly those pools, traded recently or not. Requests are split so each body stays under Koios's size limit, and run three at a time. |
 | `AddressTxsPage` | Returns one page of the transactions that touched the addresses from a block height on, newest first. |
 | `AddressTxs` | Lists every transaction that touched the addresses from a block height on (newest first). Koios returns at most 1000 rows per page, so it pages through; progress, if set, is called after each page. |
 | `AssetInfos` | Returns supply and registry details for several tokens in one request. |
 | `AssetSummary` | Asks Koios how many wallets hold a token. It uses the slow HTTP client, because Koios can take minutes to count big tokens. |
 | `TxInfo` | Returns transactions with their inputs and outputs, assets and inline datums. The inputs show which wallets' orders a batch swapped. |
+
+## `internal/koios/parallel.go`
+
+| Function | What it does |
+|---|---|
+| `Parallel` | Runs a list of jobs a few at a time (Workers = 3) and returns the first error; jobs not started yet are skipped after one fails. Same number of Koios requests, about three times as fast. |
 
 ## `internal/koios/retry.go`
 

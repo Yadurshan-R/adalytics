@@ -38,11 +38,12 @@ type Quote struct {
 	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
 
 	// The last 24 hours of trades (MinTradeADA and up).
-	Trades24h     int     `json:"trades_24h"`
-	Buys24h       int     `json:"buys_24h"`
-	Sells24h      int     `json:"sells_24h"`
-	BuyVol24hADA  float64 `json:"buy_volume_24h_ada"`
-	SellVol24hADA float64 `json:"sell_volume_24h_ada"`
+	Trades24h     int      `json:"trades_24h"`
+	Buys24h       int      `json:"buys_24h"`
+	Sells24h      int      `json:"sells_24h"`
+	BuyVol24hADA  float64  `json:"buy_volume_24h_ada"`
+	SellVol24hADA float64  `json:"sell_volume_24h_ada"`
+	Periods       []Period `json:"periods"` // 5m, 1h, 4h and 24h: change, volume, buys and sells
 
 	// From the token registry and asset_info; empty if unknown.
 	Fingerprint string     `json:"fingerprint,omitempty"`
@@ -100,6 +101,7 @@ func (t *Tracker) Quotes() []Quote {
 			q.TotalSupply = scaled(s.supply, q.Decimals)
 			q.FDVADA = q.PriceADA * q.TotalSupply
 		}
+		q.Periods = periodsOf(s, now)
 		q.HasLogo = len(s.logo) > 0
 		q.Holders = s.holders
 		if len(s.points) > 0 {

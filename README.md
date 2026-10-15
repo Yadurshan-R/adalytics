@@ -10,10 +10,10 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 
 **Token list**
 
-* Price, 1 hour, 24 hour and 7 day change, 24 hour volume, fully diluted valuation (FDV) and a small price line for every token
-* A 24h / 7d toggle: Top Gainers, Top Losers and the small lines all follow the same period
-* Tokens with no trades in that period are left out of the top lists; search still finds them
-* Top Volume, Top Gainers and Top Losers views
+* Laid out like Birdeye: every listed token, quiet ones too, with price, FDV, volume, trades (Txns), liquidity and the 5m, 1h, 4h and 24h change
+* Top Volume, Gainers and Losers tabs, and a 5m / 1h / 4h / 24h bar that Vol, Txns, Gainers and Losers follow
+* Click any column title to sort by it
+* Each token shows its ticker, name, age and short policy ID with a copy button
 * Search by name, ticker or policy ID (press `/` to jump to the search box)
 * Refreshes by itself every minute
 * While the backend starts, a progress box shows the percentage loaded and each step as it happens
@@ -60,11 +60,13 @@ Whenever someone trades, the pool output is spent and a new one is created with 
 
 **What happens at startup**
 
-1. List every Minswap transaction of the last 24 hours (`address_txs`) and read them in batches of 50 (`tx_info`) to build the price history, volume and trade list
-2. Find the pools of the tokens that did not trade in those 24 hours (`asset_utxos`, 30 tokens per request)
-3. Load total supply, logos and project details (`asset_info`). The list is now ready
-4. In the background, go back one day at a time until 30 days are loaded. The 7D and 30D charts, the 7 day change and the 7 day lines appear as soon as enough days are in
-5. Count holders in the background (`asset_summary`, one token at a time)
+1. List every Minswap transaction of the last 24 hours (`address_txs`, newest first)
+2. Read the newest hour of them in batches of 50 (`tx_info`, three batches at a time): prices, 5m and 1h numbers and trades
+3. Find the pools of the other tokens (`asset_utxos`, 30 tokens per request)
+4. Load total supply, logos and project details (`asset_info`). The list opens now, about half a minute after the start
+5. Read the rest of the 24 hours in the background, newest first; the 4h and 24h numbers fill in over the next minute or two, faded until they are complete
+6. In the background, go back one day at a time until 30 days are loaded. The 7D and 30D charts, the 7 day change and the 7 day lines appear as soon as enough days are in
+7. Count holders in the background (`asset_summary`, one token at a time)
 
 The number of days is set with `HISTORY_DAYS` in `.env` (1 to 30, default 30). Fewer days means a lighter startup.
 
@@ -147,11 +149,13 @@ backend/
     endpoints.go                one function per Koios endpoint
     types.go                    the shapes of Koios data
     retry.go                    retries and the rate limiter
+    parallel.go                 runs batches of requests three at a time
   internal/minswap/pool.go      reads a Minswap V2 pool and works out the price
   internal/market/
     tokens.json                 the 360 verified tokens from Minswap's token list
     tracker.go                  the Tracker and its main loop
-    startup.go                  the first load (last 24 hours)
+    startup.go                  the first load (the newest hour, then the list opens)
+    day.go                      the rest of the first 24 hours, in the background
     backfill.go                 older history, loaded in the background
     update.go                   checks for new swaps every minute
     pools.go                    turns transactions into prices and trades
@@ -171,7 +175,8 @@ backend/
 
 frontend/src/
   pages/TokenList.vue           the token list
-  components/ListToolbar.vue    the views, 24h / 7d switch and search above it
+  components/ListToolbar.vue    the tabs, period bar and search above it
+  listSort.js                   the list's columns, periods and sorting
   components/TokenTable.vue     the token table
   pages/TokenPage.vue           the token page
   components/ChartPanel.vue     the chart and its data
@@ -194,7 +199,6 @@ frontend/src/
   components/TraderCell.vue     the Trader cell: short address and filter icon
   components/WalletCard.vue     the summary of the trader picked
   components/ActivityBox.vue    the 5m / 1h / 4h / 24h activity box
-  components/Sparkline.vue      the small price lines in the list
   format.js                     number formats (₳, $, %, K/M/B)
 ```
 

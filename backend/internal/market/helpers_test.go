@@ -188,5 +188,6 @@ func newTracker(t *testing.T, f *fake) *Tracker {
 	t.Cleanup(srv.Close)
 	tr := NewTracker(koios.New(srv.URL, "test-token"), []Token{snekToken(t)}, time.Minute, log.New(io.Discard, "", 0))
 	tr.now = func() time.Time { return testNow }
+	tr.async = func(f func()) { f() } // the rest of the first day, read in place
 	return tr
 }

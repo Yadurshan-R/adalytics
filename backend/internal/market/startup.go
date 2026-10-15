@@ -8,15 +8,17 @@ import (
 	"cardano-analytics/internal/minswap"
 )
 
-// loadHistory is the first load, kept short so the site is usable within a
-// few minutes:
-//  1. every Minswap V2 transaction of the last 24 hours (address_txs, then
-//     tx_info 50 at a time): prices, volume and trades, and the pool of every
-//     token that traded;
-//  2. the current pool of each token that did not trade in 24 hours
-//     (asset_utxos, 30 tokens per request).
+// loadHistory is the first load, kept short so the site opens within about
+// half a minute:
+//  1. list every Minswap V2 transaction of the last 24 hours (address_txs,
+//     newest first);
+//  2. read the newest hour of them (tx_info): prices, 5m and 1h numbers and
+//     the pool of every token that traded;
+//  3. the current pool of every other token (asset_utxos, 30 per request);
+//  4. supply, logos and links. The list opens here.
 //
-// Older history is loaded afterwards in the background (backfill).
+// The rest of the 24 hours is then read in the background, newest first
+// (readDay in day.go), and after it the older history (backfill).
 func (t *Tracker) loadHistory(ctx context.Context) {
 	start, before := time.Now(), t.client.Requests()
 	t.mu.Lock()
@@ -45,12 +47,17 @@ func (t *Tracker) loadHistory(ctx context.Context) {
 		t.failAll(err)
 		return
 	}
-	t.setBoot(func(b *bootProgress) { b.step, b.found = 1, len(txs) })
-	found, err := t.readPools(ctx, txs, func(done, total int) {
+
+	// The newest hour first: the list can open with it.
+	hourAgo := time.Unix(tip.BlockTime, 0).Add(-time.Hour)
+	first := 0
+	for first < len(txs) && !time.Unix(txs[first].BlockTime, 0).Before(hourAgo) {
+		first++
+	}
+	t.setBoot(func(b *bootProgress) { b.step, b.found = 1, first })
+	t.Note("Reading the newest hour first: %s of %s transactions", group(float64(first)), group(float64(len(txs))))
+	found, err := t.readPools(ctx, txs[:first], func(done, total int) {
 		t.setBoot(func(b *bootProgress) { b.read = done })
-		if done == total || done%500 == 0 {
-			t.Note("Read %s of %s transactions (prices, volume and trades)", group(float64(done)), group(float64(total)))
-		}
 	})
 	if err != nil {
 		t.failAll(err)
@@ -71,7 +78,7 @@ func (t *Tracker) loadHistory(ctx context.Context) {
 	t.mu.Unlock()
 
 	t.setBoot(func(b *bootProgress) { b.step, b.quietTotal = 2, len(quiet) })
-	t.Note("%d tokens traded in the last 24 hours. Finding the pools of the other %d…", traded, len(quiet))
+	t.Note("%d tokens traded in the last hour. Finding the pools of the other %d…", traded, len(quiet))
 	current, err := t.findPools(ctx, quiet)
 	if err != nil {
 		t.failAll(err)
@@ -101,12 +108,14 @@ func (t *Tracker) loadHistory(ctx context.Context) {
 	t.loaded = true
 	t.lastCheck = tip.BlockHeight
 	t.firstHeight = from
-	t.coveredFrom = time.Unix(tip.BlockTime, 0).Add(-25 * time.Hour)
+	t.coveredFrom = hourAgo
 	t.mu.Unlock()
 
-	t.log.Printf("Ready: %d tokens traded on Minswap in 24h, %d more found quiet, %d pools with at least ₳%s are listed (%s transactions, %d Koios requests, %s)",
-		traded, len(current), listed, group(MinPoolADA), group(float64(len(txs))),
-		t.client.Requests()-before, time.Since(start).Round(time.Second))
+	t.log.Printf("Ready: %d tokens traded in the last hour, %d more found by their pool, %d pools with at least ₳%s are listed (%d Koios requests, %s). Reading the rest of the 24 hours…",
+		traded, len(current), listed, group(MinPoolADA), t.client.Requests()-before, time.Since(start).Round(time.Second))
+	rest := txs[first:]
+	end := time.Unix(tip.BlockTime, 0).Add(-25 * time.Hour)
+	t.async(func() { t.readDay(ctx, rest, end) })
 }
 
 // findPools asks Koios which UTxOs at the Minswap pool address hold each
@@ -143,7 +152,7 @@ func (t *Tracker) findPools(ctx context.Context, tokens []*tokenState) (map[*tok
 		if prev, ok := out[s]; ok && prev.height >= u.BlockHeight {
 			continue
 		}
-		out[s] = poolState{pool: p, height: u.BlockHeight, order: chainOrder(u.BlockHeight, 0), address: u.Address}
+		out[s] = poolState{pool: p, height: u.BlockHeight, order: chainOrder(u.BlockHeight, 0), address: u.Address, current: true}
 	}
 	return out, nil
 }

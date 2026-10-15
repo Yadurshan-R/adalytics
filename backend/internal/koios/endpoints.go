@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 )
 
 // Tip returns the newest block Koios knows about: its height and time.
@@ -31,28 +32,42 @@ func (c *Client) UTxOInfo(ctx context.Context, refs []string) ([]UTxO, error) {
 // PoolUTxOs returns the unspent outputs at address that hold any of the given
 // assets. Each Minswap pool holds its own LP token, so asking for the LP tokens
 // at the pool address returns exactly those pools, traded recently or not.
-// Requests are split so each body stays under Koios's size limit.
+// Requests are split so each body stays under Koios's size limit, and run
+// three at a time (Workers).
 func (c *Client) PoolUTxOs(ctx context.Context, address string, assets []Asset, progress func(done, total int)) ([]UTxO, error) {
 	const perRequest = 30 // 30 LP tokens make a body of about 3.9 KB
 	q := url.Values{}
 	q.Set("select", "tx_hash,tx_index,address,value,block_height,block_time,asset_list,inline_datum")
 	q.Set("address", "eq."+address)
-	var all []UTxO
-	for start := 0; start < len(assets); start += perRequest {
+	batches := (len(assets) + perRequest - 1) / perRequest
+	found := make([][]UTxO, batches)
+	var mu sync.Mutex
+	done := 0
+	err := Parallel(ctx, batches, Workers, func(i int) error {
+		start := i * perRequest
 		end := min(start+perRequest, len(assets))
 		list := make([][2]string, 0, end-start)
 		for _, a := range assets[start:end] {
 			list = append(list, [2]string{a.PolicyID, a.AssetName})
 		}
 		body := map[string]any{"_asset_list": list, "_extended": true}
-		var rows []UTxO
-		if err := c.do(ctx, c.http, http.MethodPost, "/asset_utxos?"+q.Encode(), body, &rows); err != nil {
-			return nil, err
+		if err := c.do(ctx, c.http, http.MethodPost, "/asset_utxos?"+q.Encode(), body, &found[i]); err != nil {
+			return err
 		}
-		all = append(all, rows...)
+		mu.Lock()
+		done += end - start
 		if progress != nil {
-			progress(end, len(assets))
+			progress(done, len(assets))
 		}
+		mu.Unlock()
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	var all []UTxO
+	for _, rows := range found {
+		all = append(all, rows...)
 	}
 	return all, nil
 }

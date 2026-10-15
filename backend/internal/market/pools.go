@@ -6,34 +6,49 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+	"sync"
 
 	"cardano-analytics/internal/koios"
 	"cardano-analytics/internal/minswap"
 )
 
-// readPools reads transactions with tx_info (50 per request) and returns, for
-// each token, the pool state after each of its transactions, oldest first.
+// readPools reads transactions with tx_info (50 per request, three requests
+// at a time) and returns, for each token, the pool state after each of its
+// transactions, oldest first.
 func (t *Tracker) readPools(ctx context.Context, txs []koios.AddressTx, progress func(done, total int)) (map[*tokenState][]poolState, error) {
 	byLP := map[string]*tokenState{}
 	for _, s := range t.states {
 		byLP[s.lp.AssetName] = s
 	}
 
-	var all []koios.Tx
-	for start := 0; start < len(txs); start += 50 {
-		end := min(start+50, len(txs))
+	batches := make([][]koios.Tx, (len(txs)+49)/50)
+	var mu sync.Mutex
+	done := 0
+	err := koios.Parallel(ctx, len(batches), koios.Workers, func(i int) error {
+		start, end := i*50, min(i*50+50, len(txs))
 		hashes := make([]string, 0, end-start)
 		for _, tx := range txs[start:end] {
 			hashes = append(hashes, tx.TxHash)
 		}
 		batch, err := t.client.TxInfo(ctx, hashes)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		all = append(all, batch...)
+		mu.Lock()
+		batches[i] = batch
+		done += end - start
 		if progress != nil {
-			progress(end, len(txs))
+			progress(done, len(txs))
 		}
+		mu.Unlock()
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	var all []koios.Tx
+	for _, b := range batches {
+		all = append(all, b...)
 	}
 
 	found := map[*tokenState][]poolState{}
@@ -72,6 +87,11 @@ func (t *Tracker) merge(s *tokenState, states []poolState) int {
 	added := 0
 	for _, st := range states {
 		if s.refs[st.pool.UTxO] {
+			// The pool as found at startup has no fills and no place in its
+			// block; the transaction that made it has both, so it replaces it.
+			if !st.current && replaceCurrent(s, st) {
+				added++
+			}
 			continue
 		}
 		s.refs[st.pool.UTxO] = true
@@ -135,6 +155,18 @@ func (t *Tracker) rebuild(s *tokenState) {
 	s.quote.PoolUTxO = p.UTxO
 	s.quote.LastSwap = &lastSwap
 	s.quote.UpdatedAt = &now
+}
+
+// replaceCurrent swaps the pool state found at startup for the same pool
+// output read from its transaction. It reports whether one was replaced.
+func replaceCurrent(s *tokenState, st poolState) bool {
+	for i := range s.history {
+		if s.history[i].pool.UTxO == st.pool.UTxO && s.history[i].current {
+			s.history[i] = st
+			return true
+		}
+	}
+	return false
 }
 
 // tradesFrom turns a swap into trades: one per wallet when the transaction

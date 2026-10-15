@@ -41,4 +41,8 @@ func TestPeriods(t *testing.T) {
 	if _, _, err := tr.Periods("nope"); err == nil {
 		t.Error("an unknown token should be an error")
 	}
+	// The token list carries the same periods.
+	if q := tr.Quotes(); len(q) != 1 || len(q[0].Periods) != 4 || q[0].Periods[3] != got[3] {
+		t.Errorf("periods in the token list: %+v", q)
+	}
 }

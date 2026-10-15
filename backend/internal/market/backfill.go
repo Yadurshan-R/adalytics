@@ -7,11 +7,11 @@ import (
 	"cardano-analytics/internal/koios"
 )
 
-// backfillLoop waits for the first load, then loads the rest of the history.
+// backfillLoop waits for the first 24 hours, then loads the rest of the history.
 func (t *Tracker) backfillLoop(ctx context.Context) {
 	for {
 		t.mu.RLock()
-		ready, done := t.loaded, t.historyDone
+		ready, done := t.dayDone, t.historyDone
 		t.mu.RUnlock()
 		if done {
 			return

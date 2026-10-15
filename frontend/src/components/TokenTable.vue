@@ -143,7 +143,7 @@ td { font-size: 14px; }
 .names b { font-weight: 600; }
 .name { display: inline-block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; font-size: 13px; }
 .sub { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-.age { color: var(--bull); font-weight: 600; }
+.age { color: var(--muted); }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .copy { display: inline-flex; padding: 1px; border: 0; background: none; color: inherit; cursor: pointer; }
 .copy:hover { color: var(--fg); }

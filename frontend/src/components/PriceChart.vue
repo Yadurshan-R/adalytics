@@ -84,7 +84,7 @@ function load() {
   // The latest price: a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap.
   candleSeries.applyOptions({ lastValueVisible: !line, priceLineVisible: !line })
   area.applyOptions({ lastValueVisible: line, priceLineVisible: line })
-  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: line ? VOLUME : rgba(c.close >= c.open ? UP : DOWN, 0.35) })))
+  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: line ? VOLUME : rgba(c.close >= c.open ? UP : DOWN, 0.5) })))
   showBar(-1)
   barList = bars.map((c) => ({ time: c.time, values: line ? [c.close] : [c.open, c.high, c.low, c.close] }))
   draw.attach()
@@ -147,9 +147,9 @@ onMounted(() => {
     upColor: UP, downColor: DOWN, borderUpColor: UP, borderDownColor: DOWN, wickUpColor: UP, wickDownColor: DOWN,
     priceLineVisible: true, priceLineStyle: LineStyle.Dotted, lastValueVisible: true, priceFormat,
   })
-  for (const s of [area, candleSeries]) s.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.22 } })
+  for (const s of [area, candleSeries]) s.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.28 } })
   volume = chart.addSeries(HistogramSeries, { priceScaleId: 'vol', priceLineVisible: false, lastValueVisible: false })
-  chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.84, bottom: 0 }, visible: false })
+  chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.76, bottom: 0 }, visible: false })
 
   chart.subscribeCrosshairMove((param) => {
     if (!param.point || param.logical == null || param.point.x < 0 || param.point.y < 0) return showBar(-1)

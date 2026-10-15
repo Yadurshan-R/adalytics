@@ -66,16 +66,15 @@ export function formatAgo(iso, now = Date.now()) {
   }
 }
 
-// ₳3.71T, ₳3.35M, ₳309.9K, ₳812, like CoinGecko's stats column. Pass '$' for
-// US dollars.
-export function formatCompact(v, symbol = '₳') {
+// ₳3.71T, ₳3.35M, ₳309.9K, ₳812, like CoinGecko's stats column.
+export function formatCompact(v) {
   if (v == null || !isFinite(v)) return '—'
   const abs = Math.abs(v)
-  if (abs >= 1e12) return symbol + (v / 1e12).toFixed(2) + 'T'
-  if (abs >= 1e9) return symbol + (v / 1e9).toFixed(2) + 'B'
-  if (abs >= 1e6) return symbol + (v / 1e6).toFixed(2) + 'M'
-  if (abs >= 1e3) return symbol + (v / 1e3).toFixed(1) + 'K'
-  return symbol + Math.round(v).toLocaleString('en-US')
+  if (abs >= 1e12) return '₳' + (v / 1e12).toFixed(2) + 'T'
+  if (abs >= 1e9) return '₳' + (v / 1e9).toFixed(2) + 'B'
+  if (abs >= 1e6) return '₳' + (v / 1e6).toFixed(2) + 'M'
+  if (abs >= 1e3) return '₳' + (v / 1e3).toFixed(1) + 'K'
+  return '₳' + Math.round(v).toLocaleString('en-US')
 }
 
 // "Oct 5, 2026, 13:20:00 GMT+5:30" for chart tooltips.

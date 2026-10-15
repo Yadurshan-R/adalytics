@@ -22,7 +22,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `formatPct` | Shows a change as a percentage with one decimal, without its sign: the arrow and colour show the direction. |
 | `formatTime` | Shows the clock time, e.g. 14:05:09. |
 | `formatAgo` | "just now", "12 min ago", "3 hours ago", "4 days ago" |
-| `formatCompact` | ₳3.71T, ₳3.35M, ₳309.9K, ₳812, like CoinGecko's stats column. Pass '$' for US dollars. |
+| `formatCompact` | ₳3.71T, ₳3.35M, ₳309.9K, ₳812, like CoinGecko's stats column. |
 | `formatDateTime` | "Oct 5, 2026, 13:20:00 GMT+5:30" for chart tooltips. |
 | `formatAmount` | 76.72B, 21.0M, 940K: token amounts without the ₳ sign. |
 | `short` | Shortens a long id for the info box: the first 8 and last 6 characters. |

@@ -1,27 +1,26 @@
 <!-- The line at the top left of the chart, like TradingView's: open, high,
      low, close and the change for candles; the price and the change since the
-     start of the range for the line. It shows the bar under the mouse, or the
+     bar before for the line. It shows the bar under the mouse, or the
      latest bar when the mouse is off the chart. -->
 <script setup>
 import { computed } from 'vue'
 import { formatPrice, formatADA } from '../format.js'
 
 const props = defineProps({
-  type: { type: String, default: 'line' }, // 'line' or 'candles'
-  bar: { type: Object, default: null }, // a candle or a line point
-  base: { type: Number, default: 0 }, // line: the first price of the range
+  type: { type: String, default: 'candles' }, // 'candles' or 'line'
+  bar: { type: Object, default: null }, // the candle shown
+  base: { type: Number, default: 0 }, // line: the close of the bar before
   extras: { type: Array, default: () => [] }, // indicators: [{ name, color, value, price }]
-  fmt: { type: Function, default: formatPrice }, // writes a price (or an FDV), in ₳ or $
-  volFmt: { type: Function, default: formatADA }, // writes the volume
+  fmt: { type: Function, default: formatPrice }, // writes a price (or an FDV)
 })
 
 // change is the move in the chart's unit and percent: open to close for a
-// candle, first price to this price for the line.
+// candle, the close before to this close for the line.
 const change = computed(() => {
   const b = props.bar
   if (!b) return null
   const from = props.type === 'candles' ? b.open : props.base
-  const to = props.type === 'candles' ? b.close : b.price
+  const to = b.close
   if (!(from > 0)) return null
   return { diff: to - from, pct: (to / from - 1) * 100 }
 })
@@ -38,11 +37,11 @@ const sign = (v) => (v < 0 ? '−' : '+')
       <span>L<b :class="dir">{{ fmt(bar.low) }}</b></span>
       <span>C<b :class="dir">{{ fmt(bar.close) }}</b></span>
     </template>
-    <span v-else><b :class="dir">{{ fmt(bar.price) }}</b></span>
+    <span v-else><b :class="dir">{{ fmt(bar.close) }}</b></span>
     <span v-if="change" :class="dir">
       {{ sign(change.diff) }}{{ fmt(Math.abs(change.diff)).slice(1) }} ({{ sign(change.pct) }}{{ Math.abs(change.pct).toFixed(2) }}%)
     </span>
-    <span class="vol">Vol<b>{{ volFmt(bar.volume) }}</b></span>
+    <span class="vol">Vol<b>{{ formatADA(bar.volume) }}</b></span>
     <template v-if="extras.length">
       <span class="break"></span>
       <span v-for="x in extras" :key="x.name" class="extra">

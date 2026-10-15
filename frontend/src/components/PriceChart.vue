@@ -1,40 +1,35 @@
 <!--
-  CoinGecko-style price chart (TradingView Lightweight Charts), as a line or as
-  candlesticks.
-  - Line: area line, green if the price is up over the range, red if down. On
-    hover: dashed line + dot; the line stays bold up to the cursor and fades
-    after it; the colour compares the hovered price with the first price.
-  - Candles: green when a slot closed higher than it opened, red when lower.
+  The price chart (TradingView Lightweight Charts), as candlesticks or a line.
+  Both draw the same candles: the line joins each candle's close.
+  - Candles: green when a candle closed higher than it opened, red when lower.
+  - Line: a blue line with a light area under it, like TradingView's.
   - The line at the top left (ChartLegend) shows the bar under the mouse.
-  - Volume bars underneath (grey for the line, green/red for candles).
+  - Volume bars underneath, green or red like the candle above them.
   - A drawing toolbar on the left (ChartToolbar), with zoom and scroll.
 -->
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { createChart, AreaSeries, CandlestickSeries, HistogramSeries, LineStyle, CrosshairMode } from 'lightweight-charts'
-import { formatPrice, formatADA } from '../format.js'
+import { formatPrice } from '../format.js'
 import { useDrawings, SCROLL, SCALE } from '../chart/useDrawings.js'
 import { useIndicators } from '../chart/useIndicators.js'
 import ChartToolbar from './ChartToolbar.vue'
 import ChartLegend from './ChartLegend.vue'
 
 const props = defineProps({
-  type: { type: String, default: 'line' }, // 'line' or 'candles'
-  points: { type: Array, default: () => [] }, // line: [{ time, price, volume }]
-  candles: { type: Array, default: () => [] }, // candles: [{ time, open, high, low, close, volume }]
+  type: { type: String, default: 'candles' }, // 'candles' or 'line'
+  candles: { type: Array, default: () => [] }, // [{ time, open, high, low, close, volume }], oldest first
   indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma', 'rsi']
-  fmt: { type: Function, default: formatPrice }, // writes a value: ₳ or $ price, or a compact FDV
-  volFmt: { type: Function, default: formatADA }, // writes a volume, in ADA or USD
-  fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, range, type)
+  fmt: { type: Function, default: formatPrice }, // writes a value: a price, or a compact FDV
+  fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, size, unit)
   token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
 
-const BULL = '#16c784'
-const BEAR = '#ea3943'
 const MUTED = '#58667e'
-// Candles use TradingView's colours.
+// TradingView's colours: green and red candles, a blue line.
 const UP = '#089981'
 const DOWN = '#f23645'
+const BLUE = '#2962ff'
 // rgba turns a colour like #16c784 into rgba() with transparency a (0 to 1).
 const rgba = (hex, a) => {
   const n = parseInt(hex.slice(1), 16)
@@ -43,12 +38,10 @@ const rgba = (hex, a) => {
 
 const el = ref(null)
 const shown = ref(null) // the bar the legend shows
-const base = ref(0) // line: the first price, for the legend's change
+const base = ref(0) // line: the close before the bar shown, for the legend's change
 
-let chart, area, candleSeries, volume, lastLine
-let rows = [] // line points
-let bars = [] // candles
-let lastIdx = null
+let chart, area, candleSeries, volume
+let bars = [] // the candles on the chart
 let barList = [] // [{ time, values }] for the drawing tools' magnet
 let fitted = null // the fitKey the view was last fitted for
 
@@ -72,51 +65,29 @@ function onKey(e) {
   }
 }
 
-// Line mode: colour and bold/faded split for the hovered point (-1 = none).
-function paint(idx) {
-  if (isCandles() || !rows.length || idx === lastIdx) return
-  lastIdx = idx
-  const first = rows[0].price
-  const shown = idx < 0 ? rows[rows.length - 1].price : rows[idx].price
-  const col = shown >= first ? BULL : BEAR
-  const solid = { lineColor: col, topColor: rgba(col, 0.24), bottomColor: rgba(col, 0.02) }
-  const faded = { lineColor: rgba(col, 0.3), topColor: rgba(col, 0.06), bottomColor: rgba(col, 0) }
-  area.setData(rows.map((p, k) => ({ time: p.time, value: p.price, ...(idx < 0 || k <= idx ? solid : faded) })))
-  area.applyOptions({ crosshairMarkerBackgroundColor: col, crosshairMarkerBorderColor: rgba(col, 0.25) })
-  chart.applyOptions({ crosshair: { vertLine: { color: col } } })
-  lastLine.applyOptions({ price: rows[rows.length - 1].price, color: col, axisLabelColor: col, axisLabelTextColor: '#ffffff', axisLabelVisible: true })
+// showBar puts bar i in the legend (-1: the latest bar).
+function showBar(i) {
+  if (!bars.length) return (shown.value = null)
+  const k = i < 0 ? bars.length - 1 : i
+  shown.value = bars[k]
+  base.value = k > 0 ? bars[k - 1].close : 0
 }
 
-// load puts the current points or candles into the chart and fits the view.
+// load puts the candles into the chart, as candles or a line, and fits the view.
 function load() {
   if (!chart) return
-  lastIdx = null
-  if (isCandles()) {
-    rows = []
-    bars = props.candles.filter((c) => c.close > 0)
-    area.setData([])
-    lastLine.applyOptions({ axisLabelVisible: false })
-    candleSeries.setData(bars.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })))
-    volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: rgba(c.close >= c.open ? UP : DOWN, 0.5) })))
-    chart.applyOptions({ crosshair: { mode: CrosshairMode.Normal, vertLine: { color: MUTED }, horzLine: { visible: true, labelVisible: true } } })
-  } else {
-    bars = []
-    rows = props.points.filter((p) => p.price > 0)
-    candleSeries.setData([])
-    volume.setData(rows.map((p) => ({ time: p.time, value: p.volume, color: '#e3e6eb' })))
-    chart.applyOptions({ crosshair: { mode: CrosshairMode.Magnet, horzLine: { visible: false, labelVisible: false } } })
-    if (rows.length) paint(-1)
-    else area.setData([])
-  }
-  const list = isCandles() ? bars : rows
-  shown.value = list[list.length - 1] || null
-  base.value = rows[0]?.price || 0
-  barList = isCandles()
-    ? bars.map((c) => ({ time: c.time, values: [c.open, c.high, c.low, c.close] }))
-    : rows.map((p) => ({ time: p.time, values: [p.price] }))
+  const line = !isCandles()
+  bars = props.candles.filter((c) => c.close > 0)
+  candleSeries.setData(line ? [] : bars.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })))
+  area.setData(line ? bars.map((c) => ({ time: c.time, value: c.close })) : [])
+  candleSeries.applyOptions({ lastValueVisible: !line })
+  area.applyOptions({ lastValueVisible: line })
+  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: rgba(c.close >= c.open ? UP : DOWN, 0.5) })))
+  showBar(-1)
+  barList = bars.map((c) => ({ time: c.time, values: line ? [c.close] : [c.open, c.high, c.low, c.close] }))
   draw.attach()
   draw.setBars(barList.map((b) => b.time))
-  ind.set(props.indicators, isCandles() ? bars : rows.map((p) => ({ time: p.time, close: p.price, volume: p.volume })))
+  ind.set(props.indicators, bars)
   // Keep the visitor's zoom when the data refreshes each minute.
   // Candles start with the latest ones shown, about 14px each so they are wide
   // enough to read (about 60 on a laptop), like TradingView; drag for older ones.
@@ -129,7 +100,7 @@ function load() {
   }
 }
 
-// The axis writes values the way the fmt prop says (price, FDV, ₳ or $).
+// The axis writes values the way the fmt prop says (a price or an FDV).
 const priceFormat = { type: 'custom', minMove: 1e-12, formatter: (v) => props.fmt(v) }
 const ind = useIndicators(() => chart, priceFormat)
 
@@ -153,9 +124,9 @@ onMounted(() => {
       },
     },
     crosshair: {
-      mode: CrosshairMode.Magnet,
-      vertLine: { style: LineStyle.Dashed, width: 1, labelBackgroundColor: '#131722' },
-      horzLine: { style: LineStyle.Dashed, width: 1, color: MUTED, labelBackgroundColor: '#131722', visible: false, labelVisible: false },
+      mode: CrosshairMode.Normal,
+      vertLine: { style: LineStyle.Dashed, width: 1, color: MUTED, labelBackgroundColor: '#131722' },
+      horzLine: { style: LineStyle.Dashed, width: 1, color: MUTED, labelBackgroundColor: '#131722' },
     },
     // The date under the mouse, on the time axis: "Tue 13 Oct, 10:00".
     localization: {
@@ -166,8 +137,8 @@ onMounted(() => {
   })
 
   area = chart.addSeries(AreaSeries, {
-    lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
-    crosshairMarkerRadius: 5, crosshairMarkerBorderWidth: 3, priceFormat,
+    lineColor: BLUE, topColor: rgba(BLUE, 0.16), bottomColor: rgba(BLUE, 0), lineWidth: 2,
+    priceLineVisible: false, lastValueVisible: false, crosshairMarkerRadius: 4, priceFormat,
   })
   candleSeries = chart.addSeries(CandlestickSeries, {
     upColor: UP, downColor: DOWN, borderUpColor: UP, borderDownColor: DOWN, wickUpColor: UP, wickDownColor: DOWN,
@@ -176,19 +147,10 @@ onMounted(() => {
   for (const s of [area, candleSeries]) s.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.22 } })
   volume = chart.addSeries(HistogramSeries, { priceScaleId: 'vol', priceLineVisible: false, lastValueVisible: false })
   chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.84, bottom: 0 }, visible: false })
-  lastLine = area.createPriceLine({ price: 0, lineVisible: false, axisLabelVisible: false, title: '' })
 
   chart.subscribeCrosshairMove((param) => {
-    const list = isCandles() ? bars : rows
-    if (!list.length) return
-    if (!param.point || param.logical == null || param.point.x < 0 || param.point.y < 0) {
-      shown.value = list[list.length - 1]
-      paint(-1)
-      return
-    }
-    const idx = Math.max(0, Math.min(list.length - 1, Math.round(param.logical)))
-    shown.value = list[idx]
-    if (!draw.busy.value) paint(idx)
+    if (!param.point || param.logical == null || param.point.x < 0 || param.point.y < 0) return showBar(-1)
+    showBar(Math.max(0, Math.min(bars.length - 1, Math.round(param.logical))))
   })
 
   draw.install(chart, el.value)
@@ -196,7 +158,7 @@ onMounted(() => {
   load()
 })
 
-watch(() => [props.type, props.points, props.candles, props.indicators], load)
+watch(() => [props.type, props.candles, props.indicators], load)
 watch(() => props.token, () => draw.clearAll())
 
 onBeforeUnmount(() => {
@@ -214,7 +176,7 @@ onBeforeUnmount(() => {
       <div ref="el" class="chart"></div>
       <input v-if="textBox" v-model="textBox.value" v-focus class="text-input" :style="{ left: textBox.x + 'px', top: textBox.y + 'px' }"
              maxlength="80" aria-label="Text on the chart" @keydown.enter="draw.submitText" @keydown.esc.stop="draw.cancel" @blur="draw.submitText" />
-      <ChartLegend :type="type" :bar="shown" :base="base" :fmt="fmt" :vol-fmt="volFmt" :extras="shown ? ind.at(shown.time) : []" />
+      <ChartLegend :type="type" :bar="shown" :base="base" :fmt="fmt" :extras="shown ? ind.at(shown.time) : []" />
       <button v-if="selected != null" type="button" class="remove" title="Delete drawing (Del)" @click="draw.removeSelected">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l1 11h7l1-11M8.5 8.5v5M11.5 8.5v5" /></svg>
         Delete
@@ -224,7 +186,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.frame { display: flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.frame { display: flex; border-radius: 0 0 12px 12px; overflow: hidden; }
 .wrap { position: relative; flex: 1; min-width: 0; }
 .text-input { position: absolute; z-index: 6; transform: translateY(-50%); width: 180px; font: 600 14px Inter, system-ui, sans-serif; color: var(--fg); padding: 4px 8px; border: 1px solid #2962ff; border-radius: 6px; outline: none; background: #fff; }
 @media (max-width: 700px) { .frame { flex-direction: column; } }

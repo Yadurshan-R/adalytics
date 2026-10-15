@@ -1,23 +1,23 @@
 # Chart functions
 
-Every function behind the price chart on a token page: the chart itself, its legend, units, indicators and drawing tools. Each one also has the same comment above it in the code. The rest of the website is in [FRONTEND_FUNCTIONS.md](FRONTEND_FUNCTIONS.md).
+Every function behind the price chart on a token page: the bar on top, the chart itself, its legend, Price / FDV, indicators and drawing tools. Each one also has the same comment above it in the code. The rest of the website is in [FRONTEND_FUNCTIONS.md](FRONTEND_FUNCTIONS.md).
 
 ## `src/components/PriceChart.vue`
 
 | Function | What it does |
 |---|---|
-| `rgba` | Turns a colour like #16c784 into rgba() with transparency a (0 to 1). |
+| `rgba` | Turns a colour like #089981 into rgba() with transparency a (0 to 1). |
 | `isCandles` | Reports whether the chart shows candles instead of a line. |
-| `paint` | Line mode: colour and bold/faded split for the hovered point (-1 = none). |
-| `load` | Puts the current points or candles into the chart. The view is set only when the token, range, size or type changes, so a zoom or scroll survives the minute refresh. Candles open on the latest ones, about 14px wide each. |
-| `fmt` / `volFmt` (props) | How the axis and the legend write values and volume: ₳ or $ price, or a compact FDV. |
+| `showBar` | Puts a bar in the legend (the latest one when the mouse is off the chart), with the close before it for the line's change. |
+| `load` | Puts the candles into the chart, as candles or as a line through each close. The view is set only when the token, size or unit changes, so a zoom or scroll survives the minute refresh and a switch between candles and line. Candles open on the latest ones, about 14px wide each. |
+| `fmt` (prop) | How the axis and the legend write values: a price, or a compact FDV. |
 | `onKey` | Esc stops the drawing being placed and unselects; Delete or Backspace removes the selected drawing. |
 
 ## `src/components/ChartLegend.vue`
 
 | Function | What it does |
 |---|---|
-| `change` | The move in the chart's unit and percent: open to close for a candle, first price to this price for the line. Values and volume are written with the `fmt` and `volFmt` the chart passes in (₳ or $, price or FDV). |
+| `change` | The move and percent: open to close for a candle, the close before to this close for the line. Values are written with the `fmt` the chart passes in (price or FDV). |
 
 ## `src/components/IndicatorMenu.vue`
 
@@ -47,7 +47,7 @@ Every function behind the price chart on a token page: the chart itself, its leg
 
 | Function | What it does |
 |---|---|
-| `buttons` | The quick sizes (15m, 1h, 4h, 1D), plus the picked size when it came from the list. |
+| `buttons` | The quick sizes (5m, 15m, 1h, 4h, 1D), plus the picked size when it came from the list. |
 | `progress` | How much of a size's history is loaded, 0 to 100; shown in green until it is all there. |
 | `pick` | Chooses a size and closes the list. |
 
@@ -55,11 +55,14 @@ Every function behind the price chart on a token page: the chart itself, its leg
 
 | Function | What it does |
 |---|---|
-| `load` | Fetches the chart: the line for the picked range, or the candles at the picked size. Runs again every minute. |
-| `setType` / `setRange` | Switch between line and candles, or the line's range. |
-| `setUnit` / `setCurrency` | Switch between Price and FDV, and between ADA and USD (the sums are in useUnits.js). FDV shows only when the total supply is known, USD only when the USDM pool is tracked. |
-| `waiting` | True while the picked line range is still loading; the loading percentage shows instead. Candles never wait: they show the history loaded so far. |
-| `span` (event) | Tells the page the low and high for the range bar: the line's range, or the last 24 hours of candles. |
+| `load` | Fetches the candles at the picked size; candles and line both draw them. Runs again every minute. Each size shows the history loaded so far. |
+| `span` (event) | Tells the page the low and high of the last 24 hours, for the range bar. |
+
+## `src/components/ChartHeader.vue`
+
+| Function | What it does |
+|---|---|
+| (template) | The slim bar on top of the chart, like Birdeye's: candle size, candles or line, Indicators, and Price / FDV on the right (only when the total supply is known). One bar for both chart styles, so switching style keeps the size. |
 
 ## `src/components/ChartToolbar.vue`
 
@@ -135,8 +138,6 @@ Every function behind the price chart on a token page: the chart itself, its leg
 
 | Function | What it does |
 |---|---|
-| `useUnits` | Turns the chart's ADA prices into what the visitor picked: Price or FDV (price × total supply), in ADA or USD, like TapTools' chart switches. |
-| `loadRates` | When USD is picked, fetches the USDM pool's chart for the same view. USDM's price in ADA is the number of ADA in one US dollar at that time. It comes from the backend's memory, so no extra Koios request. |
-| `convert` | Scales each bar's prices and volume. In USD each bar uses the rate at its own time, so an old candle shows what the token was worth in dollars then, not at today's ADA price. |
-| `fmt` / `volFmt` | How values and volume are written for the picked units. |
-| `key` | Changes when the units change, so the chart fits again and old drawings are cleared (a line drawn at ₳0.18 means nothing on a $ chart). |
+| `useUnits` | Price / FDV, like Birdeye's Price / MC and TapTools' Price / MCap: the candles as they are, or each price multiplied by the total supply. |
+| `fmt` | How values are written: ₳0.1903 for a price, ₳4.57B for an FDV. |
+| `key` | Changes with the unit, so the chart fits again and old drawings are cleared (a line drawn at ₳0.19 means nothing on an FDV chart). |

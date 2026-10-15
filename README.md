@@ -20,10 +20,9 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 
 **Token page**
 
-* Live price chart (TradingView Lightweight Charts) for 24 hours, 7 days or 30 days, as a line or as candles, with volume bars and a tooltip on hover
-* Chart switches like TapTools': Price or FDV, and ADA or USD. In USD each candle uses the ADA price from its own time, so a token that is up in ADA but down in dollars shows it
-* A range that is still loading can be clicked: the chart area shows the live percentage and the chart appears when it reaches 100%
-* Price in ADA and USD, low and high over the chosen range, volume, number of trades, buys against sells, holder count, pool liquidity and the time of the last trade
+* Live price chart (TradingView Lightweight Charts) as candles or a line, with volume bars. One slim bar on top, like Birdeye's: candle size (5m to 1 day), candles or line, indicators, and Price / FDV
+* Scroll back through up to 30 days of history; while older history is still loading, the chart shows what is loaded so far
+* Price in ADA (and USD for reference), low and high over the last 24 hours, volume, number of trades, buys against sells, holder count, pool liquidity and the time of the last trade
 * Info box with the project website, policy ID and fingerprint (with copy buttons), creation date, a Cardanoscan link and the project description
 * The 50 most recent trades, each with a link to the transaction on Cardanoscan
 * A drawing toolbar beside the chart, like TradingView's: trend line, horizontal line, rectangle, Fibonacci levels, text, a ruler that measures the price change and time between two points, zoom and scroll, a magnet that snaps to prices, hide and delete. Drawings stay in the browser only and are not saved
@@ -172,11 +171,12 @@ frontend/src/
   components/ListToolbar.vue    the views, 24h / 7d switch and search above it
   components/TokenTable.vue     the token table
   pages/TokenPage.vue           the token page
-  components/ChartPanel.vue     the chart's buttons, loading box and data
+  components/ChartPanel.vue     the chart and its data
+  components/ChartHeader.vue    the bar on top of the chart
   components/LoadingProgress.vue  the loading box with live progress
   components/PriceChart.vue     the price chart (line or candles)
   components/ChartLegend.vue    the open, high, low, close line on the chart
-  chart/useUnits.js             Price / FDV and ADA / USD for the chart
+  chart/useUnits.js             Price / FDV for the chart
   components/IndicatorMenu.vue  the Indicators button
   components/CandleSizePicker.vue  the candle size buttons and list
   chart/indicators.js           indicator math (MA, EMA, Bollinger, VWAP, RSI)

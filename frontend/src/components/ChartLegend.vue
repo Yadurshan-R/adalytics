@@ -11,10 +11,12 @@ const props = defineProps({
   bar: { type: Object, default: null }, // a candle or a line point
   base: { type: Number, default: 0 }, // line: the first price of the range
   extras: { type: Array, default: () => [] }, // indicators: [{ name, color, value, price }]
+  fmt: { type: Function, default: formatPrice }, // writes a price (or an FDV), in ₳ or $
+  volFmt: { type: Function, default: formatADA }, // writes the volume
 })
 
-// change is the move in ADA and percent: open to close for a candle, first
-// price to this price for the line.
+// change is the move in the chart's unit and percent: open to close for a
+// candle, first price to this price for the line.
 const change = computed(() => {
   const b = props.bar
   if (!b) return null
@@ -31,20 +33,20 @@ const sign = (v) => (v < 0 ? '−' : '+')
 <template>
   <div v-if="bar" class="legend num" :class="{ tv: type === 'candles' }">
     <template v-if="type === 'candles'">
-      <span>O<b :class="dir">{{ formatPrice(bar.open) }}</b></span>
-      <span>H<b :class="dir">{{ formatPrice(bar.high) }}</b></span>
-      <span>L<b :class="dir">{{ formatPrice(bar.low) }}</b></span>
-      <span>C<b :class="dir">{{ formatPrice(bar.close) }}</b></span>
+      <span>O<b :class="dir">{{ fmt(bar.open) }}</b></span>
+      <span>H<b :class="dir">{{ fmt(bar.high) }}</b></span>
+      <span>L<b :class="dir">{{ fmt(bar.low) }}</b></span>
+      <span>C<b :class="dir">{{ fmt(bar.close) }}</b></span>
     </template>
-    <span v-else><b :class="dir">{{ formatPrice(bar.price) }}</b></span>
+    <span v-else><b :class="dir">{{ fmt(bar.price) }}</b></span>
     <span v-if="change" :class="dir">
-      {{ sign(change.diff) }}{{ formatPrice(Math.abs(change.diff)).slice(1) }} ({{ sign(change.pct) }}{{ Math.abs(change.pct).toFixed(2) }}%)
+      {{ sign(change.diff) }}{{ fmt(Math.abs(change.diff)).slice(1) }} ({{ sign(change.pct) }}{{ Math.abs(change.pct).toFixed(2) }}%)
     </span>
-    <span class="vol">Vol<b>{{ formatADA(bar.volume) }}</b></span>
+    <span class="vol">Vol<b>{{ volFmt(bar.volume) }}</b></span>
     <template v-if="extras.length">
       <span class="break"></span>
       <span v-for="x in extras" :key="x.name" class="extra">
-        {{ x.name }}<b :style="{ color: x.color }">{{ x.value == null ? '—' : x.price ? formatPrice(x.value) : x.value.toFixed(1) }}</b>
+        {{ x.name }}<b :style="{ color: x.color }">{{ x.value == null ? '—' : x.price ? fmt(x.value) : x.value.toFixed(1) }}</b>
       </span>
     </template>
   </div>

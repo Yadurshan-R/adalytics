@@ -12,7 +12,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { createChart, AreaSeries, CandlestickSeries, HistogramSeries, LineStyle, CrosshairMode } from 'lightweight-charts'
-import { formatPrice } from '../format.js'
+import { formatPrice, formatADA } from '../format.js'
 import { useDrawings, SCROLL, SCALE } from '../chart/useDrawings.js'
 import { useIndicators } from '../chart/useIndicators.js'
 import ChartToolbar from './ChartToolbar.vue'
@@ -23,6 +23,8 @@ const props = defineProps({
   points: { type: Array, default: () => [] }, // line: [{ time, price, volume }]
   candles: { type: Array, default: () => [] }, // candles: [{ time, open, high, low, close, volume }]
   indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma', 'rsi']
+  fmt: { type: Function, default: formatPrice }, // writes a value: ₳ or $ price, or a compact FDV
+  volFmt: { type: Function, default: formatADA }, // writes a volume, in ADA or USD
   fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, range, type)
   token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
@@ -127,7 +129,8 @@ function load() {
   }
 }
 
-const priceFormat = { type: 'custom', minMove: 1e-12, formatter: formatPrice }
+// The axis writes values the way the fmt prop says (price, FDV, ₳ or $).
+const priceFormat = { type: 'custom', minMove: 1e-12, formatter: (v) => props.fmt(v) }
 const ind = useIndicators(() => chart, priceFormat)
 
 onMounted(() => {
@@ -211,7 +214,7 @@ onBeforeUnmount(() => {
       <div ref="el" class="chart"></div>
       <input v-if="textBox" v-model="textBox.value" v-focus class="text-input" :style="{ left: textBox.x + 'px', top: textBox.y + 'px' }"
              maxlength="80" aria-label="Text on the chart" @keydown.enter="draw.submitText" @keydown.esc.stop="draw.cancel" @blur="draw.submitText" />
-      <ChartLegend :type="type" :bar="shown" :base="base" :extras="shown ? ind.at(shown.time) : []" />
+      <ChartLegend :type="type" :bar="shown" :base="base" :fmt="fmt" :vol-fmt="volFmt" :extras="shown ? ind.at(shown.time) : []" />
       <button v-if="selected != null" type="button" class="remove" title="Delete drawing (Del)" @click="draw.removeSelected">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l1 11h7l1-11M8.5 8.5v5M11.5 8.5v5" /></svg>
         Delete

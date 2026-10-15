@@ -21,6 +21,7 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 **Token page**
 
 * Live price chart (TradingView Lightweight Charts) for 24 hours, 7 days or 30 days, as a line or as candles, with volume bars and a tooltip on hover
+* Chart switches like TapTools': Price or FDV, and ADA or USD. In USD each candle uses the ADA price from its own time, so a token that is up in ADA but down in dollars shows it
 * A range that is still loading can be clicked: the chart area shows the live percentage and the chart appears when it reaches 100%
 * Price in ADA and USD, low and high over the chosen range, volume, number of trades, buys against sells, holder count, pool liquidity and the time of the last trade
 * Info box with the project website, policy ID and fingerprint (with copy buttons), creation date, a Cardanoscan link and the project description
@@ -135,7 +136,7 @@ Logs only go to the terminal; nothing is written to disk.
 
 ## Project structure
 
-Every file has one job and is under 250 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together, and [docs/BACKEND_FUNCTIONS.md](docs/BACKEND_FUNCTIONS.md), [docs/MARKET_FUNCTIONS.md](docs/MARKET_FUNCTIONS.md) and [docs/FRONTEND_FUNCTIONS.md](docs/FRONTEND_FUNCTIONS.md) list every function in plain words.
+Every file has one job and is under 250 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together, and [docs/BACKEND_FUNCTIONS.md](docs/BACKEND_FUNCTIONS.md), [docs/MARKET_FUNCTIONS.md](docs/MARKET_FUNCTIONS.md), [docs/FRONTEND_FUNCTIONS.md](docs/FRONTEND_FUNCTIONS.md) and [docs/CHART_FUNCTIONS.md](docs/CHART_FUNCTIONS.md) list every function in plain words.
 
 ```
 backend/
@@ -175,6 +176,7 @@ frontend/src/
   components/LoadingProgress.vue  the loading box with live progress
   components/PriceChart.vue     the price chart (line or candles)
   components/ChartLegend.vue    the open, high, low, close line on the chart
+  chart/useUnits.js             Price / FDV and ADA / USD for the chart
   components/IndicatorMenu.vue  the Indicators button
   components/CandleSizePicker.vue  the candle size buttons and list
   chart/indicators.js           indicator math (MA, EMA, Bollinger, VWAP, RSI)

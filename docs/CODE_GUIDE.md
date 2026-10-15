@@ -1,10 +1,11 @@
 # Code guide
 
-This guide explains how Adalytics is built. Read it to see how the pieces fit together. Every function is listed in plain words in two more files, so no file is too long:
+This guide explains how Adalytics is built. Read it to see how the pieces fit together. Every function is listed in plain words in these files, so no file is too long:
 
 - [Backend functions](BACKEND_FUNCTIONS.md): the Go backend and its tests
 - [Market functions](MARKET_FUNCTIONS.md): the market package (prices, history, candles) and its tests
 - [Frontend functions](FRONTEND_FUNCTIONS.md): the Vue website
+- [Chart functions](CHART_FUNCTIONS.md): the price chart, its units, indicators and drawing tools
 
 Every function in the code also has a comment above it saying the same thing, so you can read the code on its own too.
 

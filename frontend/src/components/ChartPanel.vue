@@ -3,23 +3,31 @@
      - Line: 24H, 7D or 30D, CoinGecko style.
      - Candles: the candle size (CandleSizePicker), TradingView style. Each size
        loads all the history there is, so the visitor can scroll back in time.
+     Price / FDV and ADA / USD change what the chart shows, like TapTools'
+     switches (the sums are in chart/useUnits.js).
      It tells the page the low and high for the range bar (event "span"). -->
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useTokens } from '../useTokens.js'
-import { chartType, chartRange, candleSize, indicators } from '../chartPrefs.js'
+import { chartType, chartRange, candleSize, indicators, chartUnit, chartCurrency } from '../chartPrefs.js'
+import { useUnits } from '../chart/useUnits.js'
 import PriceChart from './PriceChart.vue'
 import IndicatorMenu from './IndicatorMenu.vue'
 import CandleSizePicker from './CandleSizePicker.vue'
 
-const props = defineProps({ id: { type: String, required: true } }) // the token's id
+const props = defineProps({
+  id: { type: String, required: true }, // the token's id
+  supply: { type: Number, default: 0 }, // total supply, for Price / FDV
+})
 const emit = defineEmits(['span'])
-const { history, reload } = useTokens()
+const { tokens, history, reload } = useTokens()
 
 const TYPES = [{ key: 'line', label: 'Line' }, { key: 'candles', label: 'Candles' }]
 const isCandles = computed(() => chartType.value === 'candles')
 const setType = (key) => (chartType.value = key)
 const setRange = (key) => (chartRange.value = key)
+const setUnit = (unit) => (chartUnit.value = unit)
+const setCurrency = (c) => (chartCurrency.value = c)
 
 // Range buttons for the line. Every range can be clicked; if its history is
 // still loading, the loading percentage shows until the chart is ready.
@@ -35,6 +43,8 @@ const view = computed(() => (isCandles.value ? `candles-${candleSize.value}` : `
 const points = ref([])
 const candles = ref([])
 const error = ref('')
+const units = useUnits(props, tokens, points, candles)
+const { fdv, usd, canUsd, shownPoints, shownCandles } = units
 let timer = null
 let progressTimer = null
 
@@ -47,7 +57,7 @@ async function load() {
   }
   const q = isCandles.value ? `type=candles&size=${candleSize.value}` : `range=${selected.value.key}`
   try {
-    const res = await fetch(`/api/tokens/${encodeURIComponent(props.id)}/chart?${q}`, { cache: 'no-store' })
+    const [res] = await Promise.all([fetch(`/api/tokens/${encodeURIComponent(props.id)}/chart?${q}`, { cache: 'no-store' }), units.loadRates(q)])
     const data = await res.json()
     if (res.status === 409) return reload() // not loaded after all (the backend restarted)
     if (!res.ok) throw new Error(data.error || `The backend answered ${res.status}`)
@@ -67,7 +77,7 @@ onUnmounted(() => {
   clearInterval(timer)
   clearInterval(progressTimer)
 })
-watch([() => props.id, view], load)
+watch([() => props.id, view, chartCurrency], load)
 
 // While a loading range is picked, ask the backend for the progress every 3
 // seconds (it reads its own memory, no Koios request), and draw the chart as
@@ -98,6 +108,14 @@ watch([points, candles, waiting], () => {
       <div class="pick" role="group" aria-label="Chart type">
         <button v-for="t in TYPES" :key="t.key" type="button" :aria-pressed="t.key === chartType" @click="setType(t.key)">{{ t.label }}</button>
       </div>
+      <div v-if="supply > 0" class="pick" role="group" aria-label="Price or fully diluted value">
+        <button type="button" :aria-pressed="!fdv" @click="setUnit('price')">Price</button>
+        <button type="button" :aria-pressed="fdv" @click="setUnit('fdv')">FDV</button>
+      </div>
+      <div v-if="canUsd" class="pick" role="group" aria-label="Currency">
+        <button type="button" :aria-pressed="!usd" @click="setCurrency('ada')">ADA</button>
+        <button type="button" :aria-pressed="usd" @click="setCurrency('usd')">USD</button>
+      </div>
       <IndicatorMenu v-model="indicators" />
     </div>
     <CandleSizePicker v-if="isCandles" v-model="candleSize" :history="history" />
@@ -112,12 +130,13 @@ watch([points, candles, waiting], () => {
     <span class="p-pct num">{{ selected.progress }}%</span>
     <span class="p-bar"><span :style="{ width: Math.max(selected.progress, 1) + '%' }"></span></span>
   </div>
-  <PriceChart v-else :type="chartType" :points="points" :candles="candles" :indicators="indicators" :fit-key="`${id}-${view}`" :token="id" />
+  <PriceChart v-else :type="chartType" :points="shownPoints" :candles="shownCandles" :indicators="indicators"
+              :fmt="units.fmt.value" :vol-fmt="units.volFmt.value" :fit-key="`${id}-${view}-${units.key.value}`" :token="`${id}-${units.key.value}`" />
 </template>
 
 <style scoped>
 .toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-.left { display: flex; gap: 8px; }
+.left { display: flex; gap: 8px; flex-wrap: wrap; }
 .pick { display: inline-flex; background: var(--chip); border-radius: 10px; padding: 4px; gap: 2px; }
 .pick button { font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 .pick button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(13, 20, 33, 0.12); }

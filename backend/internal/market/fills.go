@@ -17,6 +17,10 @@ import (
 // address often has no stake key, or Minswap's. Orders and payouts come in
 // the same order, so the first order belongs to the first payout, and so on.
 //
+// A routed swap passes through more than one pool, e.g. USDA → ADA → NIGHT:
+// the other pools are steps on the way. With one order, the token's own pool
+// change is exactly that wallet's trade in this token.
+//
 // What a wallet put in or got back also holds the batcher's fee (taken off
 // every order) and the order deposit (paid back). The deposit cancels out; the
 // fee is worked out from the transaction itself: it is whatever ADA the
@@ -31,13 +35,14 @@ type fill struct {
 // means the transaction is not a plain batch of swaps, so it is not split.
 const MaxBatchFeeADA = 10
 
-// fillsFrom splits a swap transaction into one fill per order. It returns nil
-// when the transaction cannot be split with certainty (no inputs, more than
-// one pool, orders and payouts that do not pair up, or amounts that do not
-// add up); the caller then shows the pool's change as one trade without a
-// wallet.
-func fillsFrom(tx koios.Tx, asset koios.Asset) []fill {
-	poolIn, poolOut := onePool(tx.Inputs), onePool(tx.Outputs)
+// fillsFrom splits a swap transaction into one fill per order. lp is the
+// pool's LP asset, which tells the token's pool apart from others in the
+// transaction. It returns nil when the transaction cannot be split with
+// certainty (no inputs, orders and payouts that do not pair up, several
+// orders in a routed swap, or amounts that do not add up); the caller then
+// shows the pool's change as one trade without a wallet.
+func fillsFrom(tx koios.Tx, asset, lp koios.Asset) []fill {
+	poolIn, poolOut := findPool(tx.Inputs, lp), findPool(tx.Outputs, lp)
 	if poolIn < 0 || poolOut < 0 {
 		return nil
 	}
@@ -45,8 +50,8 @@ func fillsFrom(tx koios.Tx, asset koios.Asset) []fill {
 	poolADA := sub(lovelace(out), lovelace(in))
 	poolTok := sub(units(out, asset), units(in, asset))
 
-	// The batcher's coins go in and come back out at the same address; every
-	// other input is an order, every other output a payout.
+	// The batcher's coins go in and come back out at the same address; pools
+	// are skipped; every other input is an order, every other output a payout.
 	inAddr, outAddr := map[string]bool{}, map[string]bool{}
 	for _, o := range tx.Inputs {
 		inAddr[o.PaymentAddr.Bech32] = true
@@ -55,19 +60,31 @@ func fillsFrom(tx koios.Tx, asset koios.Asset) []fill {
 		outAddr[o.PaymentAddr.Bech32] = true
 	}
 	var orders, payouts []koios.TxOutput
-	for i, o := range tx.Inputs {
-		if i != poolIn && !outAddr[o.PaymentAddr.Bech32] {
+	pools := 0
+	for _, o := range tx.Inputs {
+		if isPool(o) {
+			pools++
+		} else if !outAddr[o.PaymentAddr.Bech32] {
 			orders = append(orders, o)
 		}
 	}
-	for i, o := range tx.Outputs {
-		if i != poolOut && !inAddr[o.PaymentAddr.Bech32] {
+	for _, o := range tx.Outputs {
+		if !isPool(o) && !inAddr[o.PaymentAddr.Bech32] {
 			payouts = append(payouts, o)
 		}
 	}
 	n := len(orders)
 	if n == 0 || n != len(payouts) {
 		return nil
+	}
+	// A routed swap: with one order, the pool's change is that wallet's
+	// trade; several orders through several pools cannot be split for certain.
+	if pools > 1 {
+		ada, tok := poolADA, new(big.Int).Neg(poolTok)
+		if n > 1 || ada.Sign() == 0 || ada.Sign() != tok.Sign() {
+			return nil
+		}
+		return []fill{{wallet: walletOf(payouts[0]), ada: ada, token: tok}}
 	}
 
 	// Each order's net change (payout minus order), and the fee: the ADA the
@@ -104,28 +121,31 @@ func fillsFrom(tx koios.Tx, asset koios.Asset) []fill {
 		if ada.Sign() == 0 || ada.Sign() != tok.Sign() || (n > 1 && !nearPrice(ada, tok, in, asset)) {
 			return nil
 		}
-		w := payouts[i].StakeAddr
-		if w == "" {
-			w = payouts[i].PaymentAddr.Bech32
-		}
-		fills = append(fills, fill{wallet: w, ada: ada, token: tok})
+		fills = append(fills, fill{wallet: walletOf(payouts[i]), ada: ada, token: tok})
 	}
 	return fills
 }
 
-// onePool is the index of the only Minswap pool among outputs, or -1 when
-// there is none or more than one.
-func onePool(list []koios.TxOutput) int {
-	at := -1
+// findPool is the index of the pool holding the LP asset lp, or -1.
+func findPool(list []koios.TxOutput, lp koios.Asset) int {
 	for i, o := range list {
-		if o.PaymentAddr.Cred == minswap.PoolCredential {
-			if at >= 0 {
-				return -1
-			}
-			at = i
+		if isPool(o) && units(o, lp).Sign() > 0 {
+			return i
 		}
 	}
-	return at
+	return -1
+}
+
+// isPool reports whether an input or output is a Minswap pool.
+func isPool(o koios.TxOutput) bool { return o.PaymentAddr.Cred == minswap.PoolCredential }
+
+// walletOf is the wallet a payout goes to: its stake address, or its payment
+// address when it has none.
+func walletOf(o koios.TxOutput) string {
+	if o.StakeAddr != "" {
+		return o.StakeAddr
+	}
+	return o.PaymentAddr.Bech32
 }
 
 // nearPrice reports whether ADA per token is within 20% of the pool's price

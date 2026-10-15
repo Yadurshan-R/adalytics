@@ -76,6 +76,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `stats` | Adds up the wallet's buys and sells in this token, and its net (bought minus sold). |
 | `signed` / `tone` | Write a net amount like +₳1.4K or −₳640, green or red. |
 | `copy` | Puts the address on the clipboard and shows "Copied" for 1.5 seconds. |
+| (Cardanoscan link) | Opens the stake key page for a stake1… wallet, or the address page for a wallet without a stake key (addr1…). |
 
 ## `src/components/Sparkline.vue`
 

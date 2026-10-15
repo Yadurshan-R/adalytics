@@ -52,7 +52,7 @@ func (t *Tracker) readPools(ctx context.Context, txs []koios.AddressTx, progress
 			}
 			found[s] = append(found[s], poolState{
 				pool: p, height: tx.BlockHeight, order: chainOrder(tx.BlockHeight, tx.TxBlockIndex), address: o.PaymentAddr.Bech32,
-				fills: fillsFrom(tx, s.token.Asset),
+				fills: fillsFrom(tx, s.token.Asset, p.LPAsset),
 			})
 		}
 	}

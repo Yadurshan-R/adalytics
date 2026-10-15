@@ -52,7 +52,7 @@ function copy() {
       <span class="label">Trader</span>
       <span class="addr" :title="wallet">{{ wallet.slice(0, 16) }}…{{ wallet.slice(-6) }}</span>
       <button type="button" class="link" @click="copy">{{ copied ? 'Copied' : 'Copy' }}</button>
-      <a class="link" :href="`https://cardanoscan.io/stakekey/${wallet}`" target="_blank" rel="noopener">Cardanoscan ↗</a>
+      <a class="link" :href="`https://cardanoscan.io/${wallet.startsWith('stake1') ? 'stakekey' : 'address'}/${wallet}`" target="_blank" rel="noopener">Cardanoscan ↗</a>
       <button type="button" class="link clear" @click="$emit('close')">Show all wallets</button>
     </div>
     <dl class="grid num">

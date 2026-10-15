@@ -73,12 +73,14 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 
 ## `internal/market/fills.go`
 
-Minswap does not swap each order on its own: a batcher swaps several people's orders against the pool in one transaction. These functions split such a transaction into one trade per order. The trader is the wallet the payout goes to: an order's own address often has no stake key, or Minswap's.
+Minswap does not swap each order on its own: a batcher swaps several people's orders against the pool in one transaction. These functions split such a transaction into one trade per order. The trader is the wallet the payout goes to: an order's own address often has no stake key, or Minswap's. A routed swap (e.g. USDA → ADA → NIGHT) passes through more than one pool; with one order, the token's own pool change is that wallet's trade.
 
 | Function | What it does |
 |---|---|
-| `fillsFrom` | Sorts the transaction into the pool, the batcher (its coins go in and come out at the same address), the orders and one payout per order, paired in order. Each pair's payout minus order, less its share of the batcher fee, is what went into or out of the pool. Returns nil, so the swap shows as one trade without a wallet, when anything does not add up: one pool only, as many payouts as orders, every token accounted for, a fee of ₳0 to ₳10 per order, and with several orders each one near the pool's price. |
-| `onePool` | The index of the only Minswap pool in a list of inputs or outputs, or -1. |
+| `fillsFrom` | Finds the token's pool by its LP asset, then sorts the transaction into pools, the batcher (its coins go in and come out at the same address), the orders and one payout per order, paired in order. Each pair's payout minus order, less its share of the batcher fee, is what went into or out of the pool. Returns nil, so the swap shows as one trade without a wallet, when anything does not add up: as many payouts as orders, one order only when the swap is routed through other pools, every token accounted for, a fee of ₳0 to ₳10 per order, and with several orders each one near the pool's price. |
+| `findPool` | The index of the pool holding a given LP asset, or -1. |
+| `isPool` | Whether an input or output is a Minswap pool. |
+| `walletOf` | The wallet a payout goes to: its stake address, or its payment address when it has none. |
 | `nearPrice` | Whether a pair's ADA per token is within 20% of the pool's price before the batch; shows orders and payouts were paired right. |
 | `lovelace` | The ADA in an output, in lovelace. |
 | `units` | How much of one token an output holds, in its smallest unit. |
@@ -214,8 +216,9 @@ Run them with `go test ./internal/market/` from `backend/`. They use a fake Koio
 |---|---|
 | `TestFillsRealSwaps` | Three real SNEK swaps from mainnet: a ₳487 buy, then one wallet selling twice. Each gives the right wallet, ADA and tokens. |
 | `TestFillsOrderWithoutOwnerKey` | Three more real SNEK swaps whose orders carry no stake key, or the pool's: the trader is the wallet the payout goes to. |
+| `TestFillsRouted` | Two real NIGHT swaps routed through a stablecoin pool (a buy and a sell): NIGHT's own pool change is the wallet's trade. |
 | `TestFillsBatch` | Three wallets in one batch (two buys and a sell) become three trades that add up to the pool's change. |
-| `TestFillsNotSplit` | Transactions that cannot be split for certain give no fills: no inputs, tokens missing, a fee too big, an order without a payout, payouts paired the wrong way round. |
+| `TestFillsNotSplit` | Transactions that cannot be split for certain give no fills: no inputs, tokens missing, a fee too big, an order without a payout, two orders routed through two pools, payouts paired the wrong way round. |
 | `TestTradesFromFills` | Fills become trades with wallets; a swap without fills is still one trade from the pool's change. |
 
 ## `internal/market/wallets_test.go`

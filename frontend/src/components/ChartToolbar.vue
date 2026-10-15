@@ -93,7 +93,7 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
 </template>
 
 <style scoped>
-.toolbar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; border-right: 1px solid var(--line); }
+.toolbar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; border-right: 1px solid var(--line); overflow-y: auto; scrollbar-width: none; }
 .btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 30px; border: 0; border-radius: 6px; background: none; color: #6a6d78; cursor: pointer; }
 .btn:hover:not(:disabled) { background: #f0f3fa; color: #131722; }
 .btn[aria-pressed="true"] { color: #2962ff; }

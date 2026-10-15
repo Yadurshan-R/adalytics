@@ -21,6 +21,7 @@ const props = defineProps({
   candles: { type: Array, default: () => [] }, // [{ time, open, high, low, close, volume }], oldest first
   indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma', 'rsi']
   fmt: { type: Function, default: formatPrice }, // writes a value: a price, or a compact FDV
+  title: { type: String, default: '' }, // the pair and candle size for the legend, e.g. NIGHT/ADA · 15m
   fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, size, unit)
   token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
@@ -81,8 +82,9 @@ function load() {
   bars = props.candles.filter((c) => c.close > 0)
   candleSeries.setData(line ? [] : bars.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })))
   area.setData(line ? bars.map((c) => ({ time: c.time, value: c.close })) : [])
-  candleSeries.applyOptions({ lastValueVisible: !line })
-  area.applyOptions({ lastValueVisible: line })
+  // The latest price: a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap.
+  candleSeries.applyOptions({ lastValueVisible: !line, priceLineVisible: !line })
+  area.applyOptions({ lastValueVisible: line, priceLineVisible: line })
   volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: line ? VOLUME : rgba(c.close >= c.open ? UP : DOWN, 0.35) })))
   showBar(-1)
   barList = bars.map((c) => ({ time: c.time, values: line ? [c.close] : [c.open, c.high, c.low, c.close] }))
@@ -91,10 +93,11 @@ function load() {
   ind.set(props.indicators, bars)
   // Keep the visitor's zoom when the data refreshes each minute.
   // Candles start with the latest ones shown, about 14px each so they are wide
-  // enough to read (about 60 on a laptop), like TradingView; drag for older ones.
+  // enough to read (about 60 on a laptop), like TradingView; the line shows
+  // about four times as many, so it reads as a trend. Drag for older ones.
   if (fitted !== props.fitKey && barList.length) {
     const n = bars.length
-    const show = Math.max(20, Math.round(el.value.clientWidth / 14))
+    const show = Math.max(20, Math.round(el.value.clientWidth / (line ? 3.5 : 14)))
     if (n > show) chart.timeScale().setVisibleLogicalRange({ from: n - show, to: n - 1 })
     else chart.timeScale().fitContent()
     fitted = props.fitKey
@@ -109,7 +112,7 @@ onMounted(() => {
   chart = createChart(el.value, {
     autoSize: true,
     layout: { background: { type: 'solid', color: '#ffffff' }, textColor: MUTED, fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12 },
-    grid: { vertLines: { visible: false }, horzLines: { color: '#eff2f5' } },
+    grid: { vertLines: { color: '#f3f5f8' }, horzLines: { color: '#eff2f5' } },
     rightPriceScale: { borderVisible: false },
     timeScale: {
       borderVisible: false, fixLeftEdge: true, fixRightEdge: true,
@@ -139,11 +142,11 @@ onMounted(() => {
 
   area = chart.addSeries(AreaSeries, {
     lineColor: BLUE, topColor: 'rgba(0,0,0,0)', bottomColor: 'rgba(0,0,0,0)', lineWidth: 2, // just the line, no fill under it
-    priceLineVisible: false, lastValueVisible: false, crosshairMarkerRadius: 4, priceFormat,
+    priceLineVisible: false, priceLineStyle: LineStyle.Dotted, priceLineColor: BLUE, lastValueVisible: false, crosshairMarkerRadius: 4, priceFormat,
   })
   candleSeries = chart.addSeries(CandlestickSeries, {
     upColor: UP, downColor: DOWN, borderUpColor: UP, borderDownColor: DOWN, wickUpColor: UP, wickDownColor: DOWN,
-    priceLineVisible: false, lastValueVisible: true, priceFormat,
+    priceLineVisible: true, priceLineStyle: LineStyle.Dotted, lastValueVisible: true, priceFormat,
   })
   for (const s of [area, candleSeries]) s.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.22 } })
   volume = chart.addSeries(HistogramSeries, { priceScaleId: 'vol', priceLineVisible: false, lastValueVisible: false })
@@ -177,7 +180,7 @@ onBeforeUnmount(() => {
       <div ref="el" class="chart"></div>
       <input v-if="textBox" v-model="textBox.value" v-focus class="text-input" :style="{ left: textBox.x + 'px', top: textBox.y + 'px' }"
              maxlength="80" aria-label="Text on the chart" @keydown.enter="draw.submitText" @keydown.esc.stop="draw.cancel" @blur="draw.submitText" />
-      <ChartLegend :type="type" :bar="shown" :base="base" :fmt="fmt" :extras="shown ? ind.at(shown.time) : []" />
+      <ChartLegend :type="type" :bar="shown" :base="base" :fmt="fmt" :title="title" :extras="shown ? ind.at(shown.time) : []" />
       <button v-if="selected != null" type="button" class="remove" title="Delete drawing (Del)" @click="draw.removeSelected">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l1 11h7l1-11M8.5 8.5v5M11.5 8.5v5" /></svg>
         Delete
@@ -187,14 +190,14 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.frame { display: flex; border-radius: 0 0 12px 12px; overflow: hidden; }
+.frame { display: flex; height: 470px; border-radius: 0 0 12px 12px; overflow: hidden; } /* a little smaller, like Birdeye */
 .wrap { position: relative; flex: 1; min-width: 0; }
 .text-input { position: absolute; z-index: 6; transform: translateY(-50%); width: 180px; font: 600 14px Inter, system-ui, sans-serif; color: var(--fg); padding: 4px 8px; border: 1px solid #2962ff; border-radius: 6px; outline: none; background: #fff; }
-@media (max-width: 700px) { .frame { flex-direction: column; } }
+@media (max-width: 700px) { .frame { flex-direction: column; height: auto; } }
 .remove { position: absolute; z-index: 6; top: 40px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 6px; background: #fff; color: #131722; font: 500 13px Inter, system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(19, 23, 34, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12); }
 .remove:hover { background: #f0f3fa; color: #f23645; }
 .remove svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
-.chart { height: 520px; }
+.chart { height: 100%; }
 /* The TradingView logo in light grey. */
 .chart :deep(a#tv-attr-logo) { --fill: #c5ccd8; }
 @media (max-width: 700px) { .chart { height: 320px; } }

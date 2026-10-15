@@ -12,6 +12,7 @@ const props = defineProps({
   base: { type: Number, default: 0 }, // line: the close of the bar before
   extras: { type: Array, default: () => [] }, // indicators: [{ name, color, value, price }]
   fmt: { type: Function, default: formatPrice }, // writes a price (or an FDV)
+  title: { type: String, default: '' }, // pair and candle size, e.g. NIGHT/ADA · 15m
 })
 
 // change is the move in the chart's unit and percent: open to close for a
@@ -31,6 +32,7 @@ const sign = (v) => (v < 0 ? '−' : '+')
 
 <template>
   <div v-if="bar" class="legend num" :class="{ tv: type === 'candles' }">
+    <span v-if="title" class="pair">{{ title }}</span>
     <template v-if="type === 'candles'">
       <span>O<b :class="dir">{{ fmt(bar.open) }}</b></span>
       <span>H<b :class="dir">{{ fmt(bar.high) }}</b></span>
@@ -63,6 +65,7 @@ b { font-weight: 500; margin-left: 3px; }
 .tv .up { color: #089981; }
 .tv .down { color: #f23645; }
 .vol b { color: #131722; }
+.pair { font-weight: 600; color: #131722; }
 .break { flex-basis: 100%; height: 0; }
 .extra { color: #58667e; }
 @media (max-width: 700px) { .legend { font-size: 12px; gap: 2px 10px; } }

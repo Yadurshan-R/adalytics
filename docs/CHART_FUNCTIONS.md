@@ -9,8 +9,9 @@ Every function behind the price chart on a token page: the bar on top, the chart
 | `rgba` | Turns a colour like #089981 into rgba() with transparency a (0 to 1). |
 | `isCandles` | Reports whether the chart shows candles instead of a line. |
 | `showBar` | Puts a bar in the legend (the latest one when the mouse is off the chart), with the close before it for the line's change. |
-| `load` | Puts the candles into the chart, as candles or as a line through each close. The view is set only when the token, size or unit changes, so a zoom or scroll survives the minute refresh and a switch between candles and line. Candles open on the latest ones, about 14px wide each. |
+| `load` | Puts the candles into the chart, as candles or as a line through each close. The view is set only when the token, size or unit changes, so a zoom or scroll survives the minute refresh and a switch between candles and line. Candles open on the latest ones, about 14px wide each; the line shows about four times as many, so it reads as a trend. The latest price has a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap. |
 | `fmt` (prop) | How the axis and the legend write values: a price, or a compact FDV. |
+| `title` (prop) | The pair and candle size at the start of the legend, e.g. NIGHT/ADA · 15m. |
 | `onKey` | Esc stops the drawing being placed and unselects; Delete or Backspace removes the selected drawing. |
 
 ## `src/components/ChartLegend.vue`

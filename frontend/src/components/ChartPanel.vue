@@ -16,6 +16,7 @@ import PriceChart from './PriceChart.vue'
 const props = defineProps({
   id: { type: String, required: true }, // the token's id
   supply: { type: Number, default: 0 }, // total supply, for Price / FDV
+  ticker: { type: String, default: '' }, // for the legend: NIGHT/ADA · 15m
 })
 const emit = defineEmits(['span'])
 const { history, reload } = useTokens()
@@ -60,7 +61,7 @@ watch(candles, () => {
     <ChartHeader v-model:size="candleSize" v-model:type="chartType" v-model:indicators="indicators" v-model:unit="chartUnit"
                  :history="history" :can-fdv="supply > 0" />
     <p v-if="error" class="notice">{{ error }}</p>
-    <PriceChart :type="chartType" :candles="units.shown.value" :indicators="indicators" :fmt="units.fmt.value"
+    <PriceChart :type="chartType" :candles="units.shown.value" :indicators="indicators" :fmt="units.fmt.value" :title="`${ticker}/ADA · ${candleSize}`"
                 :fit-key="`${id}-${candleSize}-${units.key.value}`" :token="`${id}-${units.key.value}`" />
   </div>
 </template>

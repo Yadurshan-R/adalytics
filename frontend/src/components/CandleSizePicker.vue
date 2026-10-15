@@ -59,7 +59,7 @@ onBeforeUnmount(close)
   <div ref="root" class="picker">
     <div class="pick" role="group" aria-label="Candle size">
       <button v-for="k in buttons" :key="k" type="button" :aria-pressed="k === modelValue" @click="pick(k)">
-        {{ k }}<span v-if="progress(k) < 100" class="pct num">{{ progress(k) }}%</span>
+        {{ k }}
       </button>
       <button type="button" class="more" :aria-expanded="open" aria-label="All candle sizes" title="All candle sizes" @click="toggle">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 8l4.5 4.5L14.5 8" /></svg>

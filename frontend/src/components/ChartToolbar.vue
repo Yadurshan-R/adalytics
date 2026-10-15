@@ -94,12 +94,12 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
 
 <style scoped>
 .toolbar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; border-right: 1px solid var(--line); }
-.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 30px; border: 0; border-radius: 6px; background: none; color: #131722; cursor: pointer; }
-.btn:hover:not(:disabled) { background: #f0f3fa; }
+.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 30px; border: 0; border-radius: 6px; background: none; color: #6a6d78; cursor: pointer; }
+.btn:hover:not(:disabled) { background: #f0f3fa; color: #131722; }
 .btn[aria-pressed="true"] { color: #2962ff; }
 .btn:disabled { color: #b2b5be; cursor: default; }
 .btn:focus-visible { outline: 2px solid #2962ff; outline-offset: 1px; }
-.btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 .sep { width: 26px; height: 1px; margin: 3px 0; background: var(--line); flex: none; }
 
 @media (max-width: 700px) {

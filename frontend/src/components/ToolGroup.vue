@@ -67,8 +67,8 @@ onBeforeUnmount(close)
 
 <style scoped>
 .group { position: relative; display: flex; flex: none; }
-.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 32px; border: 0; border-radius: 6px; background: none; color: #131722; cursor: pointer; }
-.btn:hover { background: #f0f3fa; }
+.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 32px; border: 0; border-radius: 6px; background: none; color: #6a6d78; cursor: pointer; }
+.btn:hover { background: #f0f3fa; color: #131722; }
 .btn[aria-pressed="true"] { color: #2962ff; }
 .more { position: absolute; right: -6px; top: 0; width: 10px; height: 32px; padding: 0; border: 0; border-radius: 3px; background: none; color: #b2b5be; cursor: pointer; }
 .more:hover, .more[aria-expanded="true"] { color: #131722; background: #f0f3fa; }

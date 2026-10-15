@@ -2,9 +2,9 @@
   The price chart (TradingView Lightweight Charts), as candlesticks or a line.
   Both draw the same candles: the line joins each candle's close.
   - Candles: green when a candle closed higher than it opened, red when lower.
-  - Line: a blue line with a light area under it, like TradingView's.
+  - Line: a plain blue line with nothing filled under it, like CoinMarketCap's.
   - The line at the top left (ChartLegend) shows the bar under the mouse.
-  - Volume bars underneath, green or red like the candle above them.
+  - Volume bars underneath: green or red under candles, light grey under the line.
   - A drawing toolbar on the left (ChartToolbar), with zoom and scroll.
 -->
 <script setup>
@@ -29,7 +29,8 @@ const MUTED = '#58667e'
 // TradingView's colours: green and red candles, a blue line.
 const UP = '#089981'
 const DOWN = '#f23645'
-const BLUE = '#2962ff'
+const BLUE = '#3861fb' // CoinMarketCap's chart blue
+const VOLUME = '#e3e6ec' // line mode: quiet grey volume, like CoinMarketCap
 // rgba turns a colour like #16c784 into rgba() with transparency a (0 to 1).
 const rgba = (hex, a) => {
   const n = parseInt(hex.slice(1), 16)
@@ -82,7 +83,7 @@ function load() {
   area.setData(line ? bars.map((c) => ({ time: c.time, value: c.close })) : [])
   candleSeries.applyOptions({ lastValueVisible: !line })
   area.applyOptions({ lastValueVisible: line })
-  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: rgba(c.close >= c.open ? UP : DOWN, 0.5) })))
+  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: line ? VOLUME : rgba(c.close >= c.open ? UP : DOWN, 0.35) })))
   showBar(-1)
   barList = bars.map((c) => ({ time: c.time, values: line ? [c.close] : [c.open, c.high, c.low, c.close] }))
   draw.attach()
@@ -137,7 +138,7 @@ onMounted(() => {
   })
 
   area = chart.addSeries(AreaSeries, {
-    lineColor: BLUE, topColor: rgba(BLUE, 0.16), bottomColor: rgba(BLUE, 0), lineWidth: 2,
+    lineColor: BLUE, topColor: 'rgba(0,0,0,0)', bottomColor: 'rgba(0,0,0,0)', lineWidth: 2, // just the line, no fill under it
     priceLineVisible: false, lastValueVisible: false, crosshairMarkerRadius: 4, priceFormat,
   })
   candleSeries = chart.addSeries(CandlestickSeries, {

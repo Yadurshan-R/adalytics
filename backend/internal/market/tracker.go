@@ -78,6 +78,7 @@ type poolState struct {
 	height  int
 	order   int64  // sorts states in chain order: block height, then position in the block
 	address string // address the pool output was at
+	fills   []fill // each wallet's part of the swap; nil if it could not be split
 }
 
 // chainOrder gives one number for sorting transactions in the order they

@@ -48,7 +48,7 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 | `AddressTxs` | Lists every transaction that touched the addresses from a block height on (newest first). Koios returns at most 1000 rows per page, so it pages through; progress, if set, is called after each page. |
 | `AssetInfos` | Returns supply and registry details for several tokens in one request. |
 | `AssetSummary` | Asks Koios how many wallets hold a token. It uses the slow HTTP client, because Koios can take minutes to count big tokens. |
-| `TxInfo` | Returns transactions with their outputs, assets and inline datums. |
+| `TxInfo` | Returns transactions with their inputs and outputs, assets and inline datums. The inputs show which wallets' orders a batch swapped. |
 
 ## `internal/koios/retry.go`
 
@@ -86,8 +86,9 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 
 | Function | What it does |
 |---|---|
-| `New` | Builds the HTTP handler with every API route (tokens, chart, trades, activity, logo, health). Each route only reads from the Tracker's memory, so it answers instantly and never calls Koios. |
+| `New` | Builds the HTTP handler with every API route (tokens, chart, trades, wallets, activity, logo, health). Each route only reads from the Tracker's memory, so it answers instantly and never calls Koios. |
 | `candleChart` | Answers a candlestick chart at one candle size (`?type=candles&size=1h`), with all the history loaded so far. |
+| `validWallet` | Checks a wallet looks like a mainnet stake address (stake1…) or payment address (addr1…): lowercase letters and digits only. |
 | `writeJSON` | Sends v as JSON with the given HTTP status, and tells the browser not to cache it, so prices are always fresh. |
 | `withCORS` | Lets the Vue dev server (another port) read the API. Read-only: GET only. |
 
@@ -144,3 +145,9 @@ Run them with `go test ./...` from `backend/`. They use a fake Koios server, so 
 |---|---|
 | `TestGzipJSON` | Checks that JSON is compressed for browsers that accept gzip, unpacks to the same answer, and is sent plain to others. |
 | `TestGzipSkipsLogosAndErrors` | Checks that logos and error answers are not compressed. |
+
+## `internal/api/wallet_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestValidWallet` | Checks only real-looking stake and payment addresses pass the wallet route's check. |

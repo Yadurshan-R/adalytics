@@ -1,28 +1,45 @@
-<!-- A token's 50 most recent trades (last 24 hours, newest first), refreshed every
-     minute. Each row links to the transaction on Cardanoscan. -->
+<!-- A token's recent trades (last 24 hours, newest first), refreshed every
+     minute, laid out like Birdeye's trades table:
+     - each trade shows the wallet that made it (Trader); click it, or its
+       filter icon, to see only that wallet's trades and its summary card;
+     - All / Buys / Sells / Whales filter the list; a whale trade moves at
+       least 1% of the pool's ADA;
+     - 10 rows at first, Show more adds 10 (the backend keeps the last 50). -->
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { formatPrice, fullPrice, formatAmount, formatAgo } from '../format.js'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { formatPrice, fullPrice, formatAmount, formatAgo, formatCompact } from '../format.js'
+import WalletCard from './WalletCard.vue'
+import TraderCell from './TraderCell.vue'
 
 const props = defineProps({
   id: { type: String, required: true },
   ticker: { type: String, required: true },
 })
 
-const SHOWN = 50 // the most the backend keeps per token (MaxTrades)
+const KEEP = 50 // the most the backend keeps per token (MaxTrades)
+const PAGE = 10 // rows shown at first, and added by Show more
+// SKELETON is the width and class of each cell in the loading rows.
+const SKELETON = [{ w: 70, cls: 'left' }, { w: 36, cls: 'left' }, { w: 70, cls: 'hide-sm' }, { w: 60 }, { w: 90, cls: 'hide-sm' }, { w: 110, cls: 'left' }]
+const FILTERS = [{ key: 'all', label: 'All' }, { key: 'buy', label: 'Buys' }, { key: 'sell', label: 'Sells' }, { key: 'whale', label: 'Whales' }]
+
 const trades = ref([])
+const whaleADA = ref(0) // the smallest whale trade, from the backend
 const loaded = ref(false)
 const error = ref('')
 const now = ref(Date.now())
+const filter = ref('all')
+const wallet = ref('') // the wallet picked, or '' for all
+const limit = ref(PAGE)
 let timer = null
 
 // load asks the backend for this token's latest trades and keeps any error to show.
 async function load() {
   try {
-    const res = await fetch(`/api/tokens/${encodeURIComponent(props.id)}/trades?limit=${SHOWN}`, { cache: 'no-store' })
+    const res = await fetch(`/api/tokens/${encodeURIComponent(props.id)}/trades?limit=${KEEP}`, { cache: 'no-store' })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || `The backend answered ${res.status}`)
     trades.value = data.trades ?? []
+    whaleADA.value = data.whale_ada ?? 0
     error.value = ''
   } catch (e) {
     error.value = e instanceof TypeError ? 'Cannot reach the backend.' : e.message
@@ -31,7 +48,6 @@ async function load() {
     now.value = Date.now()
   }
 }
-
 onMounted(() => {
   load()
   timer = setInterval(load, 60_000)
@@ -40,7 +56,34 @@ onUnmounted(() => clearInterval(timer))
 watch(() => props.id, () => {
   loaded.value = false
   trades.value = []
+  wallet.value = ''
+  limit.value = PAGE
   load()
+})
+
+// isWhale is true for a trade of at least 1% of the pool's ADA.
+const isWhale = (t) => whaleADA.value > 0 && t.amount_ada >= whaleADA.value
+// matching is every kept trade that passes the filter and the wallet picked.
+const matching = computed(() => trades.value.filter((t) => (!wallet.value || t.wallet === wallet.value)
+  && (filter.value === 'all' || (filter.value === 'whale' ? isWhale(t) : t.side === filter.value))))
+const shown = computed(() => matching.value.slice(0, limit.value))
+const mine = computed(() => trades.value.filter((t) => t.wallet === wallet.value))
+
+// setFilter and setWallet pick a filter or a wallet (the same wallet again:
+// all wallets) and start again at 10 rows.
+function setFilter(key) {
+  filter.value = key
+  limit.value = PAGE
+}
+function setWallet(w) {
+  wallet.value = wallet.value === w ? '' : w
+  limit.value = PAGE
+}
+
+// emptyText explains why no trade is shown.
+const emptyText = computed(() => {
+  const what = { all: 'trades', buy: 'buys', sell: 'sells', whale: 'whale trades' }[filter.value]
+  return `No ${what}${wallet.value ? ' by this wallet' : ''} in the last 24 hours.`
 })
 
 // ₳1,250 for normal amounts, ₳4.35 for small ones.
@@ -51,10 +94,15 @@ function ada(v) {
 
 <template>
   <section class="trades" aria-labelledby="trades-title">
-    <h2 id="trades-title">Recent Trades</h2>
+    <div class="top">
+      <h2 id="trades-title">Recent Trades</h2>
+      <div class="filters" role="group" aria-label="Show">
+        <button v-for="f in FILTERS" :key="f.key" type="button" :aria-pressed="f.key === filter" @click="setFilter(f.key)"
+                :title="f.key === 'whale' && whaleADA ? `Trades of ${formatCompact(whaleADA)} or more (1% of the pool)` : null">{{ f.label }}</button>
+      </div>
+    </div>
+    <WalletCard v-if="wallet" :wallet="wallet" :id="id" :trades="mine" @close="setWallet('')" />
     <p v-if="error" class="muted note">{{ error }}</p>
-    <p v-else-if="loaded && !trades.length" class="muted note">No trades in the last 24 hours.</p>
-
     <div v-else class="wrap">
       <table>
         <thead>
@@ -63,53 +111,61 @@ function ada(v) {
             <th class="left">Type</th>
             <th class="hide-sm">Price</th>
             <th>₳ Amount</th>
-            <th class="hide-sm">{{ ticker }} Amount</th>
+            <th class="hide-sm">{{ ticker }}</th>
+            <th class="left">Trader</th>
             <th class="link-col"><span class="sr-only">Transaction</span></th>
           </tr>
         </thead>
         <tbody>
           <template v-if="!loaded">
             <tr v-for="n in 5" :key="n" class="skeleton">
-              <td class="left"><i style="width: 70px" /></td>
-              <td class="left"><i style="width: 36px" /></td>
-              <td class="hide-sm"><i style="width: 70px" /></td>
-              <td><i style="width: 60px" /></td>
-              <td class="hide-sm"><i style="width: 90px" /></td>
+              <td v-for="(c, k) in SKELETON" :key="k" :class="c.cls"><i :style="{ width: c.w + 'px' }" /></td>
               <td class="link-col"></td>
             </tr>
           </template>
-          <template v-else>
-            <tr v-for="t in trades" :key="t.tx_hash + t.time">
-              <td class="left muted" :title="new Date(t.time).toLocaleString()">{{ formatAgo(t.time, now) }}</td>
-              <td class="left side" :class="t.side === 'buy' ? 'up' : 'down'">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</td>
-              <td class="hide-sm num" :title="fullPrice(t.price_ada)">{{ formatPrice(t.price_ada) }}</td>
-              <td class="num">{{ ada(t.amount_ada) }}</td>
-              <td class="hide-sm num">{{ formatAmount(t.amount_token) }} {{ ticker }}</td>
-              <td class="link-col">
-                <a :href="`https://cardanoscan.io/transaction/${t.tx_hash}`" target="_blank" rel="noopener"
-                   class="tx" :aria-label="`View this ${t.side} on Cardanoscan`" title="View on Cardanoscan">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5h-1.5V4.6L7.1 10 6 8.9l5.4-5.4H9V2ZM3 4h4v1.5H4.5v6h6V9H12v4H3V4Z" /></svg>
-                </a>
-              </td>
-            </tr>
-          </template>
+          <tr v-for="t in shown" v-else :key="t.tx_hash + t.wallet" :class="{ whale: isWhale(t) }">
+            <td class="left muted" :title="new Date(t.time).toLocaleString()">{{ formatAgo(t.time, now) }}</td>
+            <td class="left side" :class="t.side === 'buy' ? 'up' : 'down'">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</td>
+            <td class="hide-sm num" :title="fullPrice(t.price_ada)">{{ formatPrice(t.price_ada) }}</td>
+            <td class="num amount" :title="isWhale(t) ? 'Whale trade: at least 1% of the pool' : null">{{ ada(t.amount_ada) }}</td>
+            <td class="hide-sm num">{{ formatAmount(t.amount_token) }}</td>
+            <td class="left"><TraderCell :wallet="t.wallet" :on="!!wallet && t.wallet === wallet" @pick="setWallet" /></td>
+            <td class="link-col">
+              <a :href="`https://cardanoscan.io/transaction/${t.tx_hash}`" target="_blank" rel="noopener"
+                 class="tx" :aria-label="`View this ${t.side} on Cardanoscan`" title="View on Cardanoscan">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5h-1.5V4.6L7.1 10 6 8.9l5.4-5.4H9V2ZM3 4h4v1.5H4.5v6h6V9H12v4H3V4Z" /></svg>
+              </a>
+            </td>
+          </tr>
         </tbody>
       </table>
+      <p v-if="loaded && !shown.length" class="muted note">{{ emptyText }}</p>
+      <button v-if="matching.length > shown.length" type="button" class="more" @click="limit += PAGE">
+        Show more <span class="muted">({{ shown.length }} of {{ matching.length }})</span>
+      </button>
     </div>
   </section>
 </template>
 
 <style scoped>
 .trades { margin-top: 32px; }
-h2 { font-size: 18px; font-weight: 700; margin: 0 0 12px; }
-.note { margin: 0; padding: 24px 0; border-top: 1px solid var(--line); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+h2 { font-size: 18px; font-weight: 700; margin: 0; }
+.filters { display: flex; gap: 2px; font-size: 13px; }
+.filters button { height: 30px; padding: 0 10px; border: 0; border-radius: 4px; background: none; color: #6a6d78; font: inherit; font-weight: 500; cursor: pointer; }
+.filters button:hover { background: #f0f3fa; color: #131722; }
+.filters button[aria-pressed="true"] { color: #2962ff; }
+.filters button:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
+.note { margin: 0; padding: 24px 0; }
 
 .wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
-th, td { padding: 12px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-size: 14px; }
-th { font-size: 13px; font-weight: 700; border-top: 1px solid var(--line); }
+th, td { padding: 11px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-size: 14px; }
+th { font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); }
 .left { text-align: left; }
 .side { font-weight: 600; }
+tr.whale td { background: #fffbeb; }
+tr.whale .amount { font-weight: 700; }
 
 .link-col { width: 36px; padding-inline: 4px; }
 .tx { display: inline-flex; padding: 4px; border-radius: 6px; color: var(--muted); }
@@ -117,6 +173,8 @@ th { font-size: 13px; font-weight: 700; border-top: 1px solid var(--line); }
 .tx:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
 .tx svg { width: 14px; height: 14px; fill: currentColor; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.more { display: block; width: 100%; margin-top: 12px; padding: 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.more:hover { background: #f0f3fa; }
 
 .skeleton i { display: inline-block; height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--line), #f7f9fb, var(--line)); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
@@ -124,6 +182,6 @@ th { font-size: 13px; font-weight: 700; border-top: 1px solid var(--line); }
 
 @media (max-width: 700px) {
   .hide-sm { display: none; }
-  th, td { padding: 12px 6px; }
+  th, td { padding: 11px 4px; }
 }
 </style>

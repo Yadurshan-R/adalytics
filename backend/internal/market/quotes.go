@@ -61,6 +61,7 @@ type Trade struct {
 	AmountADA   float64   `json:"amount_ada"`   // ADA in or out of the pool
 	AmountToken float64   `json:"amount_token"` // whole tokens out of or into the pool
 	TxHash      string    `json:"tx_hash"`
+	Wallet      string    `json:"wallet,omitempty"` // stake address of the trader; "" if not known
 }
 
 // MaxTrades is the most recent trades the API returns for one token.

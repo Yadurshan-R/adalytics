@@ -38,6 +38,8 @@ Everything the backend does is written to its terminal, one line each: `api` for
 
 Each Minswap pool holds ADA and one token. The price is the ratio of the two: if a pool holds 2,000,000 ADA and 744,260,765 SNEK, one SNEK costs about ₳0.0027. When someone swaps, the pool's amounts change. ADA going in and tokens coming out is a buy; the other way round is a sell. That is how the trades list is built (`tradeFrom` in `pools.go`).
 
+Minswap does not swap each order on its own: a batcher swaps several people's orders in one transaction, and pays each person back. `fills.go` splits the transaction into one trade per order; the trader is the wallet the payout goes to. When the amounts do not add up for certain, the swap is shown as one trade without a wallet, never with a wrong one.
+
 ## The API
 
 The backend serves these routes. Each one reads from memory, so they answer instantly.
@@ -47,7 +49,8 @@ The backend serves these routes. Each one reads from memory, so they answer inst
 | `GET /api/tokens` | Every listed token with price, changes, volume and small price lines, plus how much history is loaded (and the loading progress during the first load) |
 | `GET /api/tokens/{id}/chart?range=24H` | One token's line chart. `range` is 24H, 7D or 30D |
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
-| `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first |
+| `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first, each with its wallet, and the whale level |
+| `GET /api/wallets/{stake1…}` | What one wallet traded in the last 24 hours, token by token |
 | `GET /api/tokens/{id}/activity` | One token's trading over 5m, 1h, 4h and 24h: price change, volume, buys and sells |
 | `GET /api/tokens/{id}/logo` | The token's logo from the Cardano token registry (PNG) |
 | `GET /api/health` | `{"status": "ok"}` when the backend is running |
@@ -72,6 +75,8 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/backfill.go` | Older history, loaded in the background |
 | `internal/market/update.go` | The check for new swaps every minute |
 | `internal/market/pools.go` | Turns transactions into pool states, prices and trades |
+| `internal/market/fills.go` | Splits a batch of orders into one trade per wallet |
+| `internal/market/wallets.go` | One wallet's trades across tokens, and the whale level |
 | `internal/market/periods.go` | Trading over 5m, 1h, 4h and 24h for the activity box |
 | `internal/market/quotes.go` | What the API reads: token list, charts, trades, logos |
 | `internal/market/details.go` | Supply, logos, links and holder counts |
@@ -116,7 +121,9 @@ No file is longer than 300 lines. Each one has one job.
 | `src/chart/useDrawings.js` | Turns clicks into drawings, and handles zoom, the magnet and the lock |
 | `src/chart/useSelect.js` | Select, move, reshape and delete one drawing |
 | `src/chart/hitTest.js` | Finds the drawing under the mouse |
-| `src/components/RecentTrades.vue` | The recent trades table on a token page |
+| `src/components/RecentTrades.vue` | The recent trades table on a token page, with filters and Show more |
+| `src/components/TraderCell.vue` | The Trader cell: short address and filter icon |
+| `src/components/WalletCard.vue` | The summary of the trader picked |
 | `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, volume, buys, sells, net buy |
 | `src/components/Sparkline.vue` | The small price line in the list |
 | `src/components/Change.vue` | A green ▲ or red ▼ percentage |

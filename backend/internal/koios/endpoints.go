@@ -128,14 +128,15 @@ func (c *Client) AssetSummary(ctx context.Context, asset Asset) (AssetSummary, e
 	return out[0], nil
 }
 
-// TxInfo returns transactions with their outputs, assets and inline datums.
+// TxInfo returns transactions with their inputs and outputs, assets and inline
+// datums. The inputs show which wallets' orders a batch swapped.
 func (c *Client) TxInfo(ctx context.Context, hashes []string) ([]Tx, error) {
 	body := map[string]any{
 		"_tx_hashes": hashes,
-		"_inputs":    false, "_metadata": false, "_assets": true, "_withdrawals": false,
+		"_inputs":    true, "_metadata": false, "_assets": true, "_withdrawals": false,
 		"_certs": false, "_scripts": true, "_bytecode": false, "_governance": false,
 	}
 	var out []Tx
-	err := c.do(ctx, c.http, http.MethodPost, "/tx_info?select=tx_hash,block_height,tx_timestamp,tx_block_index,outputs", body, &out)
+	err := c.do(ctx, c.http, http.MethodPost, "/tx_info?select=tx_hash,block_height,tx_timestamp,tx_block_index,inputs,outputs", body, &out)
 	return out, err
 }

@@ -68,7 +68,28 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | `readPools` | Reads transactions with tx_info (50 per request) and returns, for each token, the pool state after each of its transactions, oldest first. |
 | `merge` | Adds pool states to a token's history (skipping ones it already has), keeps the history in chain order and rebuilds prices, volume and trades. It returns how many states were new. Call with t.mu held. |
 | `rebuild` | Works out a token's price points, volume and trades from its pool history, drops history older than the kept span (keeping the last state before it, so the price at the start is known) and updates the quote from the newest pool state. Call with t.mu held. |
-| `tradeFrom` | Turns the change in a pool's reserves into a trade. ADA going in while tokens come out is a buy; the other way round is a sell. |
+| `tradesFrom` | Turns a swap into trades: one per wallet when the transaction was split into fills, otherwise one trade without a wallet from the change in the pool's reserves. |
+| `tradeFrom` | Makes one trade from ADA into the pool and tokens to the trader: both positive is a buy, both negative a sell. Dust below MinTradeADA is left out. |
+
+## `internal/market/fills.go`
+
+Minswap does not swap each order on its own: a batcher swaps several people's orders against the pool in one transaction. These functions split such a transaction into one trade per order. The trader is the wallet the payout goes to: an order's own address often has no stake key, or Minswap's.
+
+| Function | What it does |
+|---|---|
+| `fillsFrom` | Sorts the transaction into the pool, the batcher (its coins go in and come out at the same address), the orders and one payout per order, paired in order. Each pair's payout minus order, less its share of the batcher fee, is what went into or out of the pool. Returns nil, so the swap shows as one trade without a wallet, when anything does not add up: one pool only, as many payouts as orders, every token accounted for, a fee of ₳0 to ₳10 per order, and with several orders each one near the pool's price. |
+| `onePool` | The index of the only Minswap pool in a list of inputs or outputs, or -1. |
+| `nearPrice` | Whether a pair's ADA per token is within 20% of the pool's price before the batch; shows orders and payouts were paired right. |
+| `lovelace` | The ADA in an output, in lovelace. |
+| `units` | How much of one token an output holds, in its smallest unit. |
+| `sub` | a − b as a new number. |
+
+## `internal/market/wallets.go`
+
+| Function | What it does |
+|---|---|
+| `WhaleADA` | The smallest whale trade for a token: 1% of its pool's ADA (WhaleShare). A share of the pool fits big and small tokens alike: either way such a trade moves the price about 2%. |
+| `Wallet` | Every token one wallet traded in the last 24 hours (buys, sells, ADA each way, last trade), latest first, from the trades in memory. |
 
 ## `internal/market/progress.go`
 
@@ -186,3 +207,19 @@ Run them with `go test ./internal/market/` from `backend/`. They use a fake Koio
 | `TestQuietTokenIsListed` | Checks that a token with a pool but no trades today is still listed, with a flat price line. |
 | `TestTokenWithoutPoolIsLeftOut` | Checks that a token with no Minswap pool is not listed. |
 | `TestFindsAllPoolsInSmallRequests` | Checks that the pool search is split into requests small enough for the Koios free tier. |
+
+## `internal/market/fills_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestFillsRealSwaps` | Three real SNEK swaps from mainnet: a ₳487 buy, then one wallet selling twice. Each gives the right wallet, ADA and tokens. |
+| `TestFillsOrderWithoutOwnerKey` | Three more real SNEK swaps whose orders carry no stake key, or the pool's: the trader is the wallet the payout goes to. |
+| `TestFillsBatch` | Three wallets in one batch (two buys and a sell) become three trades that add up to the pool's change. |
+| `TestFillsNotSplit` | Transactions that cannot be split for certain give no fills: no inputs, tokens missing, a fee too big, an order without a payout, payouts paired the wrong way round. |
+| `TestTradesFromFills` | Fills become trades with wallets; a swap without fills is still one trade from the pool's change. |
+
+## `internal/market/wallets_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestWallet` | A wallet's trades are added up per token for the last 24 hours, other wallets are left out, and the whale level is 1% of the pool. |

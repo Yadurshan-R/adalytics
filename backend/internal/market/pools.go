@@ -52,6 +52,7 @@ func (t *Tracker) readPools(ctx context.Context, txs []koios.AddressTx, progress
 			}
 			found[s] = append(found[s], poolState{
 				pool: p, height: tx.BlockHeight, order: chainOrder(tx.BlockHeight, tx.TxBlockIndex), address: o.PaymentAddr.Bech32,
+				fills: fillsFrom(tx, s.token.Asset),
 			})
 		}
 	}
@@ -115,9 +116,7 @@ func (t *Tracker) rebuild(s *tokenState) {
 			diffA := new(big.Int).Sub(p.ReserveA, prev.ReserveA)
 			diffB := new(big.Int).Sub(p.ReserveB, prev.ReserveB)
 			vol = math.Abs(scaled(diffA, 6))
-			if tr, ok := tradeFrom(*p, diffA, diffB); ok {
-				s.trades = append(s.trades, tr)
-			}
+			s.trades = append(s.trades, tradesFrom(*p, s.history[i].fills, diffA, diffB)...)
 		}
 		s.points = append(s.points, Point{Time: p.LastSwap.Unix(), Price: p.PriceADA(), VolumeADA: vol})
 		prev = p
@@ -138,21 +137,42 @@ func (t *Tracker) rebuild(s *tokenState) {
 	s.quote.UpdatedAt = &now
 }
 
-// tradeFrom turns the change in a pool's reserves into a trade. ADA going in
-// while tokens come out is a buy; the other way round is a sell.
-func tradeFrom(p minswap.Pool, diffADA, diffToken *big.Int) (Trade, bool) {
-	if diffADA.Sign() == 0 || diffToken.Sign() == 0 || diffADA.Sign() == diffToken.Sign() {
+// tradesFrom turns a swap into trades: one per wallet when the transaction
+// was split into fills, otherwise one trade without a wallet from the change
+// in the pool's reserves.
+func tradesFrom(p minswap.Pool, fills []fill, diffADA, diffToken *big.Int) []Trade {
+	var out []Trade
+	if len(fills) == 0 {
+		// The pool gives tokens when it gets ADA: tokens out is a negative diff.
+		if tr, ok := tradeFrom(p, "", diffADA, new(big.Int).Neg(diffToken)); ok {
+			out = append(out, tr)
+		}
+		return out
+	}
+	for _, f := range fills {
+		if tr, ok := tradeFrom(p, f.wallet, f.ada, f.token); ok {
+			out = append(out, tr)
+		}
+	}
+	return out
+}
+
+// tradeFrom makes one trade from ADA into the pool and tokens to the trader.
+// Both positive is a buy; both negative is a sell. Dust below MinTradeADA is
+// left out.
+func tradeFrom(p minswap.Pool, wallet string, ada, token *big.Int) (Trade, bool) {
+	if ada.Sign() == 0 || ada.Sign() != token.Sign() {
 		return Trade{}, false
 	}
-	ada := math.Abs(scaled(diffADA, 6))
-	tok := math.Abs(scaled(diffToken, p.DecimalsB))
-	if ada < MinTradeADA || tok == 0 {
+	a := math.Abs(scaled(ada, 6))
+	tok := math.Abs(scaled(token, p.DecimalsB))
+	if a < MinTradeADA || tok == 0 {
 		return Trade{}, false
 	}
 	side := "sell"
-	if diffADA.Sign() > 0 {
+	if ada.Sign() > 0 {
 		side = "buy"
 	}
 	hash, _, _ := strings.Cut(p.UTxO, "#")
-	return Trade{Time: p.LastSwap, Side: side, PriceADA: ada / tok, AmountADA: ada, AmountToken: tok, TxHash: hash}, true
+	return Trade{Time: p.LastSwap, Side: side, PriceADA: a / tok, AmountADA: a, AmountToken: tok, TxHash: hash, Wallet: wallet}, true
 }

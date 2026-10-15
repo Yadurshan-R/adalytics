@@ -66,15 +66,18 @@ type Tx struct {
 	BlockHeight  int        `json:"block_height"`
 	TxTimestamp  int64      `json:"tx_timestamp"`
 	TxBlockIndex int        `json:"tx_block_index"`
+	Inputs       []TxOutput `json:"inputs"` // the outputs this transaction spent
 	Outputs      []TxOutput `json:"outputs"`
 }
 
-// TxOutput is one output of a transaction, as tx_info returns it.
+// TxOutput is one output of a transaction, as tx_info returns it. Inputs
+// have the same shape: they are the earlier outputs being spent.
 type TxOutput struct {
 	PaymentAddr struct {
 		Bech32 string `json:"bech32"`
 		Cred   string `json:"cred"`
 	} `json:"payment_addr"`
+	StakeAddr   string        `json:"stake_addr"` // the wallet's stake address, "" if it has none
 	TxHash      string        `json:"tx_hash"`
 	TxIndex     int           `json:"tx_index"`
 	Value       string        `json:"value"`

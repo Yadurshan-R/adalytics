@@ -24,7 +24,8 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 * Scroll back through up to 30 days of history; while older history is still loading, the chart shows what is loaded so far
 * Price in ADA (and USD for reference), low and high over the last 24 hours, volume, number of trades, buys against sells, holder count, pool liquidity and the time of the last trade
 * Info box with the project website, policy ID and fingerprint (with copy buttons), creation date, a Cardanoscan link and the project description
-* The 50 most recent trades, each with a link to the transaction on Cardanoscan
+* Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (trades of at least 1% of the pool)
+* Click a trader to see only its trades, what it bought and sold in this token, and which other tokens it traded in the last 24 hours. Minswap swaps several people's orders in one transaction; Adalytics splits them into one trade per wallet
 * A drawing toolbar beside the chart, like TradingView's: trend line, horizontal line, rectangle, Fibonacci levels, text, a ruler that measures the price change and time between two points, zoom and scroll, a magnet that snaps to prices, hide and delete. Drawings stay in the browser only and are not saved
 
 It also works on phones.
@@ -154,6 +155,8 @@ backend/
     backfill.go                 older history, loaded in the background
     update.go                   checks for new swaps every minute
     pools.go                    turns transactions into prices and trades
+    fills.go                    splits a batch of orders into one trade per wallet
+    wallets.go                  one wallet's trades, and the whale level
     periods.go                  trading over 5m, 1h, 4h and 24h
     quotes.go                   the token list, charts and trades for the API
     details.go                  supply, logos, links and holder counts
@@ -187,7 +190,9 @@ frontend/src/
   chart/useDrawings.js          turns clicks into drawings; zoom, magnet and lock
   chart/useSelect.js            select, move and delete one drawing
   chart/hitTest.js              finds the drawing under the mouse
-  components/RecentTrades.vue   the recent trades table
+  components/RecentTrades.vue   the recent trades table, with filters
+  components/TraderCell.vue     the Trader cell: short address and filter icon
+  components/WalletCard.vue     the summary of the trader picked
   components/ActivityBox.vue    the 5m / 1h / 4h / 24h activity box
   components/Sparkline.vue      the small price lines in the list
   format.js                     number formats (₳, $, %, K/M/B)
@@ -200,7 +205,8 @@ frontend/src/
 | `GET /api/tokens` | every listed token with price, changes, volume and details, plus how much history is loaded |
 | `GET /api/tokens/{id}/chart?range=7D` | line chart for one token: `range` is 24H, 7D or 30D |
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | candles for one token: `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
-| `GET /api/tokens/{id}/trades?limit=5` | the most recent trades for one token |
+| `GET /api/tokens/{id}/trades?limit=5` | the most recent trades for one token, each with its wallet, and the whale level |
+| `GET /api/wallets/{stake1…}` | what one wallet traded in the last 24 hours, token by token |
 | `GET /api/tokens/{id}/activity` | trading over 5m, 1h, 4h and 24h: change, volume, buys and sells |
 | `GET /api/tokens/{id}/logo` | the token's logo from the Cardano token registry |
 

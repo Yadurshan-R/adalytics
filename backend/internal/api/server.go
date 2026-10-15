@@ -96,7 +96,18 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"ticker": quote.Ticker, "trades": trades})
+		writeJSON(w, http.StatusOK, map[string]any{"ticker": quote.Ticker, "trades": trades, "whale_ada": market.WhaleADA(quote)})
+	})
+
+	// What one wallet traded in the last 24 hours, token by token, from the
+	// trades in memory: /api/wallets/stake1u8….
+	mux.HandleFunc("GET /api/wallets/{wallet}", func(w http.ResponseWriter, r *http.Request) {
+		wallet := r.PathValue("wallet")
+		if !validWallet(wallet) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "not a Cardano stake or payment address"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"wallet": wallet, "tokens": tracker.Wallet(wallet)})
 	})
 
 	// A token's trading over the last 5m, 1h, 4h and 24h: price change, volume,
@@ -176,4 +187,18 @@ func withCORS(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// validWallet checks that a wallet looks like a mainnet stake address
+// (stake1…) or payment address (addr1…): lowercase letters and digits only.
+func validWallet(s string) bool {
+	if len(s) < 50 || len(s) > 120 || !(strings.HasPrefix(s, "stake1") || strings.HasPrefix(s, "addr1")) {
+		return false
+	}
+	for _, c := range s {
+		if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9') {
+			return false
+		}
+	}
+	return true
 }

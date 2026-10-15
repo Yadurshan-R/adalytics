@@ -55,8 +55,27 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 
 | Function | What it does |
 |---|---|
-| `load` | Asks the backend for this token's latest trades and keeps any error to show. |
+| `load` | Asks the backend for this token's latest trades and the whale level, and keeps any error to show. |
+| `isWhale` | True for a trade of at least 1% of the pool's ADA; the row is tinted and its amount bold. |
+| `matching` | Every kept trade that passes the filter (All, Buys, Sells, Whales) and the wallet picked. 10 show at first; Show more adds 10. |
+| `setFilter` / `setWallet` | Pick a filter or a wallet (the same wallet again shows everyone) and start again at 10 rows. |
+| `emptyText` | Explains why no trade is shown, e.g. "No whale trades by this wallet in the last 24 hours." |
 | `ada` | ₳1,250 for normal amounts, ₳4.35 for small ones. |
+
+## `src/components/TraderCell.vue`
+
+| Function | What it does |
+|---|---|
+| `short` | The wallet's short stake address, like stake1u82z…r2dn; a phone shows only the end. Clicking it, or its filter icon, shows only that wallet's trades. |
+
+## `src/components/WalletCard.vue`
+
+| Function | What it does |
+|---|---|
+| `load` | Asks the backend which other tokens the wallet traded in the last 24 hours. |
+| `stats` | Adds up the wallet's buys and sells in this token, and its net (bought minus sold). |
+| `signed` / `tone` | Write a net amount like +₳1.4K or −₳640, green or red. |
+| `copy` | Puts the address on the clipboard and shows "Copied" for 1.5 seconds. |
 
 ## `src/components/Sparkline.vue`
 

@@ -1,6 +1,7 @@
-<!-- The drawing toolbar beside the chart, like TradingView's: drawing tools
-     (the line tools grouped under one button), the ruler, zoom, the magnet,
-     stay in drawing mode, lock, hide drawings and delete all. -->
+<!-- The drawing toolbar beside the chart, laid out like Birdeye's: drawing
+     tools (the line tools grouped under one button), then the ruler and zoom,
+     then the magnet, stay in drawing mode, lock and hide drawings, then delete
+     all. Big icons; the column scrolls when it does not fit. -->
 <script setup>
 import ToolGroup from './ToolGroup.vue'
 import ToolIcon from './ToolIcon.vue'
@@ -24,14 +25,15 @@ const LINES = [
   { key: 'hline', label: 'Horizontal line', icon: 'M2 10h16', dots: [[10, 10]] },
   { key: 'vline', label: 'Vertical line', icon: 'M10 2v16', dots: [[10, 10]] },
 ]
-const CURSOR = { key: 'cursor', label: 'Cross', icon: 'M10 3v14M3 10h14' }
+const CURSOR = { key: 'cursor', label: 'Cross', icon: 'M10 2.5v5.5M10 12v5.5M2.5 10H8M12 10h5.5' }
+// In the same order as TradingView's and Birdeye's bars: Fib right after the lines.
 const TOOLS = [
+  { key: 'fib', label: 'Fib retracement', icon: 'M5.5 4H18M2 8h16M2 12h16M2 16h12.5', dots: [[3.5, 4], [16.5, 16]] },
   { key: 'channel', label: 'Parallel channel', icon: 'M3 12 12 3M8 17 17 8', dots: [[3, 12], [12, 3], [17, 8]] },
-  { key: 'rect', label: 'Rectangle', icon: 'M4 5h12v10H4z' },
-  { key: 'fib', label: 'Fib retracement', icon: 'M3 4h14M3 8h14M3 12h14M3 16h14' },
-  { key: 'text', label: 'Text', icon: 'M4 4h12M10 4v13' },
-  { key: 'ruler', label: 'Measure', icon: 'M3 14 14 3l3 3L6 17zM6.5 10.5l1.5 1.5M9 8l1.5 1.5M11.5 5.5l1.5 1.5' },
+  { key: 'rect', label: 'Rectangle', icon: 'M4 5h12v10H4z', dots: [[4, 5], [16, 15]] },
+  { key: 'text', label: 'Text', icon: 'M4 5.5V3.5h12v2M10 3.5v13M7.5 16.5h5' },
 ]
+const RULER = { key: 'ruler', label: 'Measure', icon: 'M3 14 14 3l3 3L6 17zM6.5 10.5l1.5 1.5M9 8l1.5 1.5M11.5 5.5l1.5 1.5' }
 
 // pick chooses a tool; picking the one already on goes back to the cursor.
 const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor' ? 'cursor' : key)
@@ -50,6 +52,9 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
 
     <span class="sep" aria-hidden="true"></span>
 
+    <button type="button" class="btn" :aria-pressed="tool === RULER.key" :aria-label="RULER.label" :title="RULER.label" @click="pick(RULER.key)">
+      <ToolIcon :tool="RULER" />
+    </button>
     <button type="button" class="btn" aria-label="Zoom in" title="Zoom in" @click="emit('zoom', 0.6)">
       <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" /><path d="M12.5 12.5 17 17M6 8.5h5M8.5 6v5" /></svg>
     </button>
@@ -86,6 +91,8 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
         <path v-if="hidden" d="M3 3l14 14" />
       </svg>
     </button>
+    <span class="sep" aria-hidden="true"></span>
+
     <button type="button" class="btn" :disabled="!count" aria-label="Delete all drawings" title="Delete all drawings" @click="emit('clear')">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l1 11h7l1-11M8.5 8.5v5M11.5 8.5v5" /></svg>
     </button>
@@ -93,19 +100,20 @@ const pick = (key) => emit('update:tool', props.tool === key && key !== 'cursor'
 </template>
 
 <style scoped>
-.toolbar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; border-right: 1px solid var(--line); overflow-y: auto; scrollbar-width: none; }
-.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 30px; border: 0; border-radius: 6px; background: none; color: #6a6d78; cursor: pointer; }
+.toolbar { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-right: 1px solid var(--line); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.toolbar::-webkit-scrollbar { display: none; }
+.btn { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 38px; border: 0; border-radius: 6px; background: none; color: #131722; cursor: pointer; }
 .btn:hover:not(:disabled) { background: #f0f3fa; color: #131722; }
 .btn[aria-pressed="true"] { color: #2962ff; }
 .btn:disabled { color: #b2b5be; cursor: default; }
 .btn:focus-visible { outline: 2px solid #2962ff; outline-offset: 1px; }
-.btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
-.sep { width: 26px; height: 1px; margin: 3px 0; background: var(--line); flex: none; }
+.btn svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round; }
+.sep { width: 32px; height: 1px; margin: 4px 0; background: var(--line); flex: none; }
 
 @media (max-width: 700px) {
   .toolbar { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); scrollbar-width: none; }
-  .btn { flex: none; width: 36px; height: 36px; }
-  .btn svg { width: 22px; height: 22px; }
+  .btn { width: 40px; height: 40px; }
+  .btn svg { width: 24px; height: 24px; }
   .sep { width: 1px; height: 24px; margin: 0 4px; }
 }
 </style>

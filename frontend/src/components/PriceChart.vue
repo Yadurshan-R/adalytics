@@ -30,7 +30,6 @@ const MUTED = '#58667e'
 const UP = '#089981'
 const DOWN = '#f23645'
 const BLUE = '#3861fb' // CoinMarketCap's chart blue
-const VOLUME = '#e3e6ec' // line mode: quiet grey volume, like CoinMarketCap
 // rgba turns a colour like #16c784 into rgba() with transparency a (0 to 1).
 const rgba = (hex, a) => {
   const n = parseInt(hex.slice(1), 16)
@@ -84,7 +83,7 @@ function load() {
   // The latest price: a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap.
   candleSeries.applyOptions({ lastValueVisible: !line, priceLineVisible: !line })
   area.applyOptions({ lastValueVisible: line, priceLineVisible: line })
-  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: line ? VOLUME : rgba(c.close >= c.open ? UP : DOWN, 0.5) })))
+  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: rgba(c.close >= c.open ? UP : DOWN, 0.5) })))
   showBar(-1)
   barList = bars.map((c) => ({ time: c.time, values: line ? [c.close] : [c.open, c.high, c.low, c.close] }))
   draw.attach()

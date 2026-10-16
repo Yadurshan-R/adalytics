@@ -67,10 +67,10 @@ onBeforeUnmount(close)
 
 <style scoped>
 .group { position: relative; display: flex; flex: none; }
-.btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 32px; border: 0; border-radius: 6px; background: none; color: #6a6d78; cursor: pointer; }
+.btn { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 38px; border: 0; border-radius: 6px; background: none; color: #131722; cursor: pointer; }
 .btn:hover { background: #f0f3fa; color: #131722; }
 .btn[aria-pressed="true"] { color: #2962ff; }
-.more { position: absolute; right: -6px; top: 0; width: 10px; height: 32px; padding: 0; border: 0; border-radius: 3px; background: none; color: #b2b5be; cursor: pointer; }
+.more { position: absolute; right: -6px; top: 0; width: 10px; height: 38px; padding: 0; border: 0; border-radius: 3px; background: none; color: #b2b5be; cursor: pointer; }
 .more:hover, .more[aria-expanded="true"] { color: #131722; background: #f0f3fa; }
 .more svg { width: 6px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .btn:focus-visible, .more:focus-visible { outline: 2px solid #2962ff; outline-offset: 1px; }
@@ -81,8 +81,8 @@ onBeforeUnmount(close)
 .item.on { color: #2962ff; }
 
 @media (max-width: 700px) {
-  .btn { width: 36px; height: 36px; }
+  .btn { width: 40px; height: 40px; }
   .group { margin-right: 8px; }
-  .more { height: 36px; right: -9px; }
+  .more { height: 40px; right: -9px; }
 }
 </style>

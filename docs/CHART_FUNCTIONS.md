@@ -70,6 +70,7 @@ Every function behind the price chart on a token page: the bar on top, the chart
 | Function | What it does |
 |---|---|
 | `pick` | Chooses a tool; picking the one already on goes back to the cursor. The line tools are grouped under one button (ToolGroup). |
+| (layout) | In the order of Birdeye's and CoinMarketCap's bars: cross, lines, Fib, channel, rectangle, text; then ruler and zoom; then magnet, stay, lock, hide; then delete. Big icons; the column scrolls when it does not fit. |
 
 ## `src/components/ToolGroup.vue`
 

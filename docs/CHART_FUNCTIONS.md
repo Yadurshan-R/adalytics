@@ -47,7 +47,8 @@ Every function behind the price chart on a token page: the bar on top, the chart
 
 | Function | What it does |
 |---|---|
-| `buttons` | The quick sizes (5m, 15m, 1h, 4h, 1D), plus the picked size when it came from the list. |
+| `buttons` | The quick sizes (5m, 15m, 1h, 4h, 1D), plus the picked size when it came from the list, or the range (7D, 30D) while one is on. |
+| `pickRange` | 1 week or 30 days from the list: picked only once its history is fully loaded; until then it is grey with "Loading 35%". |
 | `pick` | Chooses a size and closes the list. |
 
 ## `src/components/ChartPanel.vue`
@@ -63,8 +64,8 @@ Every function behind the price chart on a token page: the bar on top, the chart
 |---|---|
 | (template) | The slim bar on top of the chart, like Birdeye's: candle size, candles or line, Indicators, and Price / FDV on the right (only when the total supply is known). One bar for both chart styles, so switching style keeps the size. |
 | `loaded` | How much of the whole history is in; a quiet "History 16%" note shows until it is all loaded. |
-| `ready` | How much of a time range (24H, 7D, 30D) is loaded, as the backend reports it. A range can be picked only at 100%; until then its button is grey and its tooltip shows the progress. |
-| `pickRange` | Shows a time range with a fitting candle size (24H: 15m, 7D: 1h, 30D: 4h); picking it again goes back to the normal view. |
+| `ready` | How much of a time range (7D, 30D) is loaded, as the backend reports it. |
+| `pickRange` | Shows a time range with a fitting candle size (1 week: 1h, 30 days: 4h); picking it again goes back to the normal view. |
 | `pickSize` | A candle size picked by hand; no range is on any more. |
 
 ## `src/components/ChartToolbar.vue`

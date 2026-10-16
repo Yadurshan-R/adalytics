@@ -1,7 +1,10 @@
 // What the token list shows and sorts by, like Birdeye's table: each token's
 // numbers for one period (5m, 1h, 4h or 24h), and the column sorts.
 
-export const PERIODS = ['5m', '1h', '4h', '24h']
+// PERIODS are the change columns in the table. 5m is left out: most tokens
+// do not trade every 5 minutes, so it was mostly empty (the token page's
+// activity box still has it).
+export const PERIODS = ['1h', '4h', '24h']
 // HOURS is each period's length, to know when its history is fully loaded.
 export const HOURS = { '5m': 1 / 12, '1h': 1, '4h': 4, '24h': 24 }
 

@@ -1,18 +1,18 @@
 <!-- The list page, laid out like Birdeye's: every listed Cardano token (a
      Minswap pool with at least ₳10,000), quiet ones too, with price, FDV,
-     volume, trades, liquidity and the 5m, 1h, 4h and 24h change.
-     - Top Volume / Gainers / Losers, and the period (5m, 1h, 4h, 24h) that
-       Volume, Txns, Gainers and Losers follow.
+     24h volume and trades, liquidity and the 1h, 4h and 24h change.
+     - Top Volume / Gainers / Losers (Gainers and Losers by the 24h change).
+       No period buttons: the changes already have their own columns.
      - Click a column title to sort by it; click again to turn the order round.
-     - The view, period, sort and search are kept in the address, so a view can
-       be shared or reloaded (?view=gainers&period=1h&sort=liquidity&q=snek).
+     - The view, sort and search are kept in the address, so a view can be
+       shared or reloaded (?view=gainers&sort=liquidity&q=snek).
      The bar above the table is ListToolbar; the table is TokenTable. -->
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTokens } from '../useTokens.js'
 import { formatTime } from '../format.js'
-import { PERIODS, HOURS, COLUMNS, periodOf, sortRows } from '../listSort.js'
+import { HOURS, COLUMNS, periodOf, sortRows } from '../listSort.js'
 import ListToolbar from '../components/ListToolbar.vue'
 import TokenTable from '../components/TokenTable.vue'
 import LoadingProgress from '../components/LoadingProgress.vue'
@@ -28,7 +28,7 @@ const VIEWS = [
 ]
 const pick = (v, list, def) => (list.includes(v) ? v : def)
 const view = ref(pick(route.query.view, VIEWS.map((v) => v.key), 'volume'))
-const period = ref(pick(route.query.period, PERIODS, '24h'))
+const period = ref('24h') // Volume, Txns, Gainers and Losers are for the last 24 hours
 const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
 // sort is the column picked by the visitor ({ key, dir }), or null for the
 // view's own order.
@@ -44,11 +44,10 @@ function setView(v) {
   sort.value = null
 }
 
-// Keep the view, period, sort and search in the address without adding history entries.
-watch([view, period, sort, query], () => {
+// Keep the view, sort and search in the address without adding history entries.
+watch([view, sort, query], () => {
   const q = {}
   if (view.value !== 'volume') q.view = view.value
-  if (period.value !== '24h') q.period = period.value
   if (sort.value) Object.assign(q, { sort: sort.value.key, dir: sort.value.dir === 1 ? 'asc' : 'desc' })
   if (query.value.trim()) q.q = query.value.trim()
   router.replace({ query: q })
@@ -75,7 +74,7 @@ const shown = computed(() => {
 // emptyText explains why the list is empty.
 const emptyText = computed(() => {
   if (query.value.trim()) return `No token matches “${query.value.trim()}”.`
-  const span = { '5m': '5 minutes', '1h': 'hour', '4h': '4 hours', '24h': '24 hours' }[period.value]
+  const span = '24 hours'
   if (view.value === 'gainers') return `No token is up in the last ${span}.`
   if (view.value === 'losers') return `No token is down in the last ${span}.`
   return 'No tokens yet.'
@@ -92,7 +91,7 @@ const emptyText = computed(() => {
       </p>
     </div>
 
-    <ListToolbar :views="VIEWS" :view="view" :periods="PERIODS" v-model:period="period" v-model:query="query" @update:view="setView" />
+    <ListToolbar :views="VIEWS" :view="view" v-model:query="query" @update:view="setView" />
 
     <p v-if="error" class="notice" role="alert">{{ error }}</p>
     <LoadingProgress v-if="history.loading && !error" :loading="history.loading" />

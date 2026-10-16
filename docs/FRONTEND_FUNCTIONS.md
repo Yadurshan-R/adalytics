@@ -94,7 +94,8 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | `periodOf` | A token's trading over one period (5m, 1h, 4h or 24h): change, volume, buys and sells. |
-| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns follow the period picked. |
+| `PERIODS` | The change columns in the table: 1h, 4h and 24h (5m is left out; it was mostly empty). |
+| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns are for 24 hours. |
 | `sortRows` | Sorts the rows by a column, either way; equal values (often quiet tokens) keep the bigger pool first. |
 | `signedPct` | Shows a change like +3.65% or −0.64%. |
 
@@ -104,8 +105,8 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `setSort` | Sorts by a column title: highest first, then lowest first on a second click. |
 | `setView` | Picks Top Volume, Gainers or Losers and drops the column sort. |
-| `periodReady` | True once the picked period's history is fully loaded; until then Vol and Txns are faded. |
-| `changeOf` | A token's price change for the picked period. |
+| `periodReady` | True once the last 24 hours are fully loaded; until then Vol and Txns are faded. |
+| `changeOf` | A token's 24h price change, for Gainers and Losers. |
 | `moved` | A change that rounds to 0.00% is not a gain or a loss. |
 | `shown` | The list on screen: every listed token, quiet ones too, filtered by the search box and the view, in the view's order or the column picked. |
 | `emptyText` | Explains why the list is empty. |
@@ -122,8 +123,8 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `open` | Goes to a token's page. |
 | `sortedBy` | Which way the rows are in order of a column (1 up, -1 down, 0 not that column), for the ▲▼ arrows. |
-| `title` | A column's heading; Vol and Txns name the period. |
-| `hidden` | Hides a column on a phone: only price, volume and the period's change stay. |
+| `title` | A column's heading; Vol and Txns name their period (24h). |
+| `hidden` | Hides a column on a phone: only price, volume and the 24h change stay. |
 | `faded` | True for numbers whose history is not fully loaded yet. |
 | `cell` / `tone` | Write one number in its column's style, and colour a change green or red. A period with no trades shows a grey dash instead of 0 or 0.00%, like CoinMarketCap. |
 | `age` | How long ago a token was created: 4d, 8mo, 2y. |

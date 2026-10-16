@@ -10,8 +10,8 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 
 **Token list**
 
-* Laid out like Birdeye: every listed token, quiet ones too, with price, FDV, volume, trades (Txns), liquidity and the 5m, 1h, 4h and 24h change
-* Top Volume, Gainers and Losers tabs, and a 5m / 1h / 4h / 24h bar that Vol, Txns, Gainers and Losers follow
+* Laid out like Birdeye: every listed token, quiet ones too, with price, FDV, volume, trades (Txns), liquidity and the 1h, 4h and 24h change
+* Top Volume, Gainers and Losers tabs (by 24h volume and 24h change)
 * Click any column title to sort by it
 * Each token shows its ticker, name, age and short policy ID with a copy button
 * Search by name, ticker or policy ID (press `/` to jump to the search box)
@@ -20,7 +20,7 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 
 **Token page**
 
-* Live price chart (TradingView Lightweight Charts) as candles or a line, with volume bars. One slim bar on top, like Birdeye's: candle size (5m to 1 day), candles or line, indicators, and Price / FDV
+* Live price chart (TradingView Lightweight Charts) as candles or a line, with volume bars. One slim bar on top, like Birdeye's: candle size (5m to 1 day, plus 1 week and 30 days once loaded), candles or line, indicators, and Price / FDV
 * Scroll back through up to 30 days of history; while older history is still loading, the chart shows what is loaded so far
 * A token panel like Birdeye's: price in ADA and USD, liquidity, FDV and holders in boxes, then 5m / 1h / 4h / 24h volume and trades with buys, sells and net
 * Price performance (24h low and high), links and IDs with copy buttons, supply, pool reserves, last trade and the project description, like CoinMarketCap's info list

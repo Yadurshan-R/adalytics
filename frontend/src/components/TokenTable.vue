@@ -11,7 +11,7 @@ import { COLUMNS, HOURS, periodOf, signedPct } from '../listSort.js'
 
 const props = defineProps({
   rows: { type: Array, required: true }, // the tokens to show, in order
-  period: { type: String, required: true }, // '5m', '1h', '4h' or '24h'
+  period: { type: String, required: true }, // '24h': the period Vol and Txns are for
   sort: { type: Object, default: null }, // the column picked { key, dir }, or null
   view: { type: String, default: 'volume' }, // decides the order when no column is picked
   loading: { type: Boolean, default: false },

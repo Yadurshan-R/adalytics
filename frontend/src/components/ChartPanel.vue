@@ -21,7 +21,7 @@ const emit = defineEmits(['span'])
 const { history, reload } = useTokens()
 
 // SPAN is how many seconds each time range shows.
-const SPAN = { '24H': 86400, '7D': 7 * 86400, '30D': 30 * 86400 }
+const SPAN = { '7D': 7 * 86400, '30D': 30 * 86400 }
 
 const candles = ref([])
 const error = ref('')

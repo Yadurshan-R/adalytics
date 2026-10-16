@@ -103,9 +103,9 @@ No file is longer than 300 lines. Each one has one job.
 | `src/useTokens.js` | Loads the token list from the backend and refreshes it |
 | `src/format.js` | Formats prices, percentages, amounts and dates |
 | `src/chartPrefs.js` | Remembers candles or line, the candle size, indicators and Price / FDV, between token pages |
-| `src/pages/TokenList.vue` | The token list (Top Volume, Gainers, Losers, period, sort, search) |
-| `src/components/ListToolbar.vue` | The bar above the list: tabs, the 5m / 1h / 4h / 24h bar and the search box |
-| `src/listSort.js` | The list's columns, periods and sorting |
+| `src/pages/TokenList.vue` | The token list (Top Volume, Gainers, Losers, sort, search) |
+| `src/components/ListToolbar.vue` | The bar above the list: tabs and the search box |
+| `src/listSort.js` | The list's columns and sorting |
 | `src/components/TokenTable.vue` | The token table: sortable columns, faded numbers while loading, the empty message |
 | `src/pages/TokenPage.vue` | One token's page: the token panel, chart and trades |
 | `src/components/TokenOverview.vue` | The token panel: name, links, policy ID and the main numbers in boxes |

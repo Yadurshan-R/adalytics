@@ -1,17 +1,14 @@
 <!-- The bar above the token list, like Birdeye's: Top Volume / Gainers /
-     Losers as underlined tabs, the period (5m, 1h, 4h, 24h) and the search
-     box. Press "/" anywhere to jump to the search box, Esc to clear it. -->
+     Losers as underlined tabs and the search box. Press "/" anywhere to jump to the search box, Esc to clear it. -->
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
 defineProps({
   views: { type: Array, required: true }, // [{ key, label }]
   view: { type: String, required: true },
-  periods: { type: Array, required: true }, // ['5m', '1h', '4h', '24h']
-  period: { type: String, required: true },
   query: { type: String, required: true },
 })
-const emit = defineEmits(['update:view', 'update:period', 'update:query'])
+const emit = defineEmits(['update:view', 'update:query'])
 
 const search = ref(null)
 // onKey makes "/" jump to the search box from anywhere on the page.
@@ -30,9 +27,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
     <nav class="tabs" aria-label="Order the list">
       <button v-for="v in views" :key="v.key" type="button" :aria-pressed="view === v.key" @click="emit('update:view', v.key)">{{ v.label }}</button>
     </nav>
-    <div class="periods" role="group" aria-label="Period">
-      <button v-for="p in periods" :key="p" type="button" :aria-pressed="period === p" @click="emit('update:period', p)">{{ p }}</button>
-    </div>
     <label class="search">
       <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" /><path d="M13 13l4 4" /></svg>
       <input ref="search" :value="query" type="search" placeholder="Search token or policy ID" aria-label="Search token"
@@ -48,10 +42,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .tabs button { padding: 10px 0 11px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--muted); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
 .tabs button:hover { color: var(--fg); }
 .tabs button[aria-pressed="true"] { color: var(--fg); border-bottom-color: #2962ff; }
-.periods { display: inline-flex; padding: 2px; border: 1px solid var(--line); border-radius: 6px; }
-.periods button { height: 26px; padding: 0 10px; border: 0; border-radius: 4px; background: none; color: #6a6d78; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
-.periods button:hover { color: #131722; }
-.periods button[aria-pressed="true"] { background: #f0f3fa; color: #131722; font-weight: 600; }
 button:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
 .search { margin-left: auto; display: flex; align-items: center; gap: 8px; width: min(300px, 100%); height: 34px; padding: 0 10px; margin-bottom: 6px; border: 1px solid var(--line); border-radius: 6px; }
 .search:focus-within { border-color: #2962ff; }

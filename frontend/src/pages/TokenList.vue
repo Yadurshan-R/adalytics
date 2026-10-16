@@ -1,11 +1,13 @@
 <!-- The list page, laid out like Birdeye's: every listed Cardano token (a
-     Minswap pool with at least ₳10,000), quiet ones too, with price, FDV,
+     Minswap pool with at least ₳10,000) that traded in 24 hours, with price, FDV,
      24h volume and trades, liquidity and the 1h, 4h and 24h change.
      - Top Volume / Gainers / Losers (Gainers and Losers by the 24h change).
        No period buttons: the changes already have their own columns.
      - Click a column title to sort by it; click again to turn the order round.
      - The view, sort and search are kept in the address, so a view can be
        shared or reloaded (?view=gainers&sort=liquidity&q=snek).
+     - Only tokens that traded in the last 24 hours are listed; quiet ones
+       appear when searched for, with when they last traded.
      The bar above the table is ListToolbar; the table is TokenTable. -->
 <script setup>
 import { computed, ref, watch } from 'vue'
@@ -59,12 +61,20 @@ const changeOf = (t) => periodOf(t, period.value).change_pct
 // A change that rounds to 0.00% is not a gain or a loss.
 const moved = (v) => Math.abs(v) >= 0.005
 
-// shown is the list on screen: every listed token, filtered by the search box
-// and the view, in the view's order or the column picked.
+// traded is true for a token with at least one trade in the last 24 hours.
+const traded = (t) => periodOf(t, '24h').buys + periodOf(t, '24h').sells > 0
+// active counts the tokens that traded in the last 24 hours.
+const active = computed(() => tokens.value.filter((t) => t.price_ada && traded(t)).length)
+
+// shown is the list on screen, in the view's order or the column picked.
+// Only tokens that traded in the last 24 hours are listed; a quiet token shows
+// up when the visitor searches for it. While the 24 hours are still loading,
+// every token is listed, so none goes missing just because it is not read yet.
 const shown = computed(() => {
   const q = query.value.trim().toLowerCase()
   let list = tokens.value.filter((t) => t.price_ada)
   if (q) list = list.filter((t) => t.name.toLowerCase().includes(q) || t.ticker.toLowerCase().includes(q) || t.policy_id.startsWith(q))
+  else if (day.value.ready) list = list.filter(traded)
   if (view.value === 'gainers') list = list.filter((t) => moved(changeOf(t)) && changeOf(t) > 0)
   if (view.value === 'losers') list = list.filter((t) => moved(changeOf(t)) && changeOf(t) < 0)
   const own = { volume: { key: 'volume', dir: -1 }, gainers: { key: `c${period.value}`, dir: -1 }, losers: { key: `c${period.value}`, dir: 1 } }
@@ -87,7 +97,8 @@ const emptyText = computed(() => {
       <h1>Cardano Tokens</h1>
       <p v-if="updatedAt && !error" class="live muted num">
         <span class="dot" aria-hidden="true"></span>
-        {{ tokens.length }} tokens · updated {{ formatTime(updatedAt) }}
+        <template v-if="day.ready">{{ active }} tokens traded in 24h</template><template v-else>{{ tokens.length }} tokens</template>
+        · updated {{ formatTime(updatedAt) }}
       </p>
     </div>
 

@@ -1,12 +1,15 @@
 <!-- The token table, laid out like Birdeye's: rank, token (ticker, name, age
      and short policy ID with a copy button), price, FDV, volume and trades for
-     the period picked, liquidity, and the 5m, 1h, 4h and 24h change. Every
-     column title sorts. Numbers whose history is still loading are faded.
+     24 hours, liquidity, and the 1h, 4h and 24h change. Every column title
+     sorts. Numbers whose history is still loading are faded.
+     A token with no trade in 24 hours (listed only when searched for) shows
+     when it last traded instead of empty changes; in Top Volume order these
+     come last, under a line saying so.
      Grey placeholder rows while loading; a click on a row opens the token. -->
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { formatPrice, fullPrice, formatCompact } from '../format.js'
+import { formatPrice, fullPrice, formatCompact, formatAgo } from '../format.js'
 import { COLUMNS, HOURS, periodOf, signedPct } from '../listSort.js'
 
 const props = defineProps({
@@ -52,6 +55,20 @@ function cell(c, t) {
   const q = periodOf(t, c.change)
   return q.buys + q.sells ? signedPct(q.change_pct) : '—'
 }
+// quiet is true for a token with no trade in the last 24 hours.
+const quiet = (t) => !(periodOf(t, '24h').buys + periodOf(t, '24h').sells)
+// changes are the change columns, which a quiet row replaces with one note.
+const changes = COLUMNS.filter((c) => c.change)
+// divider is the index of the first quiet row in Top Volume order (-1: none).
+const divider = computed(() => (props.sort || props.view !== 'volume' ? -1 : props.rows.findIndex(quiet)))
+// lastTrade is a quiet token's note, e.g. "Last trade 3 days ago".
+const lastTrade = (t) => (t.last_swap ? `Last trade ${formatAgo(t.last_swap)}` : 'No trades yet')
+// shortAgo is the same for a phone: 3d, 5h, 20m.
+function shortAgo(iso) {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000
+  return s >= 86400 ? `${Math.floor(s / 86400)}d` : s >= 3600 ? `${Math.floor(s / 3600)}h` : `${Math.max(1, Math.floor(s / 60))}m`
+}
+
 // tone colours a change green or red.
 function tone(c, t) {
   if (!c.change) return ''
@@ -97,7 +114,11 @@ function copy(t) {
         </tr>
       </tbody>
       <tbody v-else>
-        <tr v-for="(t, i) in rows" :key="t.id" class="row" tabindex="0" @click="open(t)" @keydown.enter="open(t)">
+        <template v-for="(t, i) in rows" :key="t.id">
+        <tr v-if="i === divider" class="divider">
+          <td :colspan="COLUMNS.length + 2" class="left muted">Not traded in the last 24 hours</td>
+        </tr>
+        <tr class="row" tabindex="0" @click="open(t)" @keydown.enter="open(t)">
           <td class="rank muted num">{{ i + 1 }}</td>
           <td class="left">
             <div class="token">
@@ -116,9 +137,14 @@ function copy(t) {
               </div>
             </div>
           </td>
-          <td v-for="c in COLUMNS" :key="c.key" class="num" :class="[tone(c, t), { 'hide-sm': hidden(c), faded: faded(c) }]"
-              :title="c.key === 'price' ? fullPrice(t.price_ada) : null">{{ cell(c, t) }}</td>
+          <template v-for="c in COLUMNS" :key="c.key">
+            <td v-if="!(c.change && quiet(t))" class="num" :class="[tone(c, t), { 'hide-sm': hidden(c), faded: faded(c) }]"
+                :title="c.key === 'price' ? fullPrice(t.price_ada) : null">{{ cell(c, t) }}</td>
+          </template>
+          <td v-if="quiet(t)" :colspan="changes.length" class="note muted wide">{{ lastTrade(t) }}</td>
+          <td v-if="quiet(t)" class="note muted narrow">{{ t.last_swap ? shortAgo(t.last_swap) : '—' }}</td>
         </tr>
+        </template>
         <tr v-if="!rows.length">
           <td :colspan="COLUMNS.length + 2" class="empty muted">{{ emptyText }}</td>
         </tr>
@@ -156,11 +182,15 @@ td { font-size: 14px; }
 .copy svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 .faded { opacity: 0.35; }
 .empty { text-align: center; padding-block: 40px; }
+.divider td { padding: 18px 10px 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.note { font-size: 13px; }
+.narrow { display: none; }
 .skeleton i { display: inline-block; height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--line), #f7f9fb, var(--line)); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton i { animation: none; } }
 @media (max-width: 700px) {
-  .hide-sm, .name, .sub .mono, .copy { display: none; }
+  .hide-sm, .name, .sub .mono, .copy, .wide { display: none; }
+  .narrow { display: table-cell; }
   th, td { padding: 10px 5px; }
 }
 </style>

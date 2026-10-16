@@ -8,7 +8,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useTokens } from '../useTokens.js'
-import { chartType, candleSize, indicators, chartUnit } from '../chartPrefs.js'
+import { chartType, candleSize, indicators, chartUnit, chartRange } from '../chartPrefs.js'
 import { useUnits } from '../chart/useUnits.js'
 import ChartHeader from './ChartHeader.vue'
 import PriceChart from './PriceChart.vue'
@@ -19,6 +19,9 @@ const props = defineProps({
 })
 const emit = defineEmits(['span'])
 const { history, reload } = useTokens()
+
+// SPAN is how many seconds each time range shows.
+const SPAN = { '24H': 86400, '7D': 7 * 86400, '30D': 30 * 86400 }
 
 const candles = ref([])
 const error = ref('')
@@ -57,11 +60,11 @@ watch(candles, () => {
 
 <template>
   <div class="card">
-    <ChartHeader v-model:size="candleSize" v-model:type="chartType" v-model:indicators="indicators" v-model:unit="chartUnit"
+    <ChartHeader v-model:size="candleSize" v-model:type="chartType" v-model:indicators="indicators" v-model:unit="chartUnit" v-model:range="chartRange"
                  :history="history" :can-fdv="supply > 0" />
     <p v-if="error" class="notice">{{ error }}</p>
     <PriceChart :type="chartType" :candles="units.shown.value" :indicators="indicators" :fmt="units.fmt.value"
-                :fit-key="`${id}-${candleSize}-${units.key.value}`" :token="`${id}-${units.key.value}`" />
+                :fit-key="`${id}-${candleSize}-${units.key.value}-${chartRange}`" :span="SPAN[chartRange] || 0" :token="`${id}-${units.key.value}`" />
   </div>
 </template>
 

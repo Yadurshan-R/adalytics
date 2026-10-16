@@ -45,13 +45,19 @@ function cell(c, t) {
     case 'price': return formatPrice(t.price_ada)
     case 'fdv': return t.fdv_ada ? formatCompact(t.fdv_ada) : '—'
     case 'volume': return p.volume_ada ? formatCompact(p.volume_ada) : '—'
-    case 'txns': return (p.buys + p.sells).toLocaleString('en-US')
+    case 'txns': return p.buys + p.sells ? (p.buys + p.sells).toLocaleString('en-US') : '—'
     case 'liquidity': return formatCompact(t.reserve_ada * 2)
   }
-  return signedPct(periodOf(t, c.change).change_pct)
+  // No trade in that period: a dash, not 0.00%, so a quiet token reads as quiet.
+  const q = periodOf(t, c.change)
+  return q.buys + q.sells ? signedPct(q.change_pct) : '—'
 }
 // tone colours a change green or red.
-const tone = (c, t) => (c.change ? (v => (v > 0.005 ? 'up' : v < -0.005 ? 'down' : 'muted'))(periodOf(t, c.change).change_pct) : '')
+function tone(c, t) {
+  if (!c.change) return ''
+  const q = periodOf(t, c.change)
+  return !(q.buys + q.sells) ? 'muted' : q.change_pct > 0.005 ? 'up' : q.change_pct < -0.005 ? 'down' : 'muted'
+}
 
 // age shows how long ago a token was created: 4d, 8mo, 2y.
 function age(iso) {

@@ -1,38 +1,30 @@
 <!-- The candle size picker at the start of the chart bar, like TradingView's
-     and Birdeye's: five quick buttons and a list with every size. A size whose history is still loading shows how far it
-     has got, so the visitor sees more candles are on the way. -->
+     and Birdeye's: five quick buttons and a list with every size. While older
+     history loads, the chart bar says so once ("History 49%" in ChartHeader),
+     not on every size here. -->
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   modelValue: { type: String, required: true }, // the size picked now
-  history: { type: Object, required: true }, // { days, loaded_hours, done } from the backend
 })
 const emit = defineEmits(['update:modelValue'])
 
-// SIZES is every candle size and how many days back it goes (as the backend).
+// SIZES is every candle size.
 const SIZES = [
-  { key: '5m', label: '5 minutes', days: 2 },
-  { key: '15m', label: '15 minutes', days: 7 },
-  { key: '30m', label: '30 minutes', days: 7 },
-  { key: '1h', label: '1 hour', days: 30 },
-  { key: '2h', label: '2 hours', days: 30 },
-  { key: '4h', label: '4 hours', days: 30 },
-  { key: '12h', label: '12 hours', days: 30 },
-  { key: '1D', label: '1 day', days: 30 },
+  { key: '5m', label: '5 minutes' },
+  { key: '15m', label: '15 minutes' },
+  { key: '30m', label: '30 minutes' },
+  { key: '1h', label: '1 hour' },
+  { key: '2h', label: '2 hours' },
+  { key: '4h', label: '4 hours' },
+  { key: '12h', label: '12 hours' },
+  { key: '1D', label: '1 day' },
 ]
 const QUICK = ['5m', '15m', '1h', '4h', '1D']
 
 // buttons are the quick sizes, plus the picked size when it came from the list.
 const buttons = computed(() => (QUICK.includes(props.modelValue) ? QUICK : [...QUICK, props.modelValue]))
-
-// progress is how much of a size's history is loaded, 0 to 100.
-function progress(key) {
-  const h = props.history
-  if (h.done) return 100
-  const days = Math.min(SIZES.find((s) => s.key === key).days, h.days || 30)
-  return Math.min(100, Math.floor(((h.loaded_hours || 0) / (days * 24)) * 100))
-}
 
 const open = ref(false)
 const root = ref(null)
@@ -69,8 +61,7 @@ onBeforeUnmount(close)
       <button v-for="s in SIZES" :key="s.key" type="button" role="menuitemradio" class="item"
               :aria-checked="s.key === modelValue" @click="pick(s.key)">
         <span class="name">{{ s.label }}</span>
-        <span v-if="progress(s.key) < 100" class="pct num">{{ progress(s.key) }}%</span>
-        <svg v-else-if="s.key === modelValue" class="tick" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" /></svg>
+        <svg v-if="s.key === modelValue" class="tick" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" /></svg>
       </button>
     </div>
   </div>
@@ -86,7 +77,6 @@ onBeforeUnmount(close)
 .pick .more { padding: 0 4px; align-items: center; }
 .more[aria-expanded="true"] { background: #f0f3fa; color: #131722; }
 .more svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.pct { font-size: 10px; font-weight: 600; color: var(--bull); }
 .menu { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; min-width: 190px; padding: 6px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(19, 23, 34, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12); }
 .item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px; border: 0; background: none; color: #131722; font: 14px Inter, system-ui, sans-serif; text-align: left; cursor: pointer; }
 .item:hover { background: #f0f3fa; }

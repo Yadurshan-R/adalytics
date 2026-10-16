@@ -125,7 +125,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `title` | A column's heading; Vol and Txns name the period. |
 | `hidden` | Hides a column on a phone: only price, volume and the period's change stay. |
 | `faded` | True for numbers whose history is not fully loaded yet. |
-| `cell` / `tone` | Write one number in its column's style, and colour a change green or red. |
+| `cell` / `tone` | Write one number in its column's style, and colour a change green or red. A period with no trades shows a grey dash instead of 0 or 0.00%, like CoinMarketCap. |
 | `age` | How long ago a token was created: 4d, 8mo, 2y. |
 | `copy` | Puts a policy ID on the clipboard without opening the row. |
 

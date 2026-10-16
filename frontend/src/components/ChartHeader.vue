@@ -1,6 +1,8 @@
 <!-- The slim bar on top of the chart, like Birdeye's and TradingView's:
-     candle size | candles or line | indicators            Price / FDV
-     One bar for both chart styles, so changing the style keeps the size. -->
+     candle size | candles or line | indicators     24H 7D 30D   Price / FDV
+     One bar for both chart styles, so changing the style keeps the size.
+     A time range (like CoinMarketCap's) shows that span with a fitting candle
+     size; 7D and 30D can be picked once that much history is loaded. -->
 <script setup>
 import { computed } from 'vue'
 import CandleSizePicker from './CandleSizePicker.vue'
@@ -11,16 +13,43 @@ const props = defineProps({
   type: { type: String, required: true }, // 'candles' or 'line'
   indicators: { type: Array, required: true }, // picked indicators
   unit: { type: String, required: true }, // 'price' or 'fdv'
+  range: { type: String, default: '' }, // '24H', '7D', '30D' or '' (see chartPrefs.js)
   history: { type: Object, required: true }, // loading progress from the backend
   canFdv: { type: Boolean, default: false }, // false when the total supply is unknown
 })
-const emit = defineEmits(['update:size', 'update:type', 'update:indicators', 'update:unit'])
+const emit = defineEmits(['update:size', 'update:type', 'update:indicators', 'update:unit', 'update:range'])
 
 // loaded is how much of the history is in, while older days still load.
 const loaded = computed(() => {
   const h = props.history
   return h.done || !h.days ? 100 : Math.min(99, Math.floor(((h.loaded_hours || 0) / (h.days * 24)) * 100))
 })
+
+// RANGES are the time ranges and the candle size each one uses.
+const RANGES = [
+  { key: '24H', days: 1, size: '15m' },
+  { key: '7D', days: 7, size: '1h' },
+  { key: '30D', days: 30, size: '4h' },
+]
+// ready is how much of a range's history is loaded, 0 to 100, as the backend
+// reports it.
+function ready(r) {
+  const h = props.history
+  const x = h.ranges?.find((k) => k.key === r.key)
+  if (x) return x.ready ? 100 : Math.min(99, x.progress)
+  return h.done ? 100 : Math.min(100, Math.floor(((h.loaded_hours || 0) / (r.days * 24)) * 100))
+}
+// pickRange shows a range with its candle size; picking it again goes back.
+function pickRange(r) {
+  if (props.range === r.key) return emit('update:range', '')
+  emit('update:size', r.size)
+  emit('update:range', r.key)
+}
+// pickSize is a candle size picked by hand, so no range is on any more.
+function pickSize(size) {
+  emit('update:size', size)
+  emit('update:range', '')
+}
 
 const STYLES = [
   { key: 'candles', label: 'Candles', icon: 'M6 3v3M6 14v3M4 6h4v8H4zM14 3v5M14 15v2M12 8h4v7h-4z' },
@@ -30,7 +59,7 @@ const STYLES = [
 
 <template>
   <div class="bar">
-    <CandleSizePicker :model-value="size" :history="history" @update:model-value="emit('update:size', $event)" />
+    <CandleSizePicker :model-value="size" @update:model-value="pickSize" />
     <span class="sep"></span>
     <div class="group" role="group" aria-label="Chart style">
       <button v-for="s in STYLES" :key="s.key" type="button" class="btn icon" :aria-pressed="s.key === type" :title="s.label"
@@ -42,7 +71,13 @@ const STYLES = [
     <span class="sep"></span>
     <IndicatorMenu :model-value="indicators" @update:model-value="emit('update:indicators', $event)" />
     <span v-if="loaded < 100" class="hist end" title="Older candles appear as the history loads">History {{ loaded }}%</span>
-    <div v-if="canFdv" class="group" :class="{ end: loaded >= 100 }" role="group" aria-label="Price or fully diluted value">
+    <div class="group" :class="{ end: loaded >= 100 }" role="group" aria-label="Time range">
+      <button v-for="r in RANGES" :key="r.key" type="button" class="btn" :aria-pressed="range === r.key" :disabled="ready(r) < 100"
+              :title="ready(r) < 100 ? `${r.days} days of history: ${ready(r)}% loaded` : `Last ${r.days === 1 ? '24 hours' : r.days + ' days'}`"
+              @click="pickRange(r)">{{ r.key }}</button>
+    </div>
+    <span v-if="canFdv" class="sep"></span>
+    <div v-if="canFdv" class="group" role="group" aria-label="Price or fully diluted value">
       <button type="button" class="btn" :aria-pressed="unit !== 'fdv'" @click="emit('update:unit', 'price')">Price</button>
       <span class="slash">/</span>
       <button type="button" class="btn" :aria-pressed="unit === 'fdv'" title="Fully diluted value: price × total supply" @click="emit('update:unit', 'fdv')">FDV</button>
@@ -60,6 +95,7 @@ const STYLES = [
 .btn { display: inline-flex; align-items: center; height: 30px; padding: 0 8px; border: 0; border-radius: 4px; background: none; color: #6a6d78; font: inherit; font-weight: 500; cursor: pointer; }
 .btn:hover { background: #f0f3fa; color: #131722; }
 .btn[aria-pressed="true"] { color: #2962ff; }
+.btn:disabled { color: #c3c6cf; cursor: default; background: none; }
 .btn:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
 .icon { width: 30px; justify-content: center; padding: 0; }
 .icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }

@@ -1,6 +1,6 @@
 <!-- The token table, laid out like Birdeye's: rank, token (ticker, name, age
      and short policy ID with a copy button), price, FDV, volume and trades for
-     24 hours, liquidity, and the 1h, 4h and 24h change. Every column title
+     24 hours, liquidity, holders, and the 1h, 4h and 24h change. Every column title
      sorts. Numbers whose history is still loading are faded.
      A token with no trade in 24 hours (listed only when searched for) shows
      when it last traded instead of empty changes; in Top Volume order these
@@ -9,7 +9,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { formatPrice, fullPrice, formatCompact, formatAgo } from '../format.js'
+import { formatPrice, fullPrice, formatCompact, formatAgo, formatAmount } from '../format.js'
 import { COLUMNS, HOURS, periodOf, signedPct } from '../listSort.js'
 
 const props = defineProps({
@@ -37,7 +37,7 @@ function sortedBy(key) {
 // title is a column's heading; Vol and Txns name the period.
 const title = (c) => (c.period ? `${c.title} ${props.period}` : c.title)
 // hidden hides a column on a phone: only price, volume and the period's change stay.
-const hidden = (c) => ['fdv', 'txns', 'liquidity'].includes(c.key) || (c.change && c.change !== props.period)
+const hidden = (c) => ['fdv', 'txns', 'liquidity', 'holders'].includes(c.key) || (c.change && c.change !== props.period)
 // faded is true for numbers whose history is not fully loaded yet.
 const faded = (c) => (c.change ? props.hours < HOURS[c.change] : c.period && !props.periodReady)
 
@@ -50,6 +50,7 @@ function cell(c, t) {
     case 'volume': return p.volume_ada ? formatCompact(p.volume_ada) : '—'
     case 'txns': return p.buys + p.sells ? (p.buys + p.sells).toLocaleString('en-US') : '—'
     case 'liquidity': return formatCompact(t.reserve_ada * 2)
+    case 'holders': return t.holders ? formatAmount(t.holders) : '…' // counted in the background after a restart
   }
   // No trade in that period: a dash, not 0.00%, so a quiet token reads as quiet.
   const q = periodOf(t, c.change)
@@ -139,7 +140,7 @@ function copy(t) {
           </td>
           <template v-for="c in COLUMNS" :key="c.key">
             <td v-if="!(c.change && quiet(t))" class="num" :class="[tone(c, t), { 'hide-sm': hidden(c), faded: faded(c) }]"
-                :title="c.key === 'price' ? fullPrice(t.price_ada) : null">{{ cell(c, t) }}</td>
+                :title="c.key === 'price' ? fullPrice(t.price_ada) : c.key === 'holders' ? (t.holders ? t.holders.toLocaleString('en-US') + ' holders' : 'Being counted') : null">{{ cell(c, t) }}</td>
           </template>
           <td v-if="quiet(t)" :colspan="changes.length" class="note muted wide">{{ lastTrade(t) }}</td>
           <td v-if="quiet(t)" class="note muted narrow">{{ t.last_swap ? shortAgo(t.last_swap) : '—' }}</td>

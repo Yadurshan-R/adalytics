@@ -10,7 +10,7 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 
 **Token list**
 
-* Laid out like Birdeye: every listed token that traded in the last 24 hours (quiet ones show up when searched for), with price, FDV, volume, trades (Txns), liquidity and the 1h, 4h and 24h change
+* Laid out like Birdeye: every listed token that traded in the last 24 hours (quiet ones show up when searched for), with price, FDV, volume, trades (Txns), liquidity, holders and the 1h, 4h and 24h change
 * Top Volume, Gainers and Losers tabs (by 24h volume and 24h change)
 * Click any column title to sort by it
 * Each token shows its ticker, name, age and short policy ID with a copy button

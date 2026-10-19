@@ -21,6 +21,7 @@ export const COLUMNS = [
   { key: 'volume', title: 'Vol', value: (t, p) => periodOf(t, p).volume_ada, period: true },
   { key: 'txns', title: 'Txns', value: (t, p) => periodOf(t, p).buys + periodOf(t, p).sells, period: true },
   { key: 'liquidity', title: 'Liquidity', value: (t) => t.reserve_ada * 2 },
+  { key: 'holders', title: 'Holders', value: (t) => t.holders ?? 0 },
   ...PERIODS.map((k) => ({ key: `c${k}`, title: `${k} %`, value: (t) => periodOf(t, k).change_pct, change: k })),
 ]
 

@@ -95,7 +95,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `periodOf` | A token's trading over one period (5m, 1h, 4h or 24h): change, volume, buys and sells. |
 | `PERIODS` | The change columns in the table: 1h, 4h and 24h (5m is left out; it was mostly empty). |
-| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns are for 24 hours. |
+| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns are for 24 hours. Holders sorts by the holder count (0 while still being counted). |
 | `sortRows` | Sorts the rows by a column, either way; equal values (often quiet tokens) keep the bigger pool first. |
 | `signedPct` | Shows a change like +3.65% or −0.64%. |
 
@@ -126,6 +126,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `sortedBy` | Which way the rows are in order of a column (1 up, -1 down, 0 not that column), for the ▲▼ arrows. |
 | `title` | A column's heading; Vol and Txns name their period (24h). |
 | `hidden` | Hides a column on a phone: only price, volume and the 24h change stay. |
+| (Holders) | How many wallets hold the token, like 64.4K (the exact number on hover); a grey "…" while it is still being counted after a restart. |
 | `faded` | True for numbers whose history is not fully loaded yet. |
 | `cell` / `tone` | Write one number in its column's style, and colour a change green or red. A period with no trades shows a grey dash instead of 0 or 0.00%, like CoinMarketCap. |
 | `quiet` / `divider` / `lastTrade` | A token with no trade in 24 hours (found by search) shows "Last trade 3 days ago" instead of its changes ("3d" on a phone), below a "Not traded in the last 24 hours" line in Top Volume order. |

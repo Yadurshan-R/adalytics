@@ -52,9 +52,10 @@ function cell(c, t) {
     case 'liquidity': return formatCompact(t.reserve_ada * 2)
     case 'holders': return t.holders ? formatAmount(t.holders) : '…' // counted in the background after a restart
   }
-  // No trade in that period: a dash, not 0.00%, so a quiet token reads as quiet.
-  const q = periodOf(t, c.change)
-  return q.buys + q.sells ? signedPct(q.change_pct) : '—'
+  // No trade in that hour or 4 hours means the price did not move: 0.00% in
+  // grey, as CoinGecko and TapTools show a flat price (a token with no trade
+  // in 24 hours shows its last trade instead, see quiet).
+  return signedPct(periodOf(t, c.change).change_pct)
 }
 // quiet is true for a token with no trade in the last 24 hours.
 const quiet = (t) => !(periodOf(t, '24h').buys + periodOf(t, '24h').sells)
@@ -73,8 +74,8 @@ function shortAgo(iso) {
 // tone colours a change green or red.
 function tone(c, t) {
   if (!c.change) return ''
-  const q = periodOf(t, c.change)
-  return !(q.buys + q.sells) ? 'muted' : q.change_pct > 0.005 ? 'up' : q.change_pct < -0.005 ? 'down' : 'muted'
+  const v = periodOf(t, c.change).change_pct
+  return v > 0.005 ? 'up' : v < -0.005 ? 'down' : 'muted'
 }
 
 // age shows how long ago a token was created: 4d, 8mo, 2y.

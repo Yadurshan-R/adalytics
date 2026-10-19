@@ -128,7 +128,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `hidden` | Hides a column on a phone: only price, volume and the 24h change stay. |
 | (Holders) | How many wallets hold the token, like 64.4K (the exact number on hover); a grey "…" while it is still being counted after a restart. |
 | `faded` | True for numbers whose history is not fully loaded yet. |
-| `cell` / `tone` | Write one number in its column's style, and colour a change green or red. A period with no trades shows a grey dash instead of 0 or 0.00%, like CoinMarketCap. |
+| `cell` / `tone` | Write one number in its column's style, and colour a change green or red. An hour with no trade means the price did not move, so it shows 0.00% in grey, like CoinGecko and TapTools. |
 | `quiet` / `divider` / `lastTrade` | A token with no trade in 24 hours (found by search) shows "Last trade 3 days ago" instead of its changes ("3d" on a phone), below a "Not traded in the last 24 hours" line in Top Volume order. |
 | `age` | How long ago a token was created: 4d, 8mo, 2y. |
 | `copy` | Puts a policy ID on the clipboard without opening the row. |

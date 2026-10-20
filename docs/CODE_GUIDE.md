@@ -101,7 +101,8 @@ No file is longer than 300 lines. Each one has one job.
 
 | File | Job |
 |---|---|
-| `src/main.js` | Starts the app and sets up the three pages (token list, token page, Large Trades) |
+| `src/main.js` | Starts the app, sets up the pages (token list, token page, Large Trades, Page not found) and names each in the browser tab |
+| `src/pages/NotFound.vue` | The Page not found page, for an address that does not exist |
 | `src/App.vue` | The top bar and the page frame |
 | `src/components/NavMenu.vue` | The ☰ menu in the top bar: Tokens and Large Trades |
 | `src/useTokens.js` | Loads the token list from the backend and refreshes it |

@@ -7,9 +7,11 @@
        links and IDs, supply, pool, description.
      On phones the chart comes right after the price boxes, like Birdeye's app. -->
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useTokens } from '../useTokens.js'
+import { formatPrice } from '../format.js'
+import { periodOf, signedPct } from '../listSort.js'
 import TokenOverview from '../components/TokenOverview.vue'
 import ActivityBox from '../components/ActivityBox.vue'
 import TokenInfo from '../components/TokenInfo.vue'
@@ -31,6 +33,15 @@ function back() {
   if (window.history.state?.back) router.back()
   else router.push('/')
 }
+
+// The browser tab shows the token and its live price, like Birdeye and
+// CoinMarketCap: "NIGHT ₳0.1890 +2.60% | Adalytics". It follows the price
+// as the list refreshes. A wrong id says so in the tab too.
+watchEffect(() => {
+  const t = token.value
+  if (t) document.title = `${t.ticker} ${formatPrice(t.price_ada)} ${signedPct(periodOf(t, '24h').change_pct)} | Adalytics`
+  else if (!loading.value && !history.value.loading) document.title = 'Token not found | Adalytics'
+})
 
 // span is the low and high of the last 24 hours, from the chart (ChartPanel).
 const span = ref(null)

@@ -32,8 +32,8 @@ const sign = (t, part) => ((t.side === 'buy') === (part === 'token') ? '+' : 'âˆ
           <th class="left type">Type</th>
           <th class="left hide-sm value-col">Value</th>
           <th class="left amount-col">Amount</th>
-          <th class="hide-sm" title="The trade's ADA against the pool's ADA">% of pool</th>
-          <th class="left">Trader</th>
+          <th class="left hide-sm pool-col" title="The trade's ADA against the pool's ADA">% of pool</th>
+          <th class="left trader-col">Trader</th>
           <th class="link-col hide-sm"><span class="sr-only">Transaction</span></th>
         </tr>
       </thead>
@@ -55,7 +55,7 @@ const sign = (t, part) => ((t.side === 'buy') === (part === 'token') ? '+' : 'âˆ
               <span class="num">{{ sign(t, 'ada') }}{{ Math.round(t.amount_ada).toLocaleString('en-US') }}</span><b>ADA</b>
             </span>
           </td>
-          <td class="hide-sm num" :class="{ big: t.pool_share >= 1 }">{{ t.pool_share.toFixed(1) }}%</td>
+          <td class="left hide-sm num" :class="{ big: t.pool_share >= 1 }">{{ t.pool_share.toFixed(1) }}%</td>
           <td class="left"><TraderCell :wallet="t.wallet" :on="!!wallet && t.wallet === wallet" @pick="emit('wallet', $event)" /></td>
           <td class="link-col hide-sm">
             <a :href="`https://cardanoscan.io/transaction/${t.tx_hash}`" target="_blank" rel="noopener" class="tx"
@@ -81,10 +81,17 @@ th { font-size: 12px; font-weight: 500; color: var(--muted); }
 .value { font-weight: 700; }
 /* Value and Amount each start at their own left edge with room between,
    like Birdeye, so the two numbers do not read as one. */
-.time { width: 13%; }
-.type { width: 9%; }
-.value-col { width: 16%; }
-.amount-col { padding-left: 24px; }
+/* Fixed column widths, so the space is shared evenly and every column
+   starts at its own left edge, like Birdeye. */
+@media (min-width: 701px) {
+  table { table-layout: fixed; }
+  .time { width: 13%; }
+  .type { width: 9%; }
+  .value-col { width: 15%; }
+  .amount-col { width: 25%; }
+  .pool-col { width: 11%; }
+  .trader-col { width: 22%; }
+}
 .icon { margin-right: 6px; font-size: 16px; font-weight: 400; }
 .tip { position: relative; cursor: help; }
 .tip:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 5; width: max-content; max-width: 220px; padding: 6px 9px; border-radius: 6px; background: #131722; color: #fff; font-size: 12px; font-weight: 400; line-height: 1.4; white-space: normal; text-align: left; pointer-events: none; }
@@ -108,7 +115,6 @@ th { font-size: 12px; font-weight: 500; color: var(--muted); }
   .show-sm { display: inline; margin-right: 2px; }
   .side { padding: 3px 5px; }
   th, td { padding: 11px 3px; font-size: 13px; }
-  .amount-col { padding-left: 3px; }
   .line { gap: 4px; }
 }
 </style>

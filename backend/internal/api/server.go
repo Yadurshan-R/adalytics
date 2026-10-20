@@ -99,6 +99,21 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 		writeJSON(w, http.StatusOK, map[string]any{"ticker": quote.Ticker, "trades": trades, "whale_ada": market.WhaleADA(quote)})
 	})
 
+	// The Whale Trades page: one page of big trades across every token,
+	// newest first, with the token list and how much history is loaded:
+	// /api/whales?hours=24&min=10000&max=50000&token=snek&wallet=stake1…&offset=200.
+	mux.HandleFunc("GET /api/whales", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		hours, _ := strconv.Atoi(q.Get("hours"))
+		minADA, _ := strconv.ParseFloat(q.Get("min"), 64)
+		maxADA, _ := strconv.ParseFloat(q.Get("max"), 64)
+		offset, _ := strconv.Atoi(q.Get("offset"))
+		f := market.WhaleFilter{Hours: hours, MinADA: minADA, MaxADA: maxADA, Token: q.Get("token"), Wallet: q.Get("wallet"), Offset: offset}
+		trades, more := tracker.WhaleTrades(f)
+		writeJSON(w, http.StatusOK, map[string]any{"trades": trades, "more": more, "tokens": tracker.WhaleTokens(),
+			"ranges": tracker.History().Ranges, "share": market.WhaleShare * 100})
+	})
+
 	// What one wallet traded in the last 24 hours, token by token, from the
 	// trades in memory: /api/wallets/stake1u8….
 	mux.HandleFunc("GET /api/wallets/{wallet}", func(w http.ResponseWriter, r *http.Request) {

@@ -6,6 +6,7 @@ This guide explains how Adalytics is built. Read it to see how the pieces fit to
 - [Market functions](MARKET_FUNCTIONS.md): the market package (prices, history, candles) and its tests
 - [Frontend functions](FRONTEND_FUNCTIONS.md): the Vue website
 - [Chart functions](CHART_FUNCTIONS.md): the price chart, its units, indicators and drawing tools
+- [Large Trades functions](TRADES_FUNCTIONS.md): the Large Trades page, backend and frontend
 
 Every function in the code also has a comment above it saying the same thing, so you can read the code on its own too.
 
@@ -50,6 +51,7 @@ The backend serves these routes. Each one reads from memory, so they answer inst
 | `GET /api/tokens/{id}/chart?range=24H` | One token's line chart. `range` is 24H, 7D or 30D |
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
 | `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first, each with its wallet, and the whale level |
+| `GET /api/whales?hours=24&min=10000&max=50000` | The Large Trades page: one page of big trades across every token (up to 30 days back), the token list and how much history is loaded |
 | `GET /api/wallets/{stake1…}` | What one wallet traded in the last 24 hours, token by token |
 | `GET /api/tokens/{id}/activity` | One token's trading over 5m, 1h, 4h and 24h: price change, volume, buys and sells |
 | `GET /api/tokens/{id}/logo` | The token's logo from the Cardano token registry (PNG) |
@@ -79,6 +81,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/pools.go` | Turns transactions into pool states, prices and trades |
 | `internal/market/fills.go` | Splits a batch of orders into one trade per wallet |
 | `internal/market/wallets.go` | One wallet's trades across tokens, and the whale level |
+| `internal/market/whales.go` | The big trades across every token, for the Large Trades page |
 | `internal/market/periods.go` | Trading over 5m, 1h, 4h and 24h for the activity box |
 | `internal/market/quotes.go` | What the API reads: token list, charts, trades, logos |
 | `internal/market/details.go` | Supply, logos, links and holder counts |
@@ -98,13 +101,14 @@ No file is longer than 300 lines. Each one has one job.
 
 | File | Job |
 |---|---|
-| `src/main.js` | Starts the app and sets up the two pages (list and token page) |
+| `src/main.js` | Starts the app and sets up the three pages (token list, token page, Large Trades) |
 | `src/App.vue` | The top bar and the page frame |
+| `src/components/NavMenu.vue` | The ☰ menu in the top bar: Tokens and Large Trades |
 | `src/useTokens.js` | Loads the token list from the backend and refreshes it |
 | `src/format.js` | Formats prices, percentages, amounts and dates |
 | `src/chartPrefs.js` | Remembers candles or line, the candle size, indicators and Price / FDV, between token pages |
 | `src/pages/TokenList.vue` | The token list (Top Volume, Gainers, Losers, sort, search) |
-| `src/components/ListToolbar.vue` | The bar above the list: tabs and the search box |
+| `src/components/ListToolbar.vue` | The bar above the list: tabs, the live status and the search box |
 | `src/listSort.js` | The list's columns and sorting |
 | `src/components/TokenTable.vue` | The token table: sortable columns, faded numbers while loading, the empty message |
 | `src/pages/TokenPage.vue` | One token's page: the token panel, chart and trades |
@@ -130,4 +134,9 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/RecentTrades.vue` | The recent trades table on a token page, with filters and Show more |
 | `src/components/TraderCell.vue` | The Trader cell: short address and filter icon |
 | `src/components/WalletCard.vue` | The summary of the trader picked |
+| `src/pages/LargeTrades.vue` | The Large Trades page: big trades across every token, with filters and Show more |
+| `src/components/TradeFilters.vue` | The Large Trades filter bar: Token, Time, Size, Wallet, Reset all |
+| `src/components/TokenPicker.vue` | The token search with suggestions on the Large Trades page |
+| `src/components/TradesTable.vue` | The Large Trades table |
+| `src/tradeSizes.js` | Fish, dolphin and whale: the three trade sizes |
 | `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, then volume and trades with buys, sells and net |

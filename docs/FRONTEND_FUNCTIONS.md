@@ -1,6 +1,13 @@
 # Frontend functions
 
-Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHART_FUNCTIONS.md)), file by file. Each one also has the same comment above it in the code. See [CODE_GUIDE.md](CODE_GUIDE.md) for how the parts fit together.
+Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHART_FUNCTIONS.md)) and the Large Trades page (see [TRADES_FUNCTIONS.md](TRADES_FUNCTIONS.md)), file by file. Each one also has the same comment above it in the code. See [CODE_GUIDE.md](CODE_GUIDE.md) for how the parts fit together.
+
+## `src/components/NavMenu.vue`
+
+| Function | What it does |
+|---|---|
+| (template) | The ☰ button left of the logo, like Birdeye's: it opens a short list of the pages (Tokens, Large Trades), each with one line on what it shows. The page you are on is blue. Pages have no big title, like Birdeye's; the title is kept for screen readers only. |
+| `outside` / `onKey` | Close the list on a click anywhere else, or on Esc. |
 
 ## `src/useTokens.js`
 
@@ -117,6 +124,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | `onKey` | Makes "/" jump to the search box from anywhere on the page. |
+| (slot) | The live status from the list page ("19 tokens traded in 24h · updated 13:00"), shown beside the search box. |
 
 ## `src/components/TokenTable.vue`
 

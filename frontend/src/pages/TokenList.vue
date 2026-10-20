@@ -93,16 +93,14 @@ const emptyText = computed(() => {
 
 <template>
   <section>
-    <div class="heading">
-      <h1>Cardano Tokens</h1>
+    <h1 class="sr-only">Cardano Tokens</h1>
+    <ListToolbar :views="VIEWS" :view="view" v-model:query="query" @update:view="setView">
       <p v-if="updatedAt && !error" class="live muted num">
         <span class="dot" aria-hidden="true"></span>
         <template v-if="day.ready">{{ active }} tokens traded in 24h</template><template v-else>{{ tokens.length }} tokens</template>
         · updated {{ formatTime(updatedAt) }}
       </p>
-    </div>
-
-    <ListToolbar :views="VIEWS" :view="view" v-model:query="query" @update:view="setView" />
+    </ListToolbar>
 
     <p v-if="error" class="notice" role="alert">{{ error }}</p>
     <LoadingProgress v-if="history.loading && !error" :loading="history.loading" />
@@ -118,9 +116,8 @@ const emptyText = computed(() => {
 </template>
 
 <style scoped>
-.heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
-h1 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
-.live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; margin: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; margin: 0 0 6px; white-space: nowrap; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bull); }
 .day { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
 .day b { color: var(--fg); font-weight: 600; }

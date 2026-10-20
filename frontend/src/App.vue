@@ -1,10 +1,12 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
+import NavMenu from './components/NavMenu.vue'
 </script>
 
 <template>
   <header class="topbar">
     <div class="container bar">
+      <NavMenu />
       <RouterLink to="/" class="brand">
         <img src="/logo.png" alt="" class="logo" />Adalytics
       </RouterLink>

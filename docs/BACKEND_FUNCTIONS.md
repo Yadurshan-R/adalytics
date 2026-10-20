@@ -93,7 +93,7 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 
 | Function | What it does |
 |---|---|
-| `New` | Builds the HTTP handler with every API route (tokens, chart, trades, wallets, activity, logo, health). Each route only reads from the Tracker's memory, so it answers instantly and never calls Koios. |
+| `New` | Builds the HTTP handler with every API route (tokens, chart, trades, whales, wallets, activity, logo, health). Each route only reads from the Tracker's memory, so it answers instantly and never calls Koios. |
 | `candleChart` | Answers a candlestick chart at one candle size (`?type=candles&size=1h`), with all the history loaded so far. |
 | `validWallet` | Checks a wallet looks like a mainnet stake address (stake1…) or payment address (addr1…): lowercase letters and digits only. |
 | `writeJSON` | Sends v as JSON with the given HTTP status, and tells the browser not to cache it, so prices are always fresh. |

@@ -25,6 +25,7 @@ type WhaleFilter struct {
 	Token  string  // a token's page id
 	Wallet string  // a stake1… or addr1… address
 	Offset int     // how many matching trades to skip, for Show more
+	Limit  int     // how many to send: PageWhales unless asked, at most MaxWhales
 }
 
 // WhaleHours are the time choices on the page, in hours.
@@ -32,6 +33,10 @@ var WhaleHours = []int{1, 4, 24, 168, 720}
 
 // PageWhales is how many trades one page (and each Show more) gets.
 const PageWhales = 200
+
+// MaxWhales is the most trades one answer sends: a page refreshing after a
+// few Show mores asks for all its rows again at once.
+const MaxWhales = 1000
 
 // BigTradeADA lets a trade in even when it is less than 1% of a deep pool:
 // ₳10,000 and more is big for any token.
@@ -69,7 +74,10 @@ func (t *Tracker) WhaleTrades(f WhaleFilter) ([]WhaleTrade, bool) {
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Time.After(out[j].Time) })
 	start := min(max(f.Offset, 0), len(out))
-	end := min(start+PageWhales, len(out))
+	if f.Limit <= 0 {
+		f.Limit = PageWhales
+	}
+	end := min(start+min(f.Limit, MaxWhales), len(out))
 	return out[start:end], end < len(out)
 }
 

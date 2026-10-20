@@ -53,6 +53,8 @@ func TestWhaleTrades(t *testing.T) {
 	same("wallet", wallets(WhaleFilter{Wallet: "STAKE1D"}), "stake1d")
 	same("other token", wallets(WhaleFilter{Token: "nope"}))
 	same("offset", wallets(WhaleFilter{Offset: 2}), "stake1a")
+	same("limit", wallets(WhaleFilter{Limit: 2}), "stake1c", "stake1d")
+	same("limit too big", wallets(WhaleFilter{Limit: 5000}), "stake1c", "stake1d", "stake1a")
 
 	got, more := tr.WhaleTrades(WhaleFilter{})
 	if more || got[0].ID != "snek" || got[2].PoolShare != 1.5 || got[1].PoolShare != 0.6 {

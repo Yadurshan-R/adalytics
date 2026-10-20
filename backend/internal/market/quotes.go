@@ -64,6 +64,7 @@ type Trade struct {
 	AmountADA   float64   `json:"amount_ada"`   // ADA in or out of the pool
 	AmountToken float64   `json:"amount_token"` // whole tokens out of or into the pool
 	TxHash      string    `json:"tx_hash"`
+	Fill        int       `json:"fill"`             // which order in the transaction: one wallet can have two in one batch
 	Wallet      string    `json:"wallet,omitempty"` // stake address of the trader; "" if not known
 }
 

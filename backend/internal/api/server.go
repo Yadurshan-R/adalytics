@@ -101,14 +101,15 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 
 	// The Whale Trades page: one page of big trades across every token,
 	// newest first, with the token list and how much history is loaded:
-	// /api/whales?hours=24&min=10000&max=50000&token=snek&wallet=stake1…&offset=200.
+	// /api/whales?hours=24&min=10000&max=50000&token=snek&wallet=stake1…&offset=200&limit=200.
 	mux.HandleFunc("GET /api/whales", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		hours, _ := strconv.Atoi(q.Get("hours"))
 		minADA, _ := strconv.ParseFloat(q.Get("min"), 64)
 		maxADA, _ := strconv.ParseFloat(q.Get("max"), 64)
 		offset, _ := strconv.Atoi(q.Get("offset"))
-		f := market.WhaleFilter{Hours: hours, MinADA: minADA, MaxADA: maxADA, Token: q.Get("token"), Wallet: q.Get("wallet"), Offset: offset}
+		limit, _ := strconv.Atoi(q.Get("limit"))
+		f := market.WhaleFilter{Hours: hours, MinADA: minADA, MaxADA: maxADA, Token: q.Get("token"), Wallet: q.Get("wallet"), Offset: offset, Limit: limit}
 		trades, more := tracker.WhaleTrades(f)
 		writeJSON(w, http.StatusOK, map[string]any{"trades": trades, "more": more, "tokens": tracker.WhaleTokens(),
 			"ranges": tracker.History().Ranges, "share": market.WhaleShare * 100})

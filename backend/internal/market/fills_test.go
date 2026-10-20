@@ -226,6 +226,13 @@ func TestTradesFromFills(t *testing.T) {
 		got[1].Wallet != "stake1b" || got[1].Side != "sell" || got[1].AmountToken != 40_000 || got[1].TxHash != "abc" {
 		t.Errorf("trades from fills: %+v", got)
 	}
+	// One wallet with two orders in one batch: same transaction and wallet,
+	// told apart by Fill (the website uses it to keep its rows apart).
+	twice := []fill{{"stake1a", big.NewInt(2_000_000_000), big.NewInt(8_000)}, {"stake1a", big.NewInt(2_000_000_000), big.NewInt(8_000)}}
+	got = tradesFrom(p, twice, big.NewInt(4_000_000_000), big.NewInt(-16_000))
+	if len(got) != 2 || got[0].TxHash != got[1].TxHash || got[0].Fill != 0 || got[1].Fill != 1 {
+		t.Errorf("two orders of one wallet: %+v", got)
+	}
 	// No fills: the pool got ₳98 and gave 25,000 tokens, a buy with no wallet.
 	got = tradesFrom(p, nil, big.NewInt(98_000_000), big.NewInt(-25_000))
 	if len(got) != 1 || got[0].Side != "buy" || got[0].Wallet != "" || got[0].AmountADA != 98 {

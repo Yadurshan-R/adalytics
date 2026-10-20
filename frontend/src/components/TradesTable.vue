@@ -13,6 +13,7 @@ defineProps({
   rows: { type: Array, default: () => [] },
   wallet: { type: String, default: '' }, // the wallet filtered on, or ''
   now: { type: Number, default: () => Date.now() },
+  showSize: { type: Boolean, default: true }, // the fish, dolphin or whale icon; off when one size is picked
 })
 const emit = defineEmits(['wallet'])
 const router = useRouter()
@@ -20,6 +21,9 @@ const router = useRouter()
 const open = (t) => router.push({ name: 'token', params: { ticker: t.id } })
 const ada = (v) => '₳' + Math.round(v).toLocaleString('en-US')
 // sign: a buy gets tokens (+) for ADA (−); a sell the other way round.
+// rowKey is unique for every trade: one wallet can have two orders in one
+// transaction (fill tells them apart), and one transaction can swap in two pools.
+const rowKey = (t) => `${t.tx_hash}#${t.fill}:${t.id}`
 const sign = (t, part) => ((t.side === 'buy') === (part === 'token') ? '+' : '−')
 </script>
 
@@ -38,11 +42,11 @@ const sign = (t, part) => ((t.side === 'buy') === (part === 'token') ? '+' : '�
         </tr>
       </thead>
       <tbody role="rowgroup">
-        <tr role="row" v-for="t in rows" :key="t.tx_hash + t.wallet + t.id">
+        <tr role="row" v-for="t in rows" :key="rowKey(t)">
           <td role="cell" class="left muted" :title="new Date(t.time).toLocaleString()">{{ formatAgo(t.time, now) }}</td>
-          <td role="cell" class="left"><span class="icon show-sm" aria-hidden="true">{{ sizeOf(t).icon }}</span><span class="side" :class="t.side">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</span></td>
+          <td role="cell" class="left"><span v-if="showSize" class="icon show-sm" aria-hidden="true">{{ sizeOf(t).icon }}</span><span class="side" :class="t.side">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</span></td>
           <td role="cell" class="left hide-sm num value value-col">
-            <span class="icon tip" :data-tip="sizeOf(t).hint" :aria-label="sizeOf(t).label">{{ sizeOf(t).icon }}</span>{{ ada(t.amount_ada) }}
+            <span v-if="showSize" class="icon tip" :data-tip="sizeOf(t).hint" :aria-label="sizeOf(t).label">{{ sizeOf(t).icon }}</span>{{ ada(t.amount_ada) }}
           </td>
           <td role="cell" class="left amount-col">
             <button type="button" class="line token" :title="`Open ${t.ticker}`" @click="open(t)">

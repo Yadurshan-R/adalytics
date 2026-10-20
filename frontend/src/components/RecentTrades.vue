@@ -127,7 +127,7 @@ function ada(v) {
               <td class="link-col"></td>
             </tr>
           </template>
-          <tr v-for="t in shown" v-else :key="t.tx_hash + t.wallet">
+          <tr v-for="t in shown" v-else :key="`${t.tx_hash}#${t.fill}`">
             <td class="left muted" :title="new Date(t.time).toLocaleString()">{{ formatAgo(t.time, now) }}</td>
             <td class="left"><span class="side" :class="t.side">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</span></td>
             <td class="hide-sm num" :title="fullPrice(t.price_ada)">{{ formatPrice(t.price_ada) }}</td>

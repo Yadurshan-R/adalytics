@@ -20,9 +20,10 @@ Picking a size shows only that size.
 | Function | What it does |
 |---|---|
 | `WhaleTrade` | One trade on the page: the trade, its token (id, ticker, logo or not) and its share of the pool in %. |
-| `WhaleFilter` | What the page asks for: hours, the size as an ADA range (smallest, and below what; 0 means no top), a token, a wallet, and how many trades to skip (Show more). |
+| `WhaleFilter` | What the page asks for: hours, the size as an ADA range (smallest, and below what; 0 means no top), a token, a wallet, how many trades to skip (Show more) and how many to send. |
 | `WhaleHours` | The time choices in hours: 1, 4, 24, 168 (7 days), 720 (30 days). Anything else is 24. |
 | `PageWhales` | 200: how many trades one page, and each Show more, gets. |
+| `MaxWhales` | 1000: the most one answer sends, when a page refreshes all the rows it has opened with Show more. |
 | `BigTradeADA` | ₳10,000: a trade this big is on the page even when it is under 1% of a deep pool. |
 | `WhaleTrades` | One page of the big trades that match the filter, newest first, and whether there are more. A wallet matches whatever its letter case. |
 | `WhaleTokens` | Every listed token with its ticker, name and whether it has a logo, the biggest pool first, for the token search. |
@@ -31,20 +32,21 @@ Picking a size shows only that size.
 
 | Function | What it does |
 |---|---|
-| `TestWhaleTrades` | Small trades are left out; ₳10K+ trades under 1% of the pool are in; each filter (24 hours, 7 days, ₳25K and up, fish, ₳20K to ₳50K, wallet in capitals, another token, offset) gives the right trades in the right order; the pool shares are right. |
+| `TestWhaleTrades` | Small trades are left out; ₳10K+ trades under 1% of the pool are in; each filter (24 hours, 7 days, ₳25K and up, fish, ₳20K to ₳50K, wallet in capitals, another token, offset, limit) gives the right trades in the right order; the pool shares are right. |
 
 ## `internal/api/server.go`
 
 | Route | What it returns |
 |---|---|
-| `GET /api/whales?hours=24&min=10000&max=50000&token=snek&wallet=stake1…&offset=200` | One page of trades (`trades`), whether there are more (`more`), the token list (`tokens`) and how much of 7D and 30D is loaded (`ranges`). |
+| `GET /api/whales?hours=24&min=10000&max=50000&token=snek&wallet=stake1…&offset=200&limit=200` | One page of trades (`trades`), whether there are more (`more`), the token list (`tokens`) and how much of 7D and 30D is loaded (`ranges`). |
 
 ## `src/pages/LargeTrades.vue`
 
 | Function | What it does |
 |---|---|
 | `ask` | Builds the backend address for one page of trades with the filters picked. |
-| `load` | Asks for the newest trades again (as many as are shown, so the pages opened with Show more stay), or the next 200 for Show more. Runs again every minute. |
+| `load` | Asks for the newest trades again (as many as are shown, so the pages opened with Show more stay; one page after a filter change), or the next 200 for Show more. Runs again every minute. Only the answer to the latest question is used, so a slow answer for old filters never shows under new ones. |
+| `addNew` | Adds the next page without repeating a trade: trades arriving between two pages move the rest down, so the next page can start with a few already shown. |
 | (watch) | A filter change loads again and goes into the page address, so a filtered view can be shared; typing a wallet waits for a short pause. |
 | `changed` / `reset` | Whether any filter is off its default, and Reset all. |
 | `pickWallet` | A click on a trader shows only that wallet's trades; the same wallet again shows all. |
@@ -74,6 +76,8 @@ Picking a size shows only that size.
 | Function | What it does |
 |---|---|
 | (template) | Time, Buy or Sell, the value with its size icon, both sides of the swap (the token on top, the ADA under it), % of pool, the trader and a Cardanoscan link. A phone hides the value, % of pool and link, and shows the size icon beside Buy or Sell. |
+| `rowKey` | A unique name for each row: transaction, order number (`fill`) and token. Without the order number, two orders of one wallet in one batch looked like one row, and rows were left behind on screen when the filters changed. |
+| `showSize` (prop) | The fish, dolphin or whale icon on each row, shown only with All sizes: with one size picked, every row is that size. |
 | `open` | Goes to the token's page. |
 | `ada` | ₳62,977: the value in whole ADA. |
 | `sign` | + or −, from the trader's side: a buy gets tokens (+) for ADA (−), a sell the other way round. |

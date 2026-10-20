@@ -78,7 +78,7 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | `merge` | Adds pool states to a token's history (skipping ones it already has), keeps the history in chain order and rebuilds prices, volume and trades. It returns how many states were new. Call with t.mu held. |
 | `rebuild` | Works out a token's price points, volume and trades from its pool history, drops history older than the kept span (keeping the last state before it, so the price at the start is known) and updates the quote from the newest pool state. Call with t.mu held. |
 | `replaceCurrent` | Swaps a pool state found at startup (as the pool is now) for the same pool output read from its transaction, which has the wallets and its place in the block. |
-| `tradesFrom` | Turns a swap into trades: one per wallet when the transaction was split into fills, otherwise one trade without a wallet from the change in the pool's reserves. |
+| `tradesFrom` | Turns a swap into trades: one per wallet when the transaction was split into fills, otherwise one trade without a wallet from the change in the pool's reserves. Each trade keeps its order's number (`Fill`), because one wallet can have two orders in one batch. |
 | `tradeFrom` | Makes one trade from ADA into the pool and tokens to the trader: both positive is a buy, both negative a sell. Dust below MinTradeADA is left out. |
 
 ## `internal/market/fills.go`
@@ -241,7 +241,7 @@ Run them with `go test ./internal/market/` from `backend/`. They use a fake Koio
 | `TestFillsRouted` | Two real NIGHT swaps routed through a stablecoin pool (a buy and a sell): NIGHT's own pool change is the wallet's trade. |
 | `TestFillsBatch` | Three wallets in one batch (two buys and a sell) become three trades that add up to the pool's change. |
 | `TestFillsNotSplit` | Transactions that cannot be split for certain give no fills: no inputs, tokens missing, a fee too big, an order without a payout, two orders routed through two pools, payouts paired the wrong way round. |
-| `TestTradesFromFills` | Fills become trades with wallets; a swap without fills is still one trade from the pool's change. |
+| `TestTradesFromFills` | Fills become trades with wallets; a swap without fills is still one trade from the pool's change; two orders of one wallet in one batch get Fill 0 and 1. |
 
 ## `internal/market/wallets_test.go`
 

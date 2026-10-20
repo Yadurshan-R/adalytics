@@ -181,8 +181,9 @@ func tradesFrom(p minswap.Pool, fills []fill, diffADA, diffToken *big.Int) []Tra
 		}
 		return out
 	}
-	for _, f := range fills {
+	for i, f := range fills {
 		if tr, ok := tradeFrom(p, f.wallet, f.ada, f.token); ok {
+			tr.Fill = i // tx hash and Fill tell apart two orders of one wallet in one batch
 			out = append(out, tr)
 		}
 	}

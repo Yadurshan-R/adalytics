@@ -24,9 +24,21 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 * Scroll back through up to 30 days of history; while older history is still loading, the chart shows what is loaded so far
 * A token panel like Birdeye's: price in ADA and USD, liquidity, FDV and holders in boxes, then 5m / 1h / 4h / 24h volume and trades with buys, sells and net
 * Price performance (24h low and high), links and IDs with copy buttons, supply, pool reserves, last trade and the project description, like CoinMarketCap's info list
-* Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (trades of at least 1% of the pool)
+* Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (at least 1% of the pool, or ₳10K and more), marked 🐟 🐬 🐋 by size
 * Click a trader to see only its trades, what it bought and sold in this token, and which other tokens it traded in the last 24 hours. Minswap swaps several people's orders in one transaction; Adalytics splits them into one trade per wallet
 * A drawing toolbar beside the chart, like TradingView's: trend line, horizontal line, rectangle, Fibonacci levels, text, a ruler that measures the price change and time between two points, zoom and scroll, a magnet that snaps to prices, hide and delete. Drawings stay in the browser only and are not saved
+
+**Large Trades**
+
+* Like Birdeye's Find Trades: the big trades across every token, up to 30 days back, newest first. A trade is big when it is at least 1% of its pool (it moves the price about 2%) or ₳10,000 and more
+* Filters: a token search with suggestions and logos, time (last 1 hour to 30 days), size (🐟 under ₳10K, 🐬 ₳10K–₳50K, 🐋 ₳50K+) and wallet. The filters stay in the page address, so a view can be shared
+* Each trade shows both sides of the swap, its share of the pool, the trader and a Cardanoscan link; 200 at a time with Show more
+
+**Everywhere**
+
+* A ☰ menu beside the logo opens Tokens and Large Trades
+* Each browser tab names its page; a token page shows the live price, like "NIGHT ₳0.1890 +2.60% | Adalytics"
+* A wrong address shows "Page not found" with a way back
 
 It also works on phones.
 
@@ -161,6 +173,7 @@ backend/
     pools.go                    turns transactions into prices and trades
     fills.go                    splits a batch of orders into one trade per wallet
     wallets.go                  one wallet's trades, and the whale level
+    whales.go                   the big trades across every token, for Large Trades
     periods.go                  trading over 5m, 1h, 4h and 24h
     quotes.go                   the token list, charts and trades for the API
     details.go                  supply, logos, links and holder counts
@@ -176,7 +189,7 @@ backend/
 
 frontend/src/
   pages/TokenList.vue           the token list
-  components/ListToolbar.vue    the tabs, period bar and search above it
+  components/ListToolbar.vue    the tabs, live status and search above it
   listSort.js                   the list's columns, periods and sorting
   components/TokenTable.vue     the token table
   pages/TokenPage.vue           the token page
@@ -202,6 +215,13 @@ frontend/src/
   components/TraderCell.vue     the Trader cell: short address and filter icon
   components/WalletCard.vue     the summary of the trader picked
   components/ActivityBox.vue    the 5m / 1h / 4h / 24h activity box
+  pages/LargeTrades.vue         the Large Trades page
+  components/TradeFilters.vue   its filter bar: token, time, size, wallet
+  components/TokenPicker.vue    the token search with suggestions
+  components/TradesTable.vue    its table
+  tradeSizes.js                 fish, dolphin and whale: the trade sizes
+  components/NavMenu.vue        the ☰ menu in the top bar
+  pages/NotFound.vue            Page not found
   format.js                     number formats (₳, $, %, K/M/B)
 ```
 
@@ -214,6 +234,7 @@ frontend/src/
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | candles for one token: `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
 | `GET /api/tokens/{id}/trades?limit=5` | the most recent trades for one token, each with its wallet, and the whale level |
 | `GET /api/wallets/{stake1…}` | what one wallet traded in the last 24 hours, token by token |
+| `GET /api/whales?hours=24&min=10000&max=50000` | the big trades across every token for Large Trades (also `token`, `wallet`, `offset`), the token list and how much history is loaded |
 | `GET /api/tokens/{id}/activity` | trading over 5m, 1h, 4h and 24h: change, volume, buys and sells |
 | `GET /api/tokens/{id}/logo` | the token's logo from the Cardano token registry |
 
@@ -222,7 +243,7 @@ frontend/src/
 * Prices come from Minswap V2 only. Tokens that mostly trade on other exchanges may show lower volume than sites that combine every exchange, such as DexHunter.
 * History is kept in memory only, so after every restart the 30 days are loaded again from Koios.
 * Ranking is by 24 hour volume, because circulating supply (needed for market cap) is not known for every token.
-* Minswap fills orders in batches, so two people's orders in the same transaction show up as one trade.
+* Minswap fills orders in batches; Adalytics splits them into one trade per wallet. When the amounts do not add up for certain, the swap is shown as one trade without a wallet, never with a wrong one.
 
 ## Built with
 

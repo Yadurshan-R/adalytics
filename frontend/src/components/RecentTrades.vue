@@ -2,14 +2,17 @@
      minute, laid out like Birdeye's trades table:
      - each trade shows the wallet that made it (Trader); click it, or its
        filter icon, to see only that wallet's trades and its summary card;
-     - All / Buys / Sells / Whales filter the list; a whale trade moves at
-       least 1% of the pool's ADA;
+     - All / Buys / Sells / Whales filter the list; Whales are the trades the
+       Large Trades page shows (at least 1% of the pool's ADA, or ₳10K and
+       more), marked with the same fish, dolphin or whale icon;
+     - Buy and Sell are coloured tags, as on Large Trades;
      - 10 rows at first, Show more adds 10 (the backend keeps the last 50). -->
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { formatPrice, fullPrice, formatAmount, formatAgo, formatCompact } from '../format.js'
 import WalletCard from './WalletCard.vue'
 import TraderCell from './TraderCell.vue'
+import { sizeOf } from '../tradeSizes.js'
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -20,7 +23,7 @@ const KEEP = 50 // the most the backend keeps per token (MaxTrades)
 const PAGE = 10 // rows shown at first, and added by Show more
 // SKELETON is the width and class of each cell in the loading rows.
 const SKELETON = [{ w: 70, cls: 'left' }, { w: 36, cls: 'left' }, { w: 70, cls: 'hide-sm' }, { w: 60 }, { w: 90, cls: 'hide-sm' }, { w: 110, cls: 'left' }]
-const FILTERS = [{ key: 'all', label: 'All' }, { key: 'buy', label: 'Buys' }, { key: 'sell', label: 'Sells' }, { key: 'whale', label: 'Whales' }]
+const FILTERS = [{ key: 'all', label: 'All' }, { key: 'buy', label: 'Buys' }, { key: 'sell', label: 'Sells' }, { key: 'large', label: 'Whales' }]
 
 const trades = ref([])
 const whaleADA = ref(0) // the smallest whale trade, from the backend
@@ -61,11 +64,12 @@ watch(() => props.id, () => {
   load()
 })
 
-// isWhale is true for a trade of at least 1% of the pool's ADA.
-const isWhale = (t) => whaleADA.value > 0 && t.amount_ada >= whaleADA.value
+// isLarge is true for a trade the Large Trades page shows: at least 1% of
+// the pool's ADA (whaleADA), or ₳10,000 and more (BigTradeADA).
+const isLarge = (t) => (whaleADA.value > 0 && t.amount_ada >= whaleADA.value) || t.amount_ada >= 10_000
 // matching is every kept trade that passes the filter and the wallet picked.
 const matching = computed(() => trades.value.filter((t) => (!wallet.value || t.wallet === wallet.value)
-  && (filter.value === 'all' || (filter.value === 'whale' ? isWhale(t) : t.side === filter.value))))
+  && (filter.value === 'all' || (filter.value === 'large' ? isLarge(t) : t.side === filter.value))))
 const shown = computed(() => matching.value.slice(0, limit.value))
 const mine = computed(() => trades.value.filter((t) => t.wallet === wallet.value))
 
@@ -82,7 +86,7 @@ function setWallet(w) {
 
 // emptyText explains why no trade is shown.
 const emptyText = computed(() => {
-  const what = { all: 'trades', buy: 'buys', sell: 'sells', whale: 'whale trades' }[filter.value]
+  const what = { all: 'trades', buy: 'buys', sell: 'sells', large: 'whale trades' }[filter.value]
   return `No ${what}${wallet.value ? ' by this wallet' : ''} in the last 24 hours.`
 })
 
@@ -98,7 +102,7 @@ function ada(v) {
       <h2 id="trades-title">Recent Trades</h2>
       <div class="filters" role="group" aria-label="Show">
         <button v-for="f in FILTERS" :key="f.key" type="button" :aria-pressed="f.key === filter" @click="setFilter(f.key)"
-                :title="f.key === 'whale' && whaleADA ? `Trades of ${formatCompact(whaleADA)} or more (1% of the pool)` : null">{{ f.label }}</button>
+                :title="f.key === 'large' ? `At least 1% of the pool${whaleADA ? ` (${formatCompact(whaleADA)})` : ''} or ₳10K, as on Large Trades` : null">{{ f.label }}</button>
       </div>
     </div>
     <WalletCard v-if="wallet" :wallet="wallet" :id="id" :trades="mine" @close="setWallet('')" />
@@ -123,11 +127,13 @@ function ada(v) {
               <td class="link-col"></td>
             </tr>
           </template>
-          <tr v-for="t in shown" v-else :key="t.tx_hash + t.wallet" :class="{ whale: isWhale(t) }">
+          <tr v-for="t in shown" v-else :key="t.tx_hash + t.wallet">
             <td class="left muted" :title="new Date(t.time).toLocaleString()">{{ formatAgo(t.time, now) }}</td>
-            <td class="left side" :class="t.side === 'buy' ? 'up' : 'down'">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</td>
+            <td class="left"><span class="side" :class="t.side">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</span></td>
             <td class="hide-sm num" :title="fullPrice(t.price_ada)">{{ formatPrice(t.price_ada) }}</td>
-            <td class="num amount" :title="isWhale(t) ? 'Whale trade: at least 1% of the pool' : null">{{ ada(t.amount_ada) }}</td>
+            <td class="num" :class="{ large: isLarge(t) }">
+              <span v-if="isLarge(t)" class="icon tip" :data-tip="sizeOf(t).hint" :aria-label="sizeOf(t).label">{{ sizeOf(t).icon }}</span>{{ ada(t.amount_ada) }}
+            </td>
             <td class="hide-sm num">{{ formatAmount(t.amount_token) }}</td>
             <td class="left"><TraderCell :wallet="t.wallet" :on="!!wallet && t.wallet === wallet" @pick="setWallet" /></td>
             <td class="link-col">
@@ -163,9 +169,13 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 11px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-size: 14px; }
 th { font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); }
 .left { text-align: left; }
-.side { font-weight: 600; }
-tr.whale td { background: #fffbeb; }
-tr.whale .amount { font-weight: 700; }
+.side { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.side.buy { background: #16c78418; color: var(--bull); }
+.side.sell { background: #ea394318; color: var(--bear); }
+.large { font-weight: 700; }
+.icon { margin-right: 6px; font-size: 15px; font-weight: 400; }
+.tip { position: relative; cursor: help; }
+.tip:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); right: 0; z-index: 5; width: max-content; max-width: 220px; padding: 6px 9px; border-radius: 6px; background: #131722; color: #fff; font-size: 12px; font-weight: 400; line-height: 1.4; white-space: normal; text-align: left; pointer-events: none; }
 
 .link-col { width: 36px; padding-inline: 4px; }
 .tx { display: inline-flex; padding: 4px; border-radius: 6px; color: var(--muted); }

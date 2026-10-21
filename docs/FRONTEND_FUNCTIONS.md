@@ -6,7 +6,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 
 | Function | What it does |
 |---|---|
-| (template) | The ☰ button left of the logo, like Birdeye's: it opens a short list of the pages (Tokens, Large Trades), each with one line on what it shows. The page you are on is blue. Pages have no big title, like Birdeye's; the title is kept for screen readers only. |
+| (template) | The ☰ button left of the logo, like Birdeye's: it opens a small list of the pages (Tokens, Large Trades), one line each with a small line icon; hovering one says what it shows. The page you are on is blue. Pages have no big title, like Birdeye's; the title is kept for screen readers only. |
 | `outside` / `onKey` | Close the list on a click anywhere else, or on Esc. |
 
 ## `src/useTokens.js`

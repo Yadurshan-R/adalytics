@@ -2,15 +2,16 @@
      minute, laid out like Birdeye's trades table:
      - each trade shows the wallet that made it (Trader); click it, or its
        filter icon, to see only that wallet's trades and its summary card;
-     - All / Buys / Sells / Whales filter the list; Whales are the trades the
-       Large Trades page shows (at least 1% of the pool's ADA, or ₳10K and
-       more); trades of ₳10K and more carry the BIG or WHALE tag, as on
-       Large Trades;
+     - All / Buys / Sells / Whales filter the list; Whales are the trades
+       of ₳50K and more of the whole last 24 hours, the ones with the WHALE
+       tag (tradeSizes.js), the same as Large Trades shows; trades
+       of ₳10K and more carry the BIG or WHALE tag, as on Large Trades;
      - Buy and Sell are coloured tags, as on Large Trades;
      - 10 rows at first, Show more adds 10 (the backend keeps the last 50). -->
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { formatPrice, fullPrice, formatAmount, formatAgo, formatCompact } from '../format.js'
+import { formatPrice, fullPrice, formatAmount, formatAgo } from '../format.js'
+import { SIZES, sizeOf } from '../tradeSizes.js'
 import WalletCard from './WalletCard.vue'
 import TraderCell from './TraderCell.vue'
 import SizeTag from './SizeTag.vue'
@@ -24,10 +25,14 @@ const KEEP = 50 // the most the backend keeps per token (MaxTrades)
 const PAGE = 10 // rows shown at first, and added by Show more
 // SKELETON is the width and class of each cell in the loading rows.
 const SKELETON = [{ w: 70, cls: 'left' }, { w: 36, cls: 'left' }, { w: 70, cls: 'hide-sm' }, { w: 60 }, { w: 90, cls: 'hide-sm' }, { w: 110, cls: 'left' }]
-const FILTERS = [{ key: 'all', label: 'All' }, { key: 'buy', label: 'Buys' }, { key: 'sell', label: 'Sells' }, { key: 'large', label: 'Whales' }]
+const FILTERS = [{ key: 'all', label: 'All' }, { key: 'buy', label: 'Buys' }, { key: 'sell', label: 'Sells' }, { key: 'whale', label: 'Whales' }]
 
 const trades = ref([])
-const whaleADA = ref(0) // the smallest whale trade, from the backend
+// whales are this token's ₳50K+ trades of the whole last 24 hours, asked
+// for only while Whales is picked: the 50 latest trades of a busy token can
+// cover less than an hour. They come from the trades the backend already
+// keeps for Large Trades (no Koios requests).
+const whales = ref([])
 const loaded = ref(false)
 const error = ref('')
 const now = ref(Date.now())
@@ -35,21 +40,31 @@ const filter = ref('all')
 const wallet = ref('') // the wallet picked, or '' for all
 const limit = ref(PAGE)
 let timer = null
+let asked = 0 // drops an answer that comes after a newer question
 
-// load asks the backend for this token's latest trades and keeps any error to show.
+// get asks the backend for one list and gives its JSON, or throws its error.
+async function get(url) {
+  const res = await fetch(url, { cache: 'no-store' })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || `The backend answered ${res.status}`)
+  return data
+}
+// load asks the backend for this token's latest trades (and its whale
+// trades while Whales is picked) and keeps any error to show.
 async function load() {
+  const n = ++asked
+  const id = encodeURIComponent(props.id)
   try {
-    const res = await fetch(`/api/tokens/${encodeURIComponent(props.id)}/trades?limit=${KEEP}`, { cache: 'no-store' })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || `The backend answered ${res.status}`)
-    trades.value = data.trades ?? []
-    whaleADA.value = data.whale_ada ?? 0
+    const [recent, big] = await Promise.all([get(`/api/tokens/${id}/trades?limit=${KEEP}`),
+      filter.value === 'whale' ? get(`/api/whales?token=${id}&hours=24&min=${WHALE_ADA}&limit=200`) : null])
+    if (n !== asked) return
+    trades.value = recent.trades ?? []
+    if (big) whales.value = big.trades ?? []
     error.value = ''
   } catch (e) {
-    error.value = e instanceof TypeError ? 'Cannot reach the backend.' : e.message
+    if (n === asked) error.value = e instanceof TypeError ? 'Cannot reach the backend.' : e.message
   } finally {
-    loaded.value = true
-    now.value = Date.now()
+    if (n === asked) { loaded.value = true; now.value = Date.now() }
   }
 }
 onMounted(() => {
@@ -60,17 +75,20 @@ onUnmounted(() => clearInterval(timer))
 watch(() => props.id, () => {
   loaded.value = false
   trades.value = []
+  whales.value = []
   wallet.value = ''
   limit.value = PAGE
   load()
 })
 
-// isLarge is true for a trade the Large Trades page shows: at least 1% of
-// the pool's ADA (whaleADA), or ₳10,000 and more (BigTradeADA).
-const isLarge = (t) => (whaleADA.value > 0 && t.amount_ada >= whaleADA.value) || t.amount_ada >= 10_000
-// matching is every kept trade that passes the filter and the wallet picked.
-const matching = computed(() => trades.value.filter((t) => (!wallet.value || t.wallet === wallet.value)
-  && (filter.value === 'all' || (filter.value === 'large' ? isLarge(t) : t.side === filter.value))))
+// WHALE_ADA is the smallest whale trade (₳50K, the WHALE tag); isBig is true
+// for ₳10K and more (the BIG or WHALE tag), shown in bold.
+const WHALE_ADA = SIZES.find((s) => s.key === 'whale').min
+const isBig = (t) => !!sizeOf(t).tag
+// matching is every trade that passes the filter and the wallet picked:
+// Whales looks through the whole 24 hours, the others through the 50 latest.
+const matching = computed(() => (filter.value === 'whale' ? whales.value : trades.value).filter((t) =>
+  (!wallet.value || t.wallet === wallet.value) && (filter.value === 'all' || filter.value === 'whale' || t.side === filter.value)))
 const shown = computed(() => matching.value.slice(0, limit.value))
 const mine = computed(() => trades.value.filter((t) => t.wallet === wallet.value))
 
@@ -79,6 +97,10 @@ const mine = computed(() => trades.value.filter((t) => t.wallet === wallet.value
 function setFilter(key) {
   filter.value = key
   limit.value = PAGE
+  if (key === 'whale') {
+    loaded.value = false
+    load()
+  }
 }
 function setWallet(w) {
   wallet.value = wallet.value === w ? '' : w
@@ -87,7 +109,7 @@ function setWallet(w) {
 
 // emptyText explains why no trade is shown.
 const emptyText = computed(() => {
-  const what = { all: 'trades', buy: 'buys', sell: 'sells', large: 'whale trades' }[filter.value]
+  const what = { all: 'trades', buy: 'buys', sell: 'sells', whale: 'whale trades' }[filter.value]
   return `No ${what}${wallet.value ? ' by this wallet' : ''} in the last 24 hours.`
 })
 
@@ -103,7 +125,7 @@ function ada(v) {
       <h2 id="trades-title">Recent Trades</h2>
       <div class="filters" role="group" aria-label="Show">
         <button v-for="f in FILTERS" :key="f.key" type="button" :aria-pressed="f.key === filter" @click="setFilter(f.key)"
-                :title="f.key === 'large' ? `At least 1% of the pool${whaleADA ? ` (${formatCompact(whaleADA)})` : ''} or ₳10K, as on Large Trades` : null">{{ f.label }}</button>
+                :title="f.key === 'whale' ? 'Trades of ₳50K or more' : null">{{ f.label }}</button>
       </div>
     </div>
     <WalletCard v-if="wallet" :wallet="wallet" :id="id" :trades="mine" @close="setWallet('')" />
@@ -132,7 +154,7 @@ function ada(v) {
             <td class="left muted" :title="new Date(t.time).toLocaleString()">{{ formatAgo(t.time, now) }}</td>
             <td class="left"><span class="side" :class="t.side">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</span></td>
             <td class="hide-sm num" :title="fullPrice(t.price_ada)">{{ formatPrice(t.price_ada) }}</td>
-            <td class="num" :class="{ large: isLarge(t) }">
+            <td class="num" :class="{ big: isBig(t) }">
               {{ ada(t.amount_ada) }}<SizeTag :ada="t.amount_ada" />
             </td>
             <td class="hide-sm num">{{ formatAmount(t.amount_token) }}</td>
@@ -173,7 +195,7 @@ th { font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px sol
 .side { font-size: 13px; font-weight: 600; }
 .side.buy { color: var(--bull); }
 .side.sell { color: var(--bear); }
-.large { font-weight: 600; }
+.big { font-weight: 600; }
 
 .link-col { width: 36px; padding-inline: 4px; }
 .tx { display: inline-flex; padding: 4px; border-radius: 6px; color: var(--muted); }

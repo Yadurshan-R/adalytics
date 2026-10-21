@@ -73,10 +73,12 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 
 | Function | What it does |
 |---|---|
-| `load` | Asks the backend for this token's latest trades and the whale level, and keeps any error to show. |
-| `isLarge` | True for a trade the Large Trades page shows: at least 1% of the pool's ADA, or ₳10K and more. Its amount is a little bolder, and the Whales filter shows only these. Trades of ₳10K and more carry the BIG or WHALE tag (SizeTag), as on Large Trades. |
+| `load` | Asks the backend for this token's latest trades (and its whale trades while Whales is picked; an answer that comes after a newer question is dropped), and keeps any error to show. |
+| `whales` | This token's trades of ₳50K and more (the WHALE tag) from the whole last 24 hours, from `/api/whales` (no Koios requests). Asked for only while Whales is picked, because the 50 latest trades of a busy token can cover less than an hour. |
+| `get` | Asks the backend for one list and gives its JSON, or throws its error. |
+| `isBig` | True for a trade of ₳10K and more, the ones with the BIG or WHALE tag (SizeTag). Its amount is a little bolder. |
 | (Type) | Buy and Sell as plain green and red text, the same as on Large Trades. |
-| `matching` | Every kept trade that passes the filter (All, Buys, Sells, Whales) and the wallet picked. 10 show at first; Show more adds 10. |
+| `matching` | Every trade that passes the filter (All, Buys, Sells, Whales) and the wallet picked: Whales looks through `whales`, the others through the 50 latest trades. 10 show at first; Show more adds 10. |
 | `setFilter` / `setWallet` | Pick a filter or a wallet (the same wallet again shows everyone) and start again at 10 rows. |
 | `emptyText` | Explains why no trade is shown, e.g. "No whale trades by this wallet in the last 24 hours." |
 | `ada` | ₳1,250 for normal amounts, ₳4.35 for small ones. |

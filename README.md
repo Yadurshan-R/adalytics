@@ -24,7 +24,7 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 * Scroll back through up to 30 days of history; while older history is still loading, the chart shows what is loaded so far
 * A token panel like Birdeye's: price in ADA and USD, liquidity, FDV and holders in boxes, then 5m / 1h / 4h / 24h volume and trades with buys, sells and net
 * Price performance (24h low and high), links and IDs with copy buttons, supply, pool reserves, last trade and the project description, like CoinMarketCap's info list
-* Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (at least 1% of the pool, or ₳10K and more); trades of ₳10K and more are tagged BIG or WHALE
+* Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (₳50K and more, from the whole last 24 hours); trades of ₳10K and more are tagged BIG or WHALE
 * Click a trader to see only its trades, what it bought and sold in this token, and which other tokens it traded in the last 24 hours. Minswap swaps several people's orders in one transaction; Adalytics splits them into one trade per wallet
 * A drawing toolbar beside the chart, like TradingView's: trend line, horizontal line, rectangle, Fibonacci levels, text, a ruler that measures the price change and time between two points, zoom and scroll, a magnet that snaps to prices, hide and delete. Drawings stay in the browser only and are not saved
 

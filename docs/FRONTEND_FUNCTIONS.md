@@ -73,14 +73,16 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 
 | Function | What it does |
 |---|---|
-| `load` | Asks the backend for this token's latest trades (and its whale trades while Whales is picked; an answer that comes after a newer question is dropped), and keeps any error to show. |
-| `whales` | This token's trades of ₳50K and more (the WHALE tag) from the whole last 24 hours, from `/api/whales` (no Koios requests). Asked for only while Whales is picked, because the 50 latest trades of a busy token can cover less than an hour. |
+| `load` | Asks the backend for this token's latest trades, and the picked wallet's trades and totals; an answer that comes after a newer question is dropped. Keeps any error to show. |
+| `hours` / `mine` / `trader` | For the wallet picked: its time range (24 hours, or 7 or 30 days from Top Traders), its trades in this token over that range (the latest 200) and its totals, from the backend. Not from the 50 latest trades, which on a busy token cover less than an hour. |
 | `get` | Asks the backend for one list and gives its JSON, or throws its error. |
 | `isBig` | True for a trade of ₳10K and more, the ones with the BIG or WHALE tag (SizeTag). Its amount is a little bolder. |
 | (Type) | Buy and Sell as plain green and red text, the same as on Large Trades. |
-| `matching` | Every trade that passes the filter (All, Buys, Sells, Whales) and the wallet picked: Whales looks through `whales`, the others through the 50 latest trades. 10 show at first; Show more adds 10. |
-| `setFilter` / `setWallet` | Pick a filter or a wallet (the same wallet again shows everyone) and start again at 10 rows. |
-| `emptyText` | Explains why no trade is shown, e.g. "No whale trades by this wallet in the last 24 hours." |
+| `matching` | Every trade that passes the filter (All, Buys, Sells): the 50 latest, or the picked wallet's own. 10 show at first; Show more adds 10. When a wallet has more trades than the 200 listed, a line under the table says so. |
+| `setFilter` | Picks a filter and starts again at 10 rows. |
+| `pick` / `setWallet` / `showWallet` | Show one wallet's trades (the same wallet again shows everyone). `showWallet` comes from the Top Traders tab with its time range. |
+| (title slot) | The title is a slot: TradesSection puts the Trades / Top Traders tabs there. |
+| `emptyText` | Explains why no trade is shown, e.g. "No sells by this wallet in the last 7 days." |
 | `ada` | ₳1,250 for normal amounts, ₳4.35 for small ones. |
 
 ## `src/components/TraderCell.vue`
@@ -94,7 +96,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | `load` | Asks the backend which other tokens the wallet traded in the last 24 hours. |
-| `stats` | Adds up the wallet's buys and sells in this token, and its net (bought minus sold). |
+| `stats` | The wallet's buys and sells in this token and its net (bought minus sold), from the backend's totals, so they match its Top Traders row. The card's title shows the time range (24h, 7D or 30D). |
 | `signed` / `tone` | Write a net amount like +₳1.4K or −₳640, green or red. |
 | `copy` | Puts the address on the clipboard and shows "Copied" for 1.5 seconds. |
 | (Cardanoscan link) | Opens the stake key page for a stake1… wallet, or the address page for a wallet without a stake key (addr1…). |
@@ -164,5 +166,5 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `token` | The token this page is about, found by the id in the address. |
 | (tab title) | The browser tab shows the token and its live price, like "NIGHT ₳0.1890 +2.60% \| Adalytics", or "Token not found" for a wrong id. |
 | `back` | Goes to the previous page if it was the list, otherwise opens the list. |
-| (layout) | Laptop: token panel on the left, chart and trades on the right. Phone: price boxes, then the chart and trades, then activity, the Minswap button and Token Info, like Birdeye's app. |
+| (layout) | Laptop: token panel on the left, chart and the Trades / Top Traders tabs (TradesSection) on the right. Phone: price boxes, then the chart and trades, then activity, the Minswap button and Token Info, like Birdeye's app. |
 | `span` | The low and high of the last 24 hours, sent by the chart (ChartPanel), for the price performance bar. |

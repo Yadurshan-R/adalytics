@@ -16,7 +16,7 @@ import TokenOverview from '../components/TokenOverview.vue'
 import ActivityBox from '../components/ActivityBox.vue'
 import TokenInfo from '../components/TokenInfo.vue'
 import ChartPanel from '../components/ChartPanel.vue'
-import RecentTrades from '../components/RecentTrades.vue'
+import TradesSection from '../components/TradesSection.vue'
 import LoadingProgress from '../components/LoadingProgress.vue'
 
 // The route's :ticker is the token's unique id from the backend (usually its ticker in lower case).
@@ -71,7 +71,7 @@ const span = ref(null)
 
     <section class="chart-col">
       <ChartPanel :id="token.id" :supply="token.total_supply || 0" @span="span = $event" />
-      <RecentTrades :id="token.id" :ticker="token.ticker" />
+      <TradesSection :id="token.id" :ticker="token.ticker" />
     </section>
   </div>
 </template>

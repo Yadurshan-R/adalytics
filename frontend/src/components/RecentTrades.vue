@@ -2,16 +2,16 @@
      minute, laid out like Birdeye's trades table:
      - each trade shows the wallet that made it (Trader); click it, or its
        filter icon, to see only that wallet's trades and its summary card;
-     - All / Buys / Sells / Whales filter the list; Whales are the trades
-       of ₳50K and more of the whole last 24 hours, the ones with the WHALE
-       tag (tradeSizes.js), the same as Large Trades shows; trades
-       of ₳10K and more carry the BIG or WHALE tag, as on Large Trades;
+     - All / Buys / Sells filter the list; trades of ₳10K and more carry
+       the BIG or WHALE tag, as on Large Trades;
+     - the title is a slot: the token page puts the Trades / Top Traders
+       tabs there (TradesSection); showWallet opens one wallet's trades;
      - Buy and Sell are coloured tags, as on Large Trades;
      - 10 rows at first, Show more adds 10 (the backend keeps the last 50). -->
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { formatPrice, fullPrice, formatAmount, formatAgo } from '../format.js'
-import { SIZES, sizeOf } from '../tradeSizes.js'
+import { sizeOf } from '../tradeSizes.js'
 import WalletCard from './WalletCard.vue'
 import TraderCell from './TraderCell.vue'
 import SizeTag from './SizeTag.vue'
@@ -25,19 +25,22 @@ const KEEP = 50 // the most the backend keeps per token (MaxTrades)
 const PAGE = 10 // rows shown at first, and added by Show more
 // SKELETON is the width and class of each cell in the loading rows.
 const SKELETON = [{ w: 70, cls: 'left' }, { w: 36, cls: 'left' }, { w: 70, cls: 'hide-sm' }, { w: 60 }, { w: 90, cls: 'hide-sm' }, { w: 110, cls: 'left' }]
-const FILTERS = [{ key: 'all', label: 'All' }, { key: 'buy', label: 'Buys' }, { key: 'sell', label: 'Sells' }, { key: 'whale', label: 'Whales' }]
+const FILTERS = [{ key: 'all', label: 'All' }, { key: 'buy', label: 'Buys' }, { key: 'sell', label: 'Sells' }]
 
 const trades = ref([])
-// whales are this token's ₳50K+ trades of the whole last 24 hours, asked
-// for only while Whales is picked: the 50 latest trades of a busy token can
-// cover less than an hour. They come from the trades the backend already
-// keeps for Large Trades (no Koios requests).
-const whales = ref([])
 const loaded = ref(false)
 const error = ref('')
 const now = ref(Date.now())
 const filter = ref('all')
 const wallet = ref('') // the wallet picked, or '' for all
+// hours, mine and trader are for the wallet picked: its time range (24, or
+// 7 or 30 days when opened from Top Traders), its trades in this token over
+// that range (the latest 200) and its totals (the same as its Top Traders
+// row). They come from the backend, not from the 50 latest trades, which on
+// a busy token cover less than an hour.
+const hours = ref(24)
+const mine = ref([])
+const trader = ref(null)
 const limit = ref(PAGE)
 let timer = null
 let asked = 0 // drops an answer that comes after a newer question
@@ -49,17 +52,19 @@ async function get(url) {
   if (!res.ok) throw new Error(data.error || `The backend answered ${res.status}`)
   return data
 }
-// load asks the backend for this token's latest trades (and its whale
-// trades while Whales is picked) and keeps any error to show.
+// load asks the backend for this token's latest trades (and the picked
+// wallet's trades) and keeps any error to show.
 async function load() {
   const n = ++asked
   const id = encodeURIComponent(props.id)
+  const w = wallet.value
   try {
-    const [recent, big] = await Promise.all([get(`/api/tokens/${id}/trades?limit=${KEEP}`),
-      filter.value === 'whale' ? get(`/api/whales?token=${id}&hours=24&min=${WHALE_ADA}&limit=200`) : null])
+    const [recent, own] = await Promise.all([get(`/api/tokens/${id}/trades?limit=${KEEP}`),
+      w ? get(`/api/tokens/${id}/trades?wallet=${encodeURIComponent(w)}&hours=${hours.value}`) : null])
     if (n !== asked) return
     trades.value = recent.trades ?? []
-    if (big) whales.value = big.trades ?? []
+    mine.value = own?.trades ?? []
+    trader.value = own?.trader ?? null
     error.value = ''
   } catch (e) {
     if (n === asked) error.value = e instanceof TypeError ? 'Cannot reach the backend.' : e.message
@@ -73,44 +78,47 @@ onMounted(() => {
 })
 onUnmounted(() => clearInterval(timer))
 watch(() => props.id, () => {
-  loaded.value = false
   trades.value = []
-  whales.value = []
-  wallet.value = ''
-  limit.value = PAGE
-  load()
+  pick('', 24)
 })
 
-// WHALE_ADA is the smallest whale trade (₳50K, the WHALE tag); isBig is true
-// for ₳10K and more (the BIG or WHALE tag), shown in bold.
-const WHALE_ADA = SIZES.find((s) => s.key === 'whale').min
+// isBig is true for ₳10K and more (the BIG or WHALE tag), shown in bold.
 const isBig = (t) => !!sizeOf(t).tag
-// matching is every trade that passes the filter and the wallet picked:
-// Whales looks through the whole 24 hours, the others through the 50 latest.
-const matching = computed(() => (filter.value === 'whale' ? whales.value : trades.value).filter((t) =>
-  (!wallet.value || t.wallet === wallet.value) && (filter.value === 'all' || filter.value === 'whale' || t.side === filter.value)))
+// matching is every trade that passes the filter: the latest 50, or the
+// picked wallet's own trades.
+const matching = computed(() => (wallet.value ? mine.value : trades.value).filter((t) => filter.value === 'all' || t.side === filter.value))
 const shown = computed(() => matching.value.slice(0, limit.value))
-const mine = computed(() => trades.value.filter((t) => t.wallet === wallet.value))
 
-// setFilter and setWallet pick a filter or a wallet (the same wallet again:
-// all wallets) and start again at 10 rows.
+// setFilter picks a filter and starts again at 10 rows.
 function setFilter(key) {
   filter.value = key
   limit.value = PAGE
-  if (key === 'whale') {
-    loaded.value = false
-    load()
-  }
 }
-function setWallet(w) {
-  wallet.value = wallet.value === w ? '' : w
+// pick shows one wallet's trades over some hours ('' for everyone's) and
+// asks the backend for them.
+function pick(w, h) {
+  wallet.value = w
+  hours.value = h
+  mine.value = []
+  trader.value = null
   limit.value = PAGE
+  loaded.value = false
+  load()
 }
+// setWallet picks a wallet from the table (the same one again: everyone).
+const setWallet = (w) => pick(wallet.value === w ? '' : w, 24)
+// showWallet shows a wallet's trades over its Top Traders time range.
+function showWallet(w, h) {
+  filter.value = 'all'
+  pick(w, h)
+}
+defineExpose({ showWallet })
 
 // emptyText explains why no trade is shown.
 const emptyText = computed(() => {
-  const what = { all: 'trades', buy: 'buys', sell: 'sells', whale: 'whale trades' }[filter.value]
-  return `No ${what}${wallet.value ? ' by this wallet' : ''} in the last 24 hours.`
+  const what = { all: 'trades', buy: 'buys', sell: 'sells' }[filter.value]
+  const span = { 24: '24 hours', 168: '7 days', 720: '30 days' }[wallet.value ? hours.value : 24]
+  return `No ${what}${wallet.value ? ' by this wallet' : ''} in the last ${span}.`
 })
 
 // ₳1,250 for normal amounts, ₳4.35 for small ones.
@@ -120,15 +128,14 @@ function ada(v) {
 </script>
 
 <template>
-  <section class="trades" aria-labelledby="trades-title">
+  <section class="trades">
     <div class="top">
-      <h2 id="trades-title">Recent Trades</h2>
+      <slot name="title"><h2>Recent Trades</h2></slot>
       <div class="filters" role="group" aria-label="Show">
-        <button v-for="f in FILTERS" :key="f.key" type="button" :aria-pressed="f.key === filter" @click="setFilter(f.key)"
-                :title="f.key === 'whale' ? 'Trades of ₳50K or more' : null">{{ f.label }}</button>
+        <button v-for="f in FILTERS" :key="f.key" type="button" :aria-pressed="f.key === filter" @click="setFilter(f.key)">{{ f.label }}</button>
       </div>
     </div>
-    <WalletCard v-if="wallet" :wallet="wallet" :id="id" :trades="mine" @close="setWallet('')" />
+    <WalletCard v-if="wallet" :wallet="wallet" :id="id" :trader="trader" :hours="hours" @close="pick('', 24)" />
     <p v-if="error" class="muted note">{{ error }}</p>
     <div v-else class="wrap">
       <table>
@@ -169,6 +176,9 @@ function ada(v) {
         </tbody>
       </table>
       <p v-if="loaded && !shown.length" class="muted note">{{ emptyText }}</p>
+      <p v-if="trader && trader.buys + trader.sells > mine.length && matching.length <= shown.length" class="muted cut">
+        These are its latest {{ mine.length }} of {{ trader.buys + trader.sells }} trades; the totals above count them all.
+      </p>
       <button v-if="matching.length > shown.length" type="button" class="more" @click="limit += PAGE">
         Show more <span class="muted">({{ shown.length }} of {{ matching.length }})</span>
       </button>
@@ -186,6 +196,7 @@ h2 { font-size: 18px; font-weight: 700; margin: 0; }
 .filters button[aria-pressed="true"] { color: #2962ff; }
 .filters button:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
 .note { margin: 0; padding: 24px 0; }
+.cut { margin: 12px 0 0; font-size: 13px; }
 
 .wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }

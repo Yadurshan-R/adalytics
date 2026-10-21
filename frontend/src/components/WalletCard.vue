@@ -1,6 +1,8 @@
 <!-- The wallet summary above Recent Trades, shown when a trader is picked:
-     what the wallet did in this token over the last 24 hours, and which
-     other tokens it traded (from the trades the backend already holds). -->
+     what the wallet did in this token over the last 24 hours (or 7 or 30
+     days when opened from Top Traders, with the same totals as its row
+     there), and which other tokens it traded in the last 24 hours (from the
+     trades the backend already holds). -->
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { formatCompact, formatAgo } from '../format.js'
@@ -8,7 +10,8 @@ import { formatCompact, formatAgo } from '../format.js'
 const props = defineProps({
   wallet: { type: String, required: true },
   id: { type: String, required: true }, // this token
-  trades: { type: Array, default: () => [] }, // this token's trades by the wallet
+  trader: { type: Object, default: null }, // its totals in this token, from the backend; null while loading
+  hours: { type: Number, default: 24 }, // the time range of those totals
 })
 defineEmits(['close'])
 const others = ref([])
@@ -25,15 +28,12 @@ async function load() {
 }
 watch(() => props.wallet, load, { immediate: true })
 
-// stats adds up the wallet's buys and sells in this token.
+// stats are the wallet's buys and sells in this token (zeros while loading).
 const stats = computed(() => {
-  const s = { buys: 0, sells: 0, buy: 0, sell: 0 }
-  for (const t of props.trades) {
-    if (t.side === 'buy') (s.buys++, (s.buy += t.amount_ada))
-    else (s.sells++, (s.sell += t.amount_ada))
-  }
-  return { ...s, net: s.buy - s.sell }
+  const t = props.trader ?? {}
+  return { buys: t.buys ?? 0, sells: t.sells ?? 0, buy: t.buy_ada ?? 0, sell: t.sell_ada ?? 0, net: (t.buy_ada ?? 0) - (t.sell_ada ?? 0) }
 })
+const span = computed(() => ({ 24: '24h', 168: '7D', 720: '30D' })[props.hours] ?? '24h')
 // signed shows a net amount like +₳1.4K or −₳640.
 const signed = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + formatCompact(Math.abs(v))
 const tone = (v) => (v > 0 ? 'up' : v < 0 ? 'down' : '')
@@ -49,13 +49,13 @@ function copy() {
 <template>
   <div class="card">
     <div class="head">
-      <span class="label">Trader</span>
+      <span class="label">Trader · {{ span }}</span>
       <span class="addr" :title="wallet">{{ wallet.slice(0, 16) }}…{{ wallet.slice(-6) }}</span>
       <button type="button" class="link" @click="copy">{{ copied ? 'Copied' : 'Copy' }}</button>
       <a class="link" :href="`https://cardanoscan.io/${wallet.startsWith('stake1') ? 'stakekey' : 'address'}/${wallet}`" target="_blank" rel="noopener">Cardanoscan ↗</a>
       <button type="button" class="link clear" @click="$emit('close')">Show all wallets</button>
     </div>
-    <dl class="grid num">
+    <dl class="grid num" :class="{ wait: !trader }">
       <div><dt>Buys</dt><dd class="up">{{ stats.buys }}</dd></div>
       <div><dt>Sells</dt><dd class="down">{{ stats.sells }}</dd></div>
       <div><dt>Bought</dt><dd>{{ formatCompact(stats.buy) }}</dd></div>
@@ -87,4 +87,5 @@ dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; }
 .others a { margin: 0 4px 0 6px; color: #131722; font-weight: 600; text-decoration: none; }
 .others a:hover { text-decoration: underline; }
 @media (max-width: 700px) { .grid { grid-template-columns: repeat(3, 1fr); } .clear { margin-left: 0; } }
+.wait { opacity: 0.4; }
 </style>

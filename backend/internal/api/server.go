@@ -89,7 +89,23 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 	})
 
 	// A token page's recent trades, newest first: /api/tokens/snek/trades?limit=5.
+	// With a wallet, that wallet's trades in this token over 24 hours, 7 or 30
+	// days and its totals: /api/tokens/snek/trades?wallet=stake1…&hours=168.
 	mux.HandleFunc("GET /api/tokens/{ticker}/trades", func(w http.ResponseWriter, r *http.Request) {
+		if wallet := r.URL.Query().Get("wallet"); wallet != "" {
+			if !validWallet(wallet) {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "not a Cardano stake or payment address"})
+				return
+			}
+			hours, _ := strconv.Atoi(r.URL.Query().Get("hours"))
+			quote, sum, trades, err := tracker.TraderTrades(r.PathValue("ticker"), wallet, hours)
+			if err != nil {
+				writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]any{"ticker": quote.Ticker, "trades": trades, "trader": sum})
+			return
+		}
 		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 		quote, trades, err := tracker.Trades(r.PathValue("ticker"), limit)
 		if err != nil {
@@ -97,6 +113,18 @@ func New(tracker *market.Tracker, log *slog.Logger) *Server {
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"ticker": quote.Ticker, "trades": trades, "whale_ada": market.WhaleADA(quote)})
+	})
+
+	// A token page's Top Traders tab: the wallets that traded it most, from the
+	// trades in memory: /api/tokens/snek/traders?hours=168&sort=net.
+	mux.HandleFunc("GET /api/tokens/{ticker}/traders", func(w http.ResponseWriter, r *http.Request) {
+		hours, _ := strconv.Atoi(r.URL.Query().Get("hours"))
+		quote, traders, err := tracker.TopTraders(r.PathValue("ticker"), hours, r.URL.Query().Get("sort"))
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ticker": quote.Ticker, "traders": traders, "ranges": tracker.History().Ranges})
 	})
 
 	// The Whale Trades page: one page of big trades across every token,

@@ -24,8 +24,8 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 * Scroll back through up to 30 days of history; while older history is still loading, the chart shows what is loaded so far
 * A token panel like Birdeye's: price in ADA and USD, liquidity, FDV and holders in boxes, then 5m / 1h / 4h / 24h volume and trades with buys, sells and net
 * Price performance (24h low and high), links and IDs with copy buttons, supply, pool reserves, last trade and the project description, like CoinMarketCap's info list
-* Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (₳50K and more, from the whole last 24 hours); trades of ₳10K and more are tagged BIG or WHALE
-* Click a trader to see only its trades, what it bought and sold in this token, and which other tokens it traded in the last 24 hours. Minswap swaps several people's orders in one transaction; Adalytics splits them into one trade per wallet
+* Two tabs under the chart, like Birdeye's and DexScreener's. Trades: the latest trades, 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan; filter by Buys or Sells; trades of ₳10K and more are tagged BIG or WHALE. Top Traders: the 50 wallets that traded the token most in 24 hours, 7 or 30 days, ranked by volume or net buying, with what each bought and sold
+* Click a trader to see only its trades, what it bought and sold in this token (over 24 hours, or 7 or 30 days from Top Traders), and which other tokens it traded in the last 24 hours. Minswap swaps several people's orders in one transaction; Adalytics splits them into one trade per wallet
 * A drawing toolbar beside the chart, like TradingView's: trend line, horizontal line, rectangle, Fibonacci levels, text, a ruler that measures the price change and time between two points, zoom and scroll, a magnet that snaps to prices, hide and delete. Drawings stay in the browser only and are not saved
 
 **Large Trades**
@@ -150,7 +150,7 @@ Logs only go to the terminal; nothing is written to disk.
 
 ## Project structure
 
-Every file has one job and is under 250 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together, and [docs/BACKEND_FUNCTIONS.md](docs/BACKEND_FUNCTIONS.md), [docs/MARKET_FUNCTIONS.md](docs/MARKET_FUNCTIONS.md), [docs/FRONTEND_FUNCTIONS.md](docs/FRONTEND_FUNCTIONS.md) and [docs/CHART_FUNCTIONS.md](docs/CHART_FUNCTIONS.md) list every function in plain words.
+Every file has one job and is under 250 lines. Every function has a comment explaining what it does. [docs/CODE_GUIDE.md](docs/CODE_GUIDE.md) explains how the parts fit together, and [docs/BACKEND_FUNCTIONS.md](docs/BACKEND_FUNCTIONS.md), [docs/MARKET_FUNCTIONS.md](docs/MARKET_FUNCTIONS.md), [docs/FRONTEND_FUNCTIONS.md](docs/FRONTEND_FUNCTIONS.md), [docs/CHART_FUNCTIONS.md](docs/CHART_FUNCTIONS.md), [docs/TRADES_FUNCTIONS.md](docs/TRADES_FUNCTIONS.md) and [docs/TOP_TRADERS_FUNCTIONS.md](docs/TOP_TRADERS_FUNCTIONS.md) list every function in plain words.
 
 ```
 backend/
@@ -174,6 +174,7 @@ backend/
     fills.go                    splits a batch of orders into one trade per wallet
     wallets.go                  one wallet's trades, and the whale level
     whales.go                   the big trades across every token, for Large Trades
+    traders.go                  a token's top traders, and one wallet's trades in it
     periods.go                  trading over 5m, 1h, 4h and 24h
     quotes.go                   the token list, charts and trades for the API
     details.go                  supply, logos, links and holder counts
@@ -211,7 +212,9 @@ frontend/src/
   chart/useDrawings.js          turns clicks into drawings; zoom, magnet and lock
   chart/useSelect.js            select, move and delete one drawing
   chart/hitTest.js              finds the drawing under the mouse
+  components/TradesSection.vue  the Trades and Top Traders tabs on a token page
   components/RecentTrades.vue   the recent trades table, with filters
+  components/TopTraders.vue     the Top Traders table
   components/TraderCell.vue     the Trader cell: short address and filter icon
   components/WalletCard.vue     the summary of the trader picked
   components/ActivityBox.vue    the 5m / 1h / 4h / 24h activity box
@@ -233,7 +236,8 @@ frontend/src/
 | `GET /api/tokens` | every listed token with price, changes, volume and details, plus how much history is loaded |
 | `GET /api/tokens/{id}/chart?range=7D` | line chart for one token: `range` is 24H, 7D or 30D |
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | candles for one token: `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
-| `GET /api/tokens/{id}/trades?limit=5` | the most recent trades for one token, each with its wallet, and the whale level |
+| `GET /api/tokens/{id}/trades?limit=5` | the most recent trades for one token, each with its wallet; with `wallet=stake1…&hours=168`, that wallet's trades in it and its totals |
+| `GET /api/tokens/{id}/traders?hours=24&sort=volume` | the token's top 50 wallets over 24 hours, 7 or 30 days, by volume or by net buying (`sort=net`) |
 | `GET /api/wallets/{stake1…}` | what one wallet traded in the last 24 hours, token by token |
 | `GET /api/whales?hours=24&min=10000&max=50000` | the big trades across every token for Large Trades (also `token`, `wallet`, `offset`), the token list and how much history is loaded |
 | `GET /api/tokens/{id}/activity` | trading over 5m, 1h, 4h and 24h: change, volume, buys and sells |

@@ -7,6 +7,7 @@ This guide explains how Adalytics is built. Read it to see how the pieces fit to
 - [Frontend functions](FRONTEND_FUNCTIONS.md): the Vue website
 - [Chart functions](CHART_FUNCTIONS.md): the price chart, its units, indicators and drawing tools
 - [Large Trades functions](TRADES_FUNCTIONS.md): the Large Trades page, backend and frontend
+- [Top Traders functions](TOP_TRADERS_FUNCTIONS.md): the Top Traders tab on a token page, backend and frontend
 
 Every function in the code also has a comment above it saying the same thing, so you can read the code on its own too.
 
@@ -50,7 +51,8 @@ The backend serves these routes. Each one reads from memory, so they answer inst
 | `GET /api/tokens` | Every listed token with price, FDV, liquidity and its 5m, 1h, 4h and 24h change, volume, buys and sells, plus how much history is loaded (and the loading progress during the first load) |
 | `GET /api/tokens/{id}/chart?range=24H` | One token's line chart. `range` is 24H, 7D or 30D |
 | `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
-| `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first, each with its wallet, and the whale level |
+| `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first, each with its wallet. With `wallet=stake1…&hours=168`: that wallet's trades in the token (the latest 200) and its totals |
+| `GET /api/tokens/{id}/traders?hours=24&sort=volume` | One token's top 50 wallets over 24 hours, 7 or 30 days, by volume or net buying (`sort=net`) |
 | `GET /api/whales?hours=24&min=10000&max=50000` | The Large Trades page: one page of big trades across every token (up to 30 days back), the token list and how much history is loaded |
 | `GET /api/wallets/{stake1…}` | What one wallet traded in the last 24 hours, token by token |
 | `GET /api/tokens/{id}/activity` | One token's trading over 5m, 1h, 4h and 24h: price change, volume, buys and sells |
@@ -82,6 +84,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/fills.go` | Splits a batch of orders into one trade per wallet |
 | `internal/market/wallets.go` | One wallet's trades across tokens, and the whale level |
 | `internal/market/whales.go` | The big trades across every token, for the Large Trades page |
+| `internal/market/traders.go` | A token's top traders, and one wallet's trades in it |
 | `internal/market/periods.go` | Trading over 5m, 1h, 4h and 24h for the activity box |
 | `internal/market/quotes.go` | What the API reads: token list, charts, trades, logos |
 | `internal/market/details.go` | Supply, logos, links and holder counts |
@@ -132,7 +135,9 @@ No file is longer than 300 lines. Each one has one job.
 | `src/chart/useDrawings.js` | Turns clicks into drawings, and handles zoom, the magnet and the lock |
 | `src/chart/useSelect.js` | Select, move, reshape and delete one drawing |
 | `src/chart/hitTest.js` | Finds the drawing under the mouse |
+| `src/components/TradesSection.vue` | The Trades and Top Traders tabs on a token page |
 | `src/components/RecentTrades.vue` | The recent trades table on a token page, with filters and Show more |
+| `src/components/TopTraders.vue` | The Top Traders table on a token page |
 | `src/components/TraderCell.vue` | The Trader cell: short address and filter icon |
 | `src/components/WalletCard.vue` | The summary of the trader picked |
 | `src/pages/LargeTrades.vue` | The Large Trades page: big trades across every token, with filters and Show more |

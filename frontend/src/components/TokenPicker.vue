@@ -87,11 +87,11 @@ input.field { cursor: text; outline: 2px solid #2962ff33; border-color: #2962ff;
 .field b { font-weight: 600; }
 .field svg { width: 14px; height: 14px; margin-left: auto; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; margin: 0; padding: 4px; list-style: none; border: 1px solid var(--line); border-radius: 8px; background: var(--bg, #fff); box-shadow: 0 8px 24px rgba(13, 20, 33, 0.12); }
-li { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; font-size: 14px; cursor: pointer; white-space: nowrap; overflow: hidden; }
+li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; overflow: hidden; }
 li.on { background: var(--hover); }
 li[aria-selected="true"] b, li[aria-selected="true"] .all { color: #2962ff; }
 li b { font-weight: 600; }
-.name { overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 13px; }
+.name { overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 12px; }
 .none { color: var(--muted); font-size: 13px; cursor: default; }
 .logo { width: 20px; height: 20px; flex: none; border-radius: 50%; object-fit: cover; }
 .blank { display: inline-flex; align-items: center; justify-content: center; background: var(--chip); color: var(--muted); font-size: 10px; font-weight: 700; }

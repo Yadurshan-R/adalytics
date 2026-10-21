@@ -24,14 +24,14 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 * Scroll back through up to 30 days of history; while older history is still loading, the chart shows what is loaded so far
 * A token panel like Birdeye's: price in ADA and USD, liquidity, FDV and holders in boxes, then 5m / 1h / 4h / 24h volume and trades with buys, sells and net
 * Price performance (24h low and high), links and IDs with copy buttons, supply, pool reserves, last trade and the project description, like CoinMarketCap's info list
-* Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (at least 1% of the pool, or ₳10K and more), marked 🐟 🐬 🐋 by size
+* Recent trades like Birdeye's: 10 at a time (up to 50), each with the wallet that made it and a link to the transaction on Cardanoscan. Filter by Buys, Sells or Whales (at least 1% of the pool, or ₳10K and more); trades of ₳10K and more are tagged BIG or WHALE
 * Click a trader to see only its trades, what it bought and sold in this token, and which other tokens it traded in the last 24 hours. Minswap swaps several people's orders in one transaction; Adalytics splits them into one trade per wallet
 * A drawing toolbar beside the chart, like TradingView's: trend line, horizontal line, rectangle, Fibonacci levels, text, a ruler that measures the price change and time between two points, zoom and scroll, a magnet that snaps to prices, hide and delete. Drawings stay in the browser only and are not saved
 
 **Large Trades**
 
 * Like Birdeye's Find Trades: the big trades across every token, up to 30 days back, newest first. A trade is big when it is at least 1% of its pool (it moves the price about 2%) or ₳10,000 and more
-* Filters: a token search with suggestions and logos, time (last 1 hour to 30 days), size (🐟 under ₳10K, 🐬 ₳10K–₳50K, 🐋 ₳50K+) and wallet. The filters stay in the page address, so a view can be shared
+* Filters: a token search with suggestions and logos, time (last 1 hour to 30 days), size (small under ₳10K, big ₳10K–₳50K, whale ₳50K+) and wallet. The filters stay in the page address, so a view can be shared
 * Each trade shows both sides of the swap, its share of the pool, the trader and a Cardanoscan link; 200 at a time with Show more
 
 **Everywhere**
@@ -219,7 +219,8 @@ frontend/src/
   components/TradeFilters.vue   its filter bar: token, time, size, wallet
   components/TokenPicker.vue    the token search with suggestions
   components/TradesTable.vue    its table
-  tradeSizes.js                 fish, dolphin and whale: the trade sizes
+  tradeSizes.js                 small, big and whale: the trade sizes
+  components/SizeTag.vue        the BIG / WHALE tag
   components/NavMenu.vue        the ☰ menu in the top bar
   pages/NotFound.vue            Page not found
   format.js                     number formats (₳, $, %, K/M/B)

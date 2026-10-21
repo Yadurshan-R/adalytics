@@ -2,7 +2,7 @@
      and one table of the big trades across every token, up to 30 days back.
      Who uses it: traders who want to see where big money is going without
      opening each token. A big trade is at least 1% of its pool (it moves the
-     price about 2%) or ₳10K and more; the size icons (fish, dolphin, whale,
+     price about 2%) or ₳10K and more; the sizes (small, big, whale,
      like Birdeye's) sort them by amount. The backend filters, and sends 200
      trades at a time (Show more for the next 200). The filters are kept in
      the address, so a view can be shared. Refreshed every minute. -->

@@ -138,6 +138,8 @@ No file is longer than 300 lines. Each one has one job.
 | `src/pages/LargeTrades.vue` | The Large Trades page: big trades across every token, with filters and Show more |
 | `src/components/TradeFilters.vue` | The Large Trades filter bar: Token, Time, Size, Wallet, Reset all |
 | `src/components/TokenPicker.vue` | The token search with suggestions on the Large Trades page |
+| `src/components/PickList.vue` | The compact dropdown for the Time and Size filters |
 | `src/components/TradesTable.vue` | The Large Trades table |
-| `src/tradeSizes.js` | Fish, dolphin and whale: the three trade sizes |
+| `src/tradeSizes.js` | Small, Big and Whale: the three trade sizes |
+| `src/components/SizeTag.vue` | The BIG / WHALE tag after a trade's value |
 | `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, then volume and trades with buys, sells and net |

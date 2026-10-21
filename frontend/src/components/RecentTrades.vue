@@ -4,7 +4,8 @@
        filter icon, to see only that wallet's trades and its summary card;
      - All / Buys / Sells / Whales filter the list; Whales are the trades the
        Large Trades page shows (at least 1% of the pool's ADA, or ₳10K and
-       more), marked with the same fish, dolphin or whale icon;
+       more); trades of ₳10K and more carry the BIG or WHALE tag, as on
+       Large Trades;
      - Buy and Sell are coloured tags, as on Large Trades;
      - 10 rows at first, Show more adds 10 (the backend keeps the last 50). -->
 <script setup>
@@ -12,7 +13,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { formatPrice, fullPrice, formatAmount, formatAgo, formatCompact } from '../format.js'
 import WalletCard from './WalletCard.vue'
 import TraderCell from './TraderCell.vue'
-import { sizeOf } from '../tradeSizes.js'
+import SizeTag from './SizeTag.vue'
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -132,7 +133,7 @@ function ada(v) {
             <td class="left"><span class="side" :class="t.side">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</span></td>
             <td class="hide-sm num" :title="fullPrice(t.price_ada)">{{ formatPrice(t.price_ada) }}</td>
             <td class="num" :class="{ large: isLarge(t) }">
-              <span v-if="isLarge(t)" class="icon tip" :data-tip="sizeOf(t).hint" :aria-label="sizeOf(t).label">{{ sizeOf(t).icon }}</span>{{ ada(t.amount_ada) }}
+              {{ ada(t.amount_ada) }}<SizeTag :ada="t.amount_ada" />
             </td>
             <td class="hide-sm num">{{ formatAmount(t.amount_token) }}</td>
             <td class="left"><TraderCell :wallet="t.wallet" :on="!!wallet && t.wallet === wallet" @pick="setWallet" /></td>
@@ -169,13 +170,10 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 11px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-size: 14px; }
 th { font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); }
 .left { text-align: left; }
-.side { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-.side.buy { background: #16c78418; color: var(--bull); }
-.side.sell { background: #ea394318; color: var(--bear); }
-.large { font-weight: 700; }
-.icon { margin-right: 6px; font-size: 15px; font-weight: 400; }
-.tip { position: relative; cursor: help; }
-.tip:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); right: 0; z-index: 5; width: max-content; max-width: 220px; padding: 6px 9px; border-radius: 6px; background: #131722; color: #fff; font-size: 12px; font-weight: 400; line-height: 1.4; white-space: normal; text-align: left; pointer-events: none; }
+.side { font-size: 13px; font-weight: 600; }
+.side.buy { color: var(--bull); }
+.side.sell { color: var(--bear); }
+.large { font-weight: 600; }
 
 .link-col { width: 36px; padding-inline: 4px; }
 .tx { display: inline-flex; padding: 4px; border-radius: 6px; color: var(--muted); }

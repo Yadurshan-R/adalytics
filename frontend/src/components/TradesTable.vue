@@ -7,13 +7,13 @@
 import { useRouter } from 'vue-router'
 import { formatAmount, formatAgo } from '../format.js'
 import TraderCell from './TraderCell.vue'
-import { sizeOf } from '../tradeSizes.js'
+import SizeTag from './SizeTag.vue'
 
 defineProps({
   rows: { type: Array, default: () => [] },
   wallet: { type: String, default: '' }, // the wallet filtered on, or ''
   now: { type: Number, default: () => Date.now() },
-  showSize: { type: Boolean, default: true }, // the fish, dolphin or whale icon; off when one size is picked
+  showSize: { type: Boolean, default: true }, // the BIG / WHALE tag; off when one size is picked
 })
 const emit = defineEmits(['wallet'])
 const router = useRouter()
@@ -44,9 +44,9 @@ const sign = (t, part) => ((t.side === 'buy') === (part === 'token') ? '+' : 'âˆ
       <tbody role="rowgroup">
         <tr role="row" v-for="t in rows" :key="rowKey(t)">
           <td role="cell" class="left muted" :title="new Date(t.time).toLocaleString()">{{ formatAgo(t.time, now) }}</td>
-          <td role="cell" class="left"><span v-if="showSize" class="icon show-sm" aria-hidden="true">{{ sizeOf(t).icon }}</span><span class="side" :class="t.side">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</span></td>
+          <td role="cell" class="left"><span class="side" :class="t.side">{{ t.side === 'buy' ? 'Buy' : 'Sell' }}</span><span v-if="showSize" class="show-sm"><br /><SizeTag :ada="t.amount_ada" class="phone-tag" /></span></td>
           <td role="cell" class="left hide-sm num value value-col">
-            <span v-if="showSize" class="icon tip" :data-tip="sizeOf(t).hint" :aria-label="sizeOf(t).label">{{ sizeOf(t).icon }}</span>{{ ada(t.amount_ada) }}
+            {{ ada(t.amount_ada) }}<SizeTag v-if="showSize" :ada="t.amount_ada" />
           </td>
           <td role="cell" class="left amount-col">
             <button type="button" class="line token" :title="`Open ${t.ticker}`" @click="open(t)">
@@ -59,7 +59,7 @@ const sign = (t, part) => ((t.side === 'buy') === (part === 'token') ? '+' : 'âˆ
               <span class="num">{{ sign(t, 'ada') }}{{ Math.round(t.amount_ada).toLocaleString('en-US') }}</span><b>ADA</b>
             </span>
           </td>
-          <td role="cell" class="left hide-sm num" :class="{ big: t.pool_share >= 1 }">{{ t.pool_share.toFixed(1) }}%</td>
+          <td role="cell" class="left hide-sm num">{{ t.pool_share.toFixed(1) }}%</td>
           <td role="cell" class="left"><TraderCell :wallet="t.wallet" :on="!!wallet && t.wallet === wallet" @pick="emit('wallet', $event)" /></td>
           <td role="cell" class="link-col hide-sm">
             <a :href="`https://cardanoscan.io/transaction/${t.tx_hash}`" target="_blank" rel="noopener" class="tx"
@@ -79,10 +79,10 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-size: 14px; }
 th { font-size: 12px; font-weight: 500; color: var(--muted); }
 .left { text-align: left; }
-.side { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-.side.buy { background: #16c78418; color: var(--bull); }
-.side.sell { background: #ea394318; color: var(--bear); }
-.value { font-weight: 700; }
+.side { font-size: 13px; font-weight: 600; }
+.side.buy { color: var(--bull); }
+.side.sell { color: var(--bear); }
+.value { font-weight: 600; }
 /* Value and Amount each start at their own left edge with room between,
    like Birdeye, so the two numbers do not read as one. */
 /* On a computer the table is laid out as a grid: each column gets what it
@@ -95,9 +95,6 @@ th { font-size: 12px; font-weight: 500; color: var(--muted); }
   th, td { display: flex; align-items: center; }
   td.amount-col { flex-direction: column; align-items: flex-start; justify-content: center; }
 }
-.icon { margin-right: 6px; font-size: 16px; font-weight: 400; }
-.tip { position: relative; cursor: help; }
-.tip:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 5; width: max-content; max-width: 220px; padding: 6px 9px; border-radius: 6px; background: #131722; color: #fff; font-size: 12px; font-weight: 400; line-height: 1.4; white-space: normal; text-align: left; pointer-events: none; }
 .line { display: flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--fg); font: inherit; }
 .line + .line { margin-top: 6px; }
 .line b { font-weight: 500; color: #2962ff; }
@@ -106,7 +103,6 @@ th { font-size: 12px; font-weight: 500; color: var(--muted); }
 .logo { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex: none; }
 .blank, .ada { display: inline-flex; align-items: center; justify-content: center; background: var(--chip); color: var(--muted); font-size: 11px; font-weight: 700; }
 .ada { background: #0033ad; color: #fff; }
-.big { font-weight: 600; }
 .show-sm { display: none; }
 .link-col { width: 36px; padding-inline: 4px; }
 .tx { display: inline-flex; padding: 4px; border-radius: 6px; color: var(--muted); }
@@ -115,8 +111,8 @@ th { font-size: 12px; font-weight: 500; color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 700px) {
   .hide-sm { display: none; }
-  .show-sm { display: inline; margin-right: 2px; }
-  .side { padding: 3px 5px; }
+  .show-sm { display: inline; }
+  .phone-tag { margin: 4px 0 0; }
   th, td { padding: 11px 3px; font-size: 13px; }
   .line { gap: 4px; }
 }

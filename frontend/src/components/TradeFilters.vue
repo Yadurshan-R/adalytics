@@ -1,11 +1,13 @@
 <!-- The filter bar on the Large Trades page, laid out like Birdeye's Find
-     Trades: the token search (TokenPicker), the Time and Size lists and the
-     wallet box side by side (two by two on a phone), and Reset all beside
-     the Wallet title. The page owns the values; this bar only shows and
-     changes them (v-model on each). -->
+     Trades: the token search (TokenPicker), the Time and Size lists
+     (PickList) and the wallet box side by side (two by two on a phone), and
+     Reset all beside the Wallet title. The page owns the values; this bar
+     only shows and changes them (v-model on each). -->
 <script setup>
+import { computed } from 'vue'
 import { SIZES } from '../tradeSizes.js'
 import TokenPicker from './TokenPicker.vue'
+import PickList from './PickList.vue'
 
 const token = defineModel('token', { type: String, default: '' }) // a token id, or '' for all
 const hours = defineModel('hours', { type: Number, default: 24 })
@@ -29,6 +31,10 @@ function loading(t) {
   const r = props.ranges.find((x) => x.key === t.range)
   return r?.ready ? null : r?.progress ?? 0
 }
+// timeOptions and sizeOptions are the two lists' rows, with a grey note.
+const timeOptions = computed(() => TIMES.map((t) => ({ value: t.hours, label: t.label,
+  note: loading(t) !== null ? `Loading ${loading(t)}%` : '', disabled: loading(t) !== null })))
+const sizeOptions = [{ value: 'all', label: 'All sizes' }, ...SIZES.map((s) => ({ value: s.key, label: s.label, note: s.range }))]
 </script>
 
 <template>
@@ -39,18 +45,11 @@ function loading(t) {
     </div>
     <div class="box" role="group" aria-label="Time">
       <span class="label">Time</span>
-      <select v-model.number="hours" aria-label="Time">
-        <option v-for="t in TIMES" :key="t.hours" :value="t.hours" :disabled="loading(t) !== null">
-          {{ t.label }}{{ loading(t) !== null ? ` · Loading ${loading(t)}%` : '' }}
-        </option>
-      </select>
+      <PickList v-model="hours" :options="timeOptions" label="Time" />
     </div>
     <div class="box" role="group" aria-label="Size">
       <span class="label">Size</span>
-      <select v-model="size" aria-label="Size">
-        <option value="all">All sizes</option>
-        <option v-for="s in SIZES" :key="s.key" :value="s.key">{{ s.icon }} {{ s.label }} · {{ s.range }}</option>
-      </select>
+      <PickList v-model="size" :options="sizeOptions" label="Size" />
     </div>
     <div class="box" role="group" aria-label="Wallet">
       <span class="label row">Wallet
@@ -73,9 +72,9 @@ function loading(t) {
 .reset:hover:not(:disabled) { background: #f0f3fa; }
 .reset:disabled { color: var(--muted); opacity: 0.5; cursor: default; }
 .reset svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-select, .text { width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg, #fff); color: var(--fg); font: inherit; font-size: 14px; }
+.text { width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg, #fff); color: var(--fg); font: inherit; font-size: 14px; }
 .text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
-select:focus, .text:focus { outline: 2px solid #2962ff33; border-color: #2962ff; }
+.text:focus { outline: 2px solid #2962ff33; border-color: #2962ff; }
 @media (max-width: 860px) {
   .filters { grid-template-columns: 1fr 1fr; }
   .box { padding: 10px 12px 12px; }

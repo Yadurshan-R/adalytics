@@ -9,9 +9,9 @@ One table of the big trades across every token, up to 30 days back, laid out lik
 | Size | Meaning |
 |---|---|
 | All sizes | Every trade on the page (the default). |
-| 🐟 Fish | Under ₳10K, but at least 1% of the pool. |
-| 🐬 Dolphin | ₳10K to ₳50K. |
-| 🐋 Whale | ₳50K or more. |
+| Small | Under ₳10K, but at least 1% of the pool. No tag. |
+| Big | ₳10K to ₳50K. A grey BIG tag after the value. |
+| Whale | ₳50K or more. A WHALE tag after the value. |
 
 Picking a size shows only that size.
 
@@ -32,7 +32,7 @@ Picking a size shows only that size.
 
 | Function | What it does |
 |---|---|
-| `TestWhaleTrades` | Small trades are left out; ₳10K+ trades under 1% of the pool are in; each filter (24 hours, 7 days, ₳25K and up, fish, ₳20K to ₳50K, wallet in capitals, another token, offset, limit) gives the right trades in the right order; the pool shares are right. |
+| `TestWhaleTrades` | Small trades are left out; ₳10K+ trades under 1% of the pool are in; each filter (24 hours, 7 days, ₳25K and up, under ₳15K, ₳20K to ₳50K, wallet in capitals, another token, offset, limit) gives the right trades in the right order; the pool shares are right. |
 
 ## `internal/api/server.go`
 
@@ -56,9 +56,19 @@ Picking a size shows only that size.
 
 | Function | What it does |
 |---|---|
-| (template) | The filter bar: the token search, the Time and Size lists and the wallet box side by side (two by two on a phone), and Reset all beside the Wallet title. Each size in the list shows its range, e.g. "🐬 Dolphin · ₳10K–₳50K". |
+| (template) | The filter bar: the token search, the Time and Size lists (PickList) and the wallet box side by side (two by two on a phone), and Reset all beside the Wallet title. Each size in the list shows its range in grey, e.g. "Big  ₳10K–₳50K". |
+| `timeOptions` / `sizeOptions` | The rows of the two lists, with their grey notes ("Loading 35%", "₳10K–₳50K"). |
 | `TIMES` | The Time list: last 1 hour, 4 hours, 24 hours, 7 days, 30 days. |
 | `loading` | How much of 7 or 30 days is loaded; until it is all in, that choice is grey with "Loading 35%", like the chart's list. |
+
+## `src/components/PickList.vue`
+
+| Function | What it does |
+|---|---|
+| (template) | A compact dropdown for Time and Size, in the style of the token search: small rows, a grey note on the right, a tick on the one picked, grey rows that cannot be picked yet. The browser's own list was big and looked different on every system. |
+| `toggle` | Opens the list on the row picked, or closes it. |
+| `choose` | Picks a row (not a grey one) and closes. |
+| `onKey` | Arrow keys move (skipping grey rows), Enter picks, Esc closes; a click anywhere else closes too. |
 
 ## `src/components/TokenPicker.vue`
 
@@ -75,9 +85,9 @@ Picking a size shows only that size.
 
 | Function | What it does |
 |---|---|
-| (template) | Time, Buy or Sell, the value with its size icon, both sides of the swap (the token on top, the ADA under it), % of pool, the trader and a Cardanoscan link. A phone hides the value, % of pool and link, and shows the size icon beside Buy or Sell. |
+| (template) | Time, Buy or Sell (plain green or red text), the value with its BIG or WHALE tag, both sides of the swap (the token on top, the ADA under it), % of pool, the trader and a Cardanoscan link. A phone hides the value, % of pool and link, and shows the tag under Buy or Sell. |
 | `rowKey` | A unique name for each row: transaction, order number (`fill`) and token. Without the order number, two orders of one wallet in one batch looked like one row, and rows were left behind on screen when the filters changed. |
-| `showSize` (prop) | The fish, dolphin or whale icon on each row, shown only with All sizes: with one size picked, every row is that size. |
+| `showSize` (prop) | The BIG or WHALE tag on each row, shown only with All sizes: with one size picked, every row is that size. |
 | `open` | Goes to the token's page. |
 | `ada` | ₳62,977: the value in whole ADA. |
 | `sign` | + or −, from the trader's side: a buy gets tokens (+) for ADA (−), a sell the other way round. |
@@ -86,5 +96,11 @@ Picking a size shows only that size.
 
 | Function | What it does |
 |---|---|
-| `SIZES` | Fish, dolphin and whale: their icon, name, range text, ADA range (min, and max or 0 for no top) and the hover text for the table. |
-| `sizeOf` | The size of one trade, for its icon in the table. |
+| `SIZES` | Small, Big and Whale: name, range text, ADA range (min, and max or 0 for no top), tag (none, BIG, WHALE) and hover text. |
+| `sizeOf` | The size of one trade, for its tag in the table. |
+
+## `src/components/SizeTag.vue`
+
+| Function | What it does |
+|---|---|
+| (template) | The tag after a trade's value: WHALE for ₳50K and more, BIG for ₳10K to ₳50K, nothing below. Small outlined text tags with no fill colour, so the table stays calm; hovering one gives its range. |

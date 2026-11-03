@@ -2,11 +2,18 @@
 // channels, rectangles, Fibonacci levels, text and the ruler. `layer` turns
 // { time, price } points into pixels (see drawingLayer.js).
 import { formatPrice } from '../format.js'
+import { color } from '../theme.js'
 
 const BLUE = '#2962ff'
 const BULL = '#089981'
 const BEAR = '#f23645'
 const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1]
+
+// Text on the chart and the drawings' round handles take the theme's colours,
+// so they read on a light or a dark chart. Read fresh on every draw, so the
+// light / dark switch shows at once.
+const ink = () => color('--text') // text
+const paper = () => color('--chart-bg') // the outline around text, and the handles' fill
 
 // drawShape draws one drawing. A drawing being placed or selected (marked)
 // shows its handles.
@@ -60,9 +67,9 @@ export function drawShape(ctx, layer, d, size, marked) {
       ctx.textAlign = 'left'
       ctx.textBaseline = 'middle'
       ctx.lineWidth = 4
-      ctx.strokeStyle = '#ffffff'
+      ctx.strokeStyle = paper()
       ctx.strokeText(d.text, a.x, a.y)
-      ctx.fillStyle = '#131722'
+      ctx.fillStyle = ink()
       ctx.fillText(d.text, a.x, a.y)
       if (marked) {
         ctx.lineWidth = 1
@@ -171,7 +178,7 @@ function handle(ctx, p) {
   ctx.save()
   ctx.beginPath()
   ctx.arc(p.x, p.y, 4, 0, Math.PI * 2)
-  ctx.fillStyle = '#ffffff'
+  ctx.fillStyle = paper()
   ctx.fill()
   ctx.lineWidth = 2
   ctx.stroke()

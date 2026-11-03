@@ -88,7 +88,7 @@ const span = ref(null)
 .link:hover { text-decoration: underline; }
 .crumb { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 18px; }
 .back { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; margin-left: -4px; border: 0; border-radius: 50%; background: var(--chip); color: var(--fg); cursor: pointer; }
-.back:hover { background: #e3e8ef; }
+.back:hover { background: var(--chip-hover); }
 .back:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 .back svg { width: 16px; height: 16px; fill: currentColor; }
 .sep { color: var(--muted); }

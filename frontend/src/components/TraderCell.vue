@@ -24,11 +24,11 @@ const short = computed(() => `${props.wallet.slice(0, 10)}…${props.wallet.slic
 </template>
 
 <style scoped>
-.trader { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px; margin: -2px -4px; border: 0; border-radius: 4px; background: none; color: #131722; font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; }
-.trader svg { width: 13px; height: 13px; fill: none; stroke: #9aa0ac; stroke-width: 1.3; stroke-linejoin: round; }
-.trader:hover { background: #f0f3fa; }
-.trader:hover svg, .trader.on svg { stroke: #2962ff; }
-.trader.on { color: #2962ff; }
-.trader:focus-visible { outline: 2px solid #2962ff; outline-offset: 1px; }
+.trader { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px; margin: -2px -4px; border: 0; border-radius: 4px; background: none; color: var(--text); font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; }
+.trader svg { width: 13px; height: 13px; fill: none; stroke: var(--faint); stroke-width: 1.3; stroke-linejoin: round; }
+.trader:hover { background: var(--btn-hover); }
+.trader:hover svg, .trader.on svg { stroke: var(--accent); }
+.trader.on { color: var(--accent); }
+.trader:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-width: 700px) { .head { display: none; } }
 </style>

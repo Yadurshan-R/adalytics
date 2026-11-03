@@ -67,18 +67,18 @@ onBeforeUnmount(close)
 
 <style scoped>
 .group { position: relative; display: flex; flex: none; }
-.btn { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 38px; border: 0; border-radius: 6px; background: none; color: #131722; cursor: pointer; }
-.btn:hover { background: #f0f3fa; color: #131722; }
-.btn[aria-pressed="true"] { color: #2962ff; }
-.more { position: absolute; right: -6px; top: 0; width: 10px; height: 38px; padding: 0; border: 0; border-radius: 3px; background: none; color: #b2b5be; cursor: pointer; }
-.more:hover, .more[aria-expanded="true"] { color: #131722; background: #f0f3fa; }
+.btn { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 38px; border: 0; border-radius: 6px; background: none; color: var(--text); cursor: pointer; }
+.btn:hover { background: var(--btn-hover); color: var(--text); }
+.btn[aria-pressed="true"] { color: var(--accent); }
+.more { position: absolute; right: -6px; top: 0; width: 10px; height: 38px; padding: 0; border: 0; border-radius: 3px; background: none; color: var(--disabled); cursor: pointer; }
+.more:hover, .more[aria-expanded="true"] { color: var(--text); background: var(--btn-hover); }
 .more svg { width: 6px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-.btn:focus-visible, .more:focus-visible { outline: 2px solid #2962ff; outline-offset: 1px; }
+.btn:focus-visible, .more:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-.menu { position: fixed; z-index: 50; min-width: 200px; padding: 6px 0; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(19, 23, 34, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12); }
-.item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 14px; border: 0; background: none; color: #131722; font: 14px Inter, system-ui, sans-serif; text-align: left; cursor: pointer; }
-.item:hover { background: #f0f3fa; }
-.item.on { color: #2962ff; }
+.menu { position: fixed; z-index: 50; min-width: 200px; padding: 6px 0; background: var(--popup); border-radius: 6px; box-shadow: var(--popup-shadow); }
+.item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 14px; border: 0; background: none; color: var(--text); font: 14px Inter, system-ui, sans-serif; text-align: left; cursor: pointer; }
+.item:hover { background: var(--btn-hover); }
+.item.on { color: var(--accent); }
 
 @media (max-width: 700px) {
   .btn { width: 40px; height: 40px; }

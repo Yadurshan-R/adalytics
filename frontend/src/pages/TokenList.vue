@@ -122,7 +122,7 @@ const emptyText = computed(() => {
 .day { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
 .day b { color: var(--fg); font-weight: 600; }
 .bar { flex: 1; min-width: 120px; max-width: 240px; height: 4px; border-radius: 2px; background: var(--chip); overflow: hidden; }
-.bar span { display: block; height: 100%; background: #2962ff; transition: width 0.6s ease; }
+.bar span { display: block; height: 100%; background: var(--accent); transition: width 0.6s ease; }
 @media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
-.notice { margin: 0 0 16px; padding: 12px 16px; border-radius: 8px; background: #fdecee; color: #a0202c; font-weight: 500; }
+.notice { margin: 0 0 16px; padding: 12px 16px; border-radius: 8px; background: var(--danger-bg); color: var(--danger-fg); font-weight: 500; }
 </style>

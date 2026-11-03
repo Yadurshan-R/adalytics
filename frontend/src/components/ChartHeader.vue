@@ -86,12 +86,12 @@ const STYLES = [
 .group { display: flex; align-items: center; gap: 2px; }
 .end { margin-left: auto; }
 .sep { width: 1px; height: 20px; margin: 0 6px; background: var(--line); }
-.slash { color: #b2b5be; }
-.hist { margin-right: 8px; font-size: 12px; color: #9aa0ac; }
-.btn { display: inline-flex; align-items: center; height: 30px; padding: 0 8px; border: 0; border-radius: 4px; background: none; color: #6a6d78; font: inherit; font-weight: 500; cursor: pointer; }
-.btn:hover { background: #f0f3fa; color: #131722; }
-.btn[aria-pressed="true"] { color: #2962ff; }
-.btn:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
+.slash { color: var(--disabled); }
+.hist { margin-right: 8px; font-size: 12px; color: var(--faint); }
+.btn { display: inline-flex; align-items: center; height: 30px; padding: 0 8px; border: 0; border-radius: 4px; background: none; color: var(--subtle); font: inherit; font-weight: 500; cursor: pointer; }
+.btn:hover { background: var(--btn-hover); color: var(--text); }
+.btn[aria-pressed="true"] { color: var(--accent); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .icon { width: 30px; justify-content: center; padding: 0; }
 .icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

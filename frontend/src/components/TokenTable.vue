@@ -10,7 +10,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatPrice, fullPrice, formatCompact, formatAgo, formatAmount } from '../format.js'
-import { COLUMNS, HOURS, periodOf, signedPct } from '../listSort.js'
+import { COLUMNS, HOURS, periodOf, signedPct, changeTone } from '../listSort.js'
 
 const props = defineProps({
   rows: { type: Array, required: true }, // the tokens to show, in order
@@ -71,11 +71,11 @@ function shortAgo(iso) {
   return s >= 86400 ? `${Math.floor(s / 86400)}d` : s >= 3600 ? `${Math.floor(s / 3600)}h` : `${Math.max(1, Math.floor(s / 60))}m`
 }
 
-// tone colours a change green or red.
+// tone colours a change green or red (0.00% is red, see changeTone).
 function tone(c, t) {
   if (!c.change) return ''
   const v = periodOf(t, c.change).change_pct
-  return v > 0.005 ? 'up' : v < -0.005 ? 'down' : 'muted'
+  return changeTone(v)
 }
 
 // age shows how long ago a token was created: 4d, 8mo, 2y.
@@ -166,8 +166,8 @@ td { font-size: 14px; }
 .sort { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
 .sort:hover, .sort.on { color: var(--fg); }
 .sort svg { width: 7px; height: 11px; }
-.sort path { fill: #c5ccd8; }
-.sort path.lit { fill: #2962ff; }
+.sort path { fill: var(--icon-off); }
+.sort path.lit { fill: var(--accent); }
 .row { cursor: pointer; }
 .row:hover, .row:focus-visible { background: var(--hover); outline: none; }
 .token { display: flex; align-items: center; gap: 10px; }
@@ -187,7 +187,7 @@ td { font-size: 14px; }
 .divider td { padding: 18px 10px 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 .note { font-size: 13px; }
 .narrow { display: none; }
-.skeleton i { display: inline-block; height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--line), #f7f9fb, var(--line)); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+.skeleton i { display: inline-block; height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--line), var(--shimmer), var(--line)); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton i { animation: none; } }
 @media (max-width: 700px) {

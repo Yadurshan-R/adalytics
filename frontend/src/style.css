@@ -1,15 +1,89 @@
-/* Clean, white, CoinGecko-style. Colour is only used for up (green) and down (red). */
+/* Two themes: light (clean, white, CoinGecko-style) and dark (Birdeye-style).
+   Colour is only used for up (green), down (red) and the blue accent.
+   Every colour on the site comes from these variables, so a theme is just a
+   different set of values. The theme is picked with the switch in the top bar
+   (theme.js), which sets data-theme on <html>. */
 :root {
-  --bg: #ffffff;
-  --fg: #0d1421;
-  --muted: #58667e;
-  --line: #eff2f5;
-  --hover: #f8fafd;
+  --bg: #ffffff;          /* page */
+  --fg: #0d1421;          /* main text */
+  --text: #131722;        /* text on chart controls and menus */
+  --muted: #58667e;       /* labels, secondary text */
+  --subtle: #6a6d78;      /* buttons that are not picked */
+  --faint: #9aa0ac;       /* hints */
+  --dim: #a6b0c3;         /* steps not started yet */
+  --disabled: #b2b5be;
+  --icon-off: #c5ccd8;    /* sort arrows that are off, TradingView logo */
+  --border-strong: #c9d1dc;
+  --line: #eff2f5;        /* borders and table lines */
+  --hover: #f8fafd;       /* row hover */
+  --btn-hover: #f0f3fa;   /* button hover */
   --chip: #eff2f5;
+  --chip-hover: #e3e8ef;
+  --panel: #fafbfd;       /* loading box */
+  --shimmer: #f7f9fb;     /* loading placeholders */
+  --popup: #ffffff;       /* menus and lists */
+  --popup-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(19, 23, 34, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12);
+  --list-shadow: 0 8px 24px rgba(13, 20, 33, 0.12);
+  --accent: #2962ff;
+  --accent-hover: #1e53e5;
+  --accent-ring: #2962ff33;
+  --danger-bg: #fdecee;
+  --danger-fg: #a0202c;
+  --warn: #d97706;
   --bull: #16c784;
   --bear: #ea3943;
+  /* The price chart */
+  --chart-bg: #ffffff;
+  --chart-grid-v: #f3f5f8;
+  --chart-grid-h: #eff2f5;
+  --chart-label: #131722; /* crosshair labels on the axes */
+  --chart-up: #089981;
+  --chart-down: #f23645;
+  --chart-line: #3861fb;
+  --logo-plate: transparent; /* behind token logos (see img.logo below) */
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: light;
+}
+
+/* Dark, like Birdeye: near-black page, slightly lighter panels, soft white text. */
+:root[data-theme="dark"] {
+  --bg: #0e0f13;
+  --fg: #e8eaef;
+  --text: #e8eaef;
+  --muted: #8a91a0;
+  --subtle: #9ba2b0;
+  --faint: #6b7280;
+  --dim: #5c6270;
+  --disabled: #4b505b;
+  --icon-off: #474c57;
+  --border-strong: #3a3f4a;
+  --line: #1f2229;
+  --hover: #15171d;
+  --btn-hover: #1f232b;
+  --chip: #1d2027;
+  --chip-hover: #282c35;
+  --panel: #14161b;
+  --shimmer: #2a2e37;
+  --popup: #181a20;
+  --popup-shadow: 0 0 0 1px #2a2e37, 0 8px 24px rgba(0, 0, 0, 0.55);
+  --list-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --accent: #4f7cff;
+  --accent-hover: #6a90ff;
+  --accent-ring: #4f7cff40;
+  --danger-bg: #2b1519;
+  --danger-fg: #ff8d96;
+  --warn: #f5a524;
+  --bull: #16c784;
+  --bear: #f6465d;
+  --chart-bg: #0e0f13;
+  --chart-grid-v: #16181e;
+  --chart-grid-h: #1a1d23;
+  --chart-label: #363a45;
+  --chart-up: #089981;
+  --chart-down: #f23645;
+  --chart-line: #4f7cff;
+  --logo-plate: #e8eaef;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -24,6 +98,11 @@ html, body {
 }
 
 a { color: inherit; text-decoration: none; }
+
+/* Token logos. Some are dark drawings on a see-through background (NIGHT is a
+   black circle), which vanish on the dark theme, so dark mode puts a soft
+   light disc behind every token logo. Logos that fill their circle cover it. */
+img.logo[src^="/api/tokens/"] { background: var(--logo-plate); }
 
 .num { font-variant-numeric: tabular-nums; }
 .up { color: var(--bull); }

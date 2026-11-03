@@ -45,11 +45,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .tabs { display: flex; gap: 20px; }
 .tabs button { padding: 10px 0 11px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--muted); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
 .tabs button:hover { color: var(--fg); }
-.tabs button[aria-pressed="true"] { color: var(--fg); border-bottom-color: #2962ff; }
-button:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
+.tabs button[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .right { margin-left: auto; display: flex; align-items: center; gap: 8px 20px; justify-content: flex-end; }
 .search { display: flex; align-items: center; gap: 8px; width: min(300px, 100%); height: 34px; padding: 0 10px; margin-bottom: 6px; border: 1px solid var(--line); border-radius: 6px; }
-.search:focus-within { border-color: #2962ff; }
+.search:focus-within { border-color: var(--accent); }
 .search svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round; }
 .search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font: inherit; font-size: 13px; color: var(--fg); }
 kbd { padding: 0 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font: 11px ui-monospace, monospace; }

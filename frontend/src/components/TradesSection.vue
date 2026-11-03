@@ -45,5 +45,5 @@ function showWallet(w, hours) {
 .tabs button { padding: 0 0 6px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: inherit; font-size: 18px; font-weight: 700; cursor: pointer; }
 .tabs button:hover { color: var(--fg); }
 .tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--fg); }
-.tabs button:focus-visible { outline: 2px solid #2962ff; outline-offset: 2px; }
+.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>

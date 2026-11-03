@@ -44,9 +44,9 @@ onUnmounted(() => { document.removeEventListener('pointerdown', outside); docume
 .toggle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 8px; background: none; color: var(--fg); cursor: pointer; }
 .toggle:hover, .toggle[aria-expanded="true"] { background: var(--hover); }
 .toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
-.list { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; width: 200px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); box-shadow: 0 8px 24px rgba(13, 20, 33, 0.12); }
+.list { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; width: 200px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); box-shadow: var(--list-shadow); }
 .item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; color: var(--fg); font-size: 14px; font-weight: 500; }
 .item:hover { background: var(--hover); }
-.item.on { color: #2962ff; font-weight: 600; }
+.item.on { color: var(--accent); font-weight: 600; }
 .item svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.8; }
 </style>

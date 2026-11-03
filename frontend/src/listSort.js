@@ -39,3 +39,7 @@ export function signedPct(v) {
   const s = Math.abs(v) >= 1000 ? Math.round(Math.abs(v)).toLocaleString('en-US') : Math.abs(v).toFixed(2)
   return (v > 0.005 ? '+' : v < -0.005 ? '−' : '') + s + '%'
 }
+
+// changeTone colours a % change: green when it shows a +, red otherwise.
+// 0.00% is red too, like Birdeye and CoinMarketCap: no gain counts as down.
+export const changeTone = (v) => (v > 0.005 ? 'up' : 'down')

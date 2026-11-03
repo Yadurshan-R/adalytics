@@ -67,16 +67,16 @@ onUnmounted(() => document.removeEventListener('pointerdown', outside))
 
 <style scoped>
 .pick { position: relative; }
-.field { display: flex; align-items: center; width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg, #fff); color: var(--fg); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
-.field:focus-visible, .field[aria-expanded="true"] { outline: 2px solid #2962ff33; border-color: #2962ff; }
+.field { display: flex; align-items: center; width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.field:focus-visible, .field[aria-expanded="true"] { outline: 2px solid var(--accent-ring); border-color: var(--accent); }
 .field svg { width: 14px; height: 14px; margin-left: auto; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; margin: 0; padding: 4px; list-style: none; border: 1px solid var(--line); border-radius: 8px; background: var(--bg, #fff); box-shadow: 0 8px 24px rgba(13, 20, 33, 0.12); }
+.list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; margin: 0; padding: 4px; list-style: none; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); box-shadow: var(--list-shadow); }
 li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 li.on { background: var(--hover); }
-li[aria-selected="true"] .text { color: #2962ff; font-weight: 600; }
+li[aria-selected="true"] .text { color: var(--accent); font-weight: 600; }
 li.off { color: var(--muted); opacity: 0.6; cursor: default; }
 .note { margin-left: auto; color: var(--muted); font-size: 12px; }
-.tick { width: 14px; height: 14px; flex: none; fill: none; stroke: #2962ff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tick { width: 14px; height: 14px; flex: none; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .note + .tick { margin-left: 0; }
 .text + .tick { margin-left: auto; }
 </style>

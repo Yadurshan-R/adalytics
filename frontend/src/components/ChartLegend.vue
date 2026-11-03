@@ -27,6 +27,9 @@ const change = computed(() => {
 
 const dir = computed(() => (change.value && change.value.diff < 0 ? 'down' : 'up'))
 const sign = (v) => (v < 0 ? '−' : '+')
+// volDir colours the volume like its bar under the chart (PriceChart): green
+// when the candle closed at or above its open, red when below, like TradingView.
+const volDir = computed(() => (props.bar && props.bar.close < props.bar.open ? 'vdown' : 'vup'))
 </script>
 
 <template>
@@ -41,7 +44,7 @@ const sign = (v) => (v < 0 ? '−' : '+')
     <span v-if="change" :class="dir">
       {{ sign(change.diff) }}{{ fmt(Math.abs(change.diff)).slice(1) }} ({{ sign(change.pct) }}{{ Math.abs(change.pct).toFixed(2) }}%)
     </span>
-    <span class="vol">Vol<b>{{ formatADA(bar.volume) }}</b></span>
+    <span class="vol">Vol<b :class="volDir">{{ formatADA(bar.volume) }}</b></span>
     <template v-if="extras.length">
       <span class="break"></span>
       <span v-for="x in extras" :key="x.name" class="extra">
@@ -55,15 +58,16 @@ const sign = (v) => (v < 0 ? '−' : '+')
 .legend {
   position: absolute; z-index: 4; top: 8px; left: 12px; right: 80px;
   display: flex; flex-wrap: wrap; gap: 4px 14px; pointer-events: none;
-  font-size: 13px; color: #131722; white-space: nowrap;
+  font-size: 13px; color: var(--text); white-space: nowrap;
 }
 b { font-weight: 500; margin-left: 3px; }
-.up { color: #16c784; }
-.down { color: #ea3943; }
-.tv .up { color: #089981; }
-.tv .down { color: #f23645; }
-.vol b { color: #131722; }
+.up { color: var(--bull); }
+.down { color: var(--bear); }
+.tv .up { color: var(--chart-up); }
+.tv .down { color: var(--chart-down); }
+.vol b.vup { color: var(--chart-up); }
+.vol b.vdown { color: var(--chart-down); }
 .break { flex-basis: 100%; height: 0; }
-.extra { color: #58667e; }
+.extra { color: var(--muted); }
 @media (max-width: 700px) { .legend { font-size: 12px; gap: 2px 10px; } }
 </style>

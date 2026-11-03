@@ -68,13 +68,13 @@ const sizeOptions = [{ value: 'all', label: 'All sizes' }, ...SIZES.map((s) => (
 .box:first-child { border-left: 0; }
 .label { display: block; margin-bottom: 10px; font-size: 12px; font-weight: 600; color: var(--muted); }
 .row { display: flex; justify-content: space-between; align-items: center; }
-.reset { display: inline-flex; align-items: center; gap: 4px; margin: -4px -6px; padding: 2px 6px; border: 0; border-radius: 4px; background: none; color: #2962ff; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
-.reset:hover:not(:disabled) { background: #f0f3fa; }
+.reset { display: inline-flex; align-items: center; gap: 4px; margin: -4px -6px; padding: 2px 6px; border: 0; border-radius: 4px; background: none; color: var(--accent); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.reset:hover:not(:disabled) { background: var(--btn-hover); }
 .reset:disabled { color: var(--muted); opacity: 0.5; cursor: default; }
 .reset svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.text { width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg, #fff); color: var(--fg); font: inherit; font-size: 14px; }
+.text { width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; }
 .text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
-.text:focus { outline: 2px solid #2962ff33; border-color: #2962ff; }
+.text:focus { outline: 2px solid var(--accent-ring); border-color: var(--accent); }
 @media (max-width: 860px) {
   .filters { grid-template-columns: 1fr 1fr; }
   .box { padding: 10px 12px 12px; }

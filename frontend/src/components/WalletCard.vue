@@ -76,15 +76,15 @@ function copy() {
 .card { margin-bottom: 8px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
 .head { display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; }
 .label { color: var(--muted); }
-.addr { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; color: #2962ff; }
-.link { padding: 0; border: 0; background: none; color: #6a6d78; font: inherit; font-weight: 500; text-decoration: none; cursor: pointer; }
-.link:hover { color: #131722; text-decoration: underline; }
+.addr { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent); }
+.link { padding: 0; border: 0; background: none; color: var(--subtle); font: inherit; font-weight: 500; text-decoration: none; cursor: pointer; }
+.link:hover { color: var(--text); text-decoration: underline; }
 .clear { margin-left: auto; }
 .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 10px 0 0; }
 dt { font-size: 12px; color: var(--muted); }
 dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; }
 .others { margin: 10px 0 0; line-height: 1.7; }
-.others a { margin: 0 4px 0 6px; color: #131722; font-weight: 600; text-decoration: none; }
+.others a { margin: 0 4px 0 6px; color: var(--text); font-weight: 600; text-decoration: none; }
 .others a:hover { text-decoration: underline; }
 @media (max-width: 700px) { .grid { grid-template-columns: repeat(3, 1fr); } .clear { margin-left: 0; } }
 .wait { opacity: 0.4; }

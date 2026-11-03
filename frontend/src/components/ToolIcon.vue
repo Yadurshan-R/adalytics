@@ -13,5 +13,5 @@ defineProps({ tool: { type: Object, required: true } }) // { icon, dots }
 
 <style scoped>
 .icon { width: 30px; height: 30px; flex: none; fill: none; stroke: currentColor; stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round; }
-.dot { fill: #fff; }
+.dot { fill: var(--bg); }
 </style>

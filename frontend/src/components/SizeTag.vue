@@ -17,6 +17,6 @@ const size = computed(() => sizeOf({ amount_ada: props.ada }))
 
 <style scoped>
 .tag { display: inline-block; margin-left: 8px; padding: 1px 5px; border: 1px solid var(--line); border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; vertical-align: 1px; }
-.whale { border-color: #c9d1dc; color: var(--fg); }
+.whale { border-color: var(--border-strong); color: var(--fg); }
 .big { color: var(--muted); }
 </style>

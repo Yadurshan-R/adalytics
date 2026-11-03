@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import NavMenu from './components/NavMenu.vue'
+import ThemeToggle from './components/ThemeToggle.vue'
 </script>
 
 <template>
@@ -10,6 +11,7 @@ import NavMenu from './components/NavMenu.vue'
       <RouterLink to="/" class="brand">
         <img src="/logo.png" alt="" class="logo" />Adalytics
       </RouterLink>
+      <ThemeToggle />
     </div>
   </header>
   <main class="container page">

@@ -97,7 +97,7 @@ th { font-size: 12px; font-weight: 500; color: var(--muted); }
 }
 .line { display: flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--fg); font: inherit; }
 .line + .line { margin-top: 6px; }
-.line b { font-weight: 500; color: #2962ff; }
+.line b { font-weight: 500; color: var(--accent); }
 .token { cursor: pointer; }
 .token:hover b { text-decoration: underline; }
 .logo { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex: none; }

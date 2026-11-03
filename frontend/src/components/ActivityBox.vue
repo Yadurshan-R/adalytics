@@ -8,7 +8,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { formatCompact } from '../format.js'
 import { useTokens } from '../useTokens.js'
-import { HOURS, signedPct } from '../listSort.js'
+import { HOURS, signedPct, changeTone } from '../listSort.js'
 
 const props = defineProps({ id: { type: String, required: true } }) // the token's id
 const { day } = useTokens()
@@ -48,6 +48,8 @@ const rows = computed(() => {
 })
 // share is the buyers' part of a bar, in percent (50 when nothing traded).
 const share = (b, s) => (b + s > 0 ? (b / (b + s)) * 100 : 50)
+// tone colours a net amount: green, red, or grey for none. % changes use
+// changeTone instead, where 0.00% is red.
 const tone = (v) => (v > 0.005 ? 'up' : v < -0.005 ? 'down' : 'muted')
 </script>
 
@@ -56,7 +58,7 @@ const tone = (v) => (v > 0.005 ? 'up' : v < -0.005 ? 'down' : 'muted')
     <div class="tabs" role="tablist">
       <button v-for="x in periods" :key="x.key" type="button" role="tab" :aria-selected="x.key === picked" @click="picked = x.key">
         <span class="k">{{ x.key }}</span>
-        <span v-if="ready(x.key)" class="num" :class="tone(x.change_pct)">{{ signedPct(x.change_pct) }}</span>
+        <span v-if="ready(x.key)" class="num" :class="changeTone(x.change_pct)">{{ signedPct(x.change_pct) }}</span>
         <span v-else class="num muted" title="Still loading">{{ day.progress }}%</span>
       </button>
     </div>
@@ -79,7 +81,7 @@ const tone = (v) => (v > 0.005 ? 'up' : v < -0.005 ? 'down' : 'muted')
 .tabs button:hover { background: var(--hover); }
 .tabs button[aria-selected="true"] { background: var(--chip); }
 .tabs button[aria-selected="true"] .k { color: var(--fg); font-weight: 600; }
-.tabs button:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
+.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .k { font-size: 13px; color: var(--muted); }
 .tabs .num { font-size: 14px; font-weight: 600; }
 .row { padding: 12px 14px; }

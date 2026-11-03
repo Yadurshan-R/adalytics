@@ -45,14 +45,14 @@ function count(s) {
 </template>
 
 <style scoped>
-.box { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 16px; border-radius: 12px; background: #fafbfd; }
+.box { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 16px; border-radius: 12px; background: var(--panel); }
 .title { font-size: 15px; font-weight: 600; color: var(--muted); }
 .pct { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; }
 .bar { width: min(320px, 80%); height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden; }
 .bar > span { display: block; height: 100%; border-radius: 4px; background: var(--bull); transition: width 0.6s ease; }
 
 .steps { list-style: none; margin: 18px 0 0; padding: 0; width: min(360px, 100%); }
-.steps li { display: flex; align-items: center; gap: 12px; padding: 9px 4px; font-size: 14px; color: #a6b0c3; }
+.steps li { display: flex; align-items: center; gap: 12px; padding: 9px 4px; font-size: 14px; color: var(--dim); }
 .steps li.done, .steps li.active { color: var(--fg); }
 .label { flex: 1; }
 .steps li.active .label { font-weight: 600; }
@@ -60,7 +60,7 @@ function count(s) {
 
 .icon { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .icon svg { width: 16px; height: 16px; fill: var(--bull); }
-.dot { width: 9px; height: 9px; border-radius: 50%; border: 2px solid #c9d1de; }
+.dot { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--border-strong); }
 .active .dot { border-color: var(--bull); background: var(--bull); animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.35; } }
 @media (prefers-reduced-motion: reduce) { .bar > span { transition: none; } .active .dot { animation: none; } }

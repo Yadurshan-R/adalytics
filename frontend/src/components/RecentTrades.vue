@@ -191,10 +191,10 @@ function ada(v) {
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 h2 { font-size: 18px; font-weight: 700; margin: 0; }
 .filters { display: flex; gap: 2px; font-size: 13px; }
-.filters button { height: 30px; padding: 0 10px; border: 0; border-radius: 4px; background: none; color: #6a6d78; font: inherit; font-weight: 500; cursor: pointer; }
-.filters button:hover { background: #f0f3fa; color: #131722; }
-.filters button[aria-pressed="true"] { color: #2962ff; }
-.filters button:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
+.filters button { height: 30px; padding: 0 10px; border: 0; border-radius: 4px; background: none; color: var(--subtle); font: inherit; font-weight: 500; cursor: pointer; }
+.filters button:hover { background: var(--btn-hover); color: var(--text); }
+.filters button[aria-pressed="true"] { color: var(--accent); }
+.filters button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .note { margin: 0; padding: 24px 0; }
 .cut { margin: 12px 0 0; font-size: 13px; }
 
@@ -215,9 +215,9 @@ th { font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px sol
 .tx svg { width: 14px; height: 14px; fill: currentColor; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .more { display: block; width: 100%; margin-top: 12px; padding: 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
-.more:hover { background: #f0f3fa; }
+.more:hover { background: var(--btn-hover); }
 
-.skeleton i { display: inline-block; height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--line), #f7f9fb, var(--line)); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+.skeleton i { display: inline-block; height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--line), var(--shimmer), var(--line)); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton i { animation: none; } }
 

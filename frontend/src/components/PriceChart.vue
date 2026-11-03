@@ -11,6 +11,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { createChart, AreaSeries, CandlestickSeries, HistogramSeries, LineStyle, CrosshairMode } from 'lightweight-charts'
 import { formatPrice } from '../format.js'
+import { theme, color } from '../theme.js'
 import { useDrawings, SCROLL, SCALE } from '../chart/useDrawings.js'
 import { useIndicators } from '../chart/useIndicators.js'
 import ChartToolbar from './ChartToolbar.vue'
@@ -26,11 +27,14 @@ const props = defineProps({
   token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
 
-const MUTED = '#58667e'
-// TradingView's colours: green and red candles, a blue line.
-const UP = '#089981'
-const DOWN = '#f23645'
-const BLUE = '#3861fb' // CoinMarketCap's chart blue
+// The chart's colours come from the theme (style.css): TradingView's green
+// and red candles, CoinMarketCap's blue line. colors() reads the current ones.
+let C = {}
+const colors = () => ({
+  bg: color('--chart-bg'), muted: color('--muted'), label: color('--chart-label'),
+  gridV: color('--chart-grid-v'), gridH: color('--chart-grid-h'),
+  up: color('--chart-up'), down: color('--chart-down'), line: color('--chart-line'),
+})
 // rgba turns a colour like #16c784 into rgba() with transparency a (0 to 1).
 const rgba = (hex, a) => {
   const n = parseInt(hex.slice(1), 16)
@@ -84,7 +88,7 @@ function load() {
   // The latest price: a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap.
   candleSeries.applyOptions({ lastValueVisible: !line, priceLineVisible: !line })
   area.applyOptions({ lastValueVisible: line, priceLineVisible: line })
-  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: rgba(c.close >= c.open ? UP : DOWN, 0.5) })))
+  volume.setData(bars.map((c) => ({ time: c.time, value: c.volume, color: rgba(c.close >= c.open ? C.up : C.down, 0.5) })))
   showBar(-1)
   barList = bars.map((c) => ({ time: c.time, values: line ? [c.close] : [c.open, c.high, c.low, c.close] }))
   draw.attach()
@@ -109,11 +113,34 @@ function load() {
 const priceFormat = { type: 'custom', minMove: 1e-12, formatter: (v) => props.fmt(v) }
 const ind = useIndicators(() => chart, priceFormat)
 
+// themeOptions are the chart options that change with light / dark.
+function themeOptions() {
+  return {
+    layout: { background: { type: 'solid', color: C.bg }, textColor: C.muted },
+    grid: { vertLines: { color: C.gridV }, horzLines: { color: C.gridH } },
+    crosshair: {
+      vertLine: { color: C.muted, labelBackgroundColor: C.label },
+      horzLine: { color: C.muted, labelBackgroundColor: C.label },
+    },
+  }
+}
+
+// applyTheme repaints the chart in the current theme's colours.
+function applyTheme() {
+  if (!chart) return
+  C = colors()
+  chart.applyOptions(themeOptions())
+  area.applyOptions({ lineColor: C.line, priceLineColor: C.line })
+  candleSeries.applyOptions({ upColor: C.up, downColor: C.down, borderUpColor: C.up, borderDownColor: C.down, wickUpColor: C.up, wickDownColor: C.down })
+  load()
+}
+
 onMounted(() => {
+  C = colors()
   chart = createChart(el.value, {
     autoSize: true,
-    layout: { background: { type: 'solid', color: '#ffffff' }, textColor: MUTED, fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12 },
-    grid: { vertLines: { color: '#f3f5f8' }, horzLines: { color: '#eff2f5' } },
+    layout: { background: { type: 'solid', color: C.bg }, textColor: C.muted, fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12 },
+    grid: { vertLines: { color: C.gridV }, horzLines: { color: C.gridH } },
     rightPriceScale: { borderVisible: false },
     timeScale: {
       borderVisible: false, fixLeftEdge: true, fixRightEdge: true,
@@ -130,8 +157,8 @@ onMounted(() => {
     },
     crosshair: {
       mode: CrosshairMode.Normal,
-      vertLine: { style: LineStyle.Dashed, width: 1, color: MUTED, labelBackgroundColor: '#131722' },
-      horzLine: { style: LineStyle.Dashed, width: 1, color: MUTED, labelBackgroundColor: '#131722' },
+      vertLine: { style: LineStyle.Dashed, width: 1, color: C.muted, labelBackgroundColor: C.label },
+      horzLine: { style: LineStyle.Dashed, width: 1, color: C.muted, labelBackgroundColor: C.label },
     },
     // The date under the mouse, on the time axis: "Tue 13 Oct, 10:00".
     localization: {
@@ -142,11 +169,11 @@ onMounted(() => {
   })
 
   area = chart.addSeries(AreaSeries, {
-    lineColor: BLUE, topColor: 'rgba(0,0,0,0)', bottomColor: 'rgba(0,0,0,0)', lineWidth: 2, // just the line, no fill under it
-    priceLineVisible: false, priceLineStyle: LineStyle.Dotted, priceLineColor: BLUE, lastValueVisible: false, crosshairMarkerRadius: 4, priceFormat,
+    lineColor: C.line, topColor: 'rgba(0,0,0,0)', bottomColor: 'rgba(0,0,0,0)', lineWidth: 2, // just the line, no fill under it
+    priceLineVisible: false, priceLineStyle: LineStyle.Dotted, priceLineColor: C.line, lastValueVisible: false, crosshairMarkerRadius: 4, priceFormat,
   })
   candleSeries = chart.addSeries(CandlestickSeries, {
-    upColor: UP, downColor: DOWN, borderUpColor: UP, borderDownColor: DOWN, wickUpColor: UP, wickDownColor: DOWN,
+    upColor: C.up, downColor: C.down, borderUpColor: C.up, borderDownColor: C.down, wickUpColor: C.up, wickDownColor: C.down,
     priceLineVisible: true, priceLineStyle: LineStyle.Dotted, lastValueVisible: true, priceFormat,
   })
   for (const s of [area, candleSeries]) s.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.28 } })
@@ -165,6 +192,8 @@ onMounted(() => {
 
 watch(() => [props.type, props.candles, props.indicators], load)
 watch(() => props.token, () => draw.clearAll())
+// The light / dark switch repaints the chart; the drawings follow on the next redraw.
+watch(theme, applyTheme)
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
@@ -193,13 +222,13 @@ onBeforeUnmount(() => {
 <style scoped>
 .frame { display: flex; height: 470px; border-radius: 0 0 12px 12px; overflow: hidden; } /* a little smaller, like Birdeye */
 .wrap { position: relative; flex: 1; min-width: 0; }
-.text-input { position: absolute; z-index: 6; transform: translateY(-50%); width: 180px; font: 600 14px Inter, system-ui, sans-serif; color: var(--fg); padding: 4px 8px; border: 1px solid #2962ff; border-radius: 6px; outline: none; background: #fff; }
+.text-input { position: absolute; z-index: 6; transform: translateY(-50%); width: 180px; font: 600 14px Inter, system-ui, sans-serif; color: var(--fg); padding: 4px 8px; border: 1px solid var(--accent); border-radius: 6px; outline: none; background: var(--popup); }
 @media (max-width: 700px) { .frame { flex-direction: column; height: auto; } }
-.remove { position: absolute; z-index: 6; top: 40px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 6px; background: #fff; color: #131722; font: 500 13px Inter, system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(19, 23, 34, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12); }
-.remove:hover { background: #f0f3fa; color: #f23645; }
+.remove { position: absolute; z-index: 6; top: 40px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 6px; background: var(--popup); color: var(--text); font: 500 13px Inter, system-ui, sans-serif; cursor: pointer; box-shadow: var(--popup-shadow); }
+.remove:hover { background: var(--btn-hover); color: var(--chart-down); }
 .remove svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 .chart { height: 100%; }
 /* The TradingView logo in light grey. */
-.chart :deep(a#tv-attr-logo) { --fill: #c5ccd8; }
+.chart :deep(a#tv-attr-logo) { --fill: var(--icon-off); }
 @media (max-width: 700px) { .chart { height: 320px; } }
 </style>

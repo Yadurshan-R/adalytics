@@ -70,5 +70,5 @@ watch(candles, () => {
 
 <style scoped>
 .card { border: 1px solid var(--line); border-radius: 12px; }
-.notice { margin: 0; padding: 10px 14px; background: #fdecee; color: #a0202c; font-size: 14px; }
+.notice { margin: 0; padding: 10px 14px; background: var(--danger-bg); color: var(--danger-fg); font-size: 14px; }
 </style>

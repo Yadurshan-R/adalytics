@@ -90,14 +90,14 @@ function copy(text, key) {
 
 <style scoped>
 .info { margin-top: 12px; }
-.trade { display: block; padding: 10px; border-radius: 8px; background: #2962ff; color: #fff; font-size: 14px; font-weight: 600; text-align: center; text-decoration: none; }
-.trade:hover { background: #1e53e5; }
+.trade { display: block; padding: 10px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; text-align: center; text-decoration: none; }
+.trade:hover { background: var(--accent-hover); }
 .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 4px; border: 1px solid var(--line); border-radius: 8px; }
 .card b { display: inline-flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 600; }
 .card span { font-size: 12px; color: var(--muted); }
 .card svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; }
-.warn { color: #d97706; }
+.warn { color: var(--warn); }
 h2 { margin: 22px 0 10px; font-size: 15px; font-weight: 700; }
 h2:first-child { margin-top: 0; }
 h2 .muted { font-weight: 500; font-size: 13px; margin-left: 4px; }
@@ -112,7 +112,7 @@ dl div { display: flex; justify-content: space-between; align-items: center; gap
 dt { color: var(--muted); }
 dd { margin: 0; font-weight: 500; text-align: right; }
 .chip { display: inline-block; padding: 3px 10px; border: 0; border-radius: 6px; background: var(--chip); color: var(--fg); font: inherit; font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; }
-.chip:hover { background: #e3e8ef; }
+.chip:hover { background: var(--chip-hover); }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 .about { margin: 0; color: var(--muted); line-height: 1.6; font-size: 14px; overflow-wrap: anywhere; }
 </style>

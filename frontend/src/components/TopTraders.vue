@@ -131,9 +131,9 @@ function signed(v) {
 .filters { display: flex; align-items: center; gap: 2px; font-size: 13px; }
 .right { display: flex; gap: 16px; flex-wrap: wrap; }
 .by { margin-right: 4px; font-size: 12px; }
-.filters button { height: 28px; padding: 0 10px; border: 0; border-radius: 4px; background: none; color: #6a6d78; font: inherit; font-weight: 500; cursor: pointer; }
-.filters button:hover:not(:disabled) { background: #f0f3fa; color: #131722; }
-.filters button[aria-pressed="true"] { color: #2962ff; background: #f0f3fa; }
+.filters button { height: 28px; padding: 0 10px; border: 0; border-radius: 4px; background: none; color: var(--subtle); font: inherit; font-weight: 500; cursor: pointer; }
+.filters button:hover:not(:disabled) { background: var(--btn-hover); color: var(--text); }
+.filters button[aria-pressed="true"] { color: var(--accent); background: var(--btn-hover); }
 .filters button:disabled { opacity: 0.45; cursor: default; }
 .note { margin: 0; padding: 24px 0; }
 .wrap { overflow-x: auto; }
@@ -147,10 +147,10 @@ small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
 .down { color: var(--bear); }
 td.up, td.down { font-weight: 600; }
 .dim { opacity: 0.5; }
-.trader { padding: 2px 4px; margin: -2px -4px; border: 0; border-radius: 4px; background: none; color: #131722; font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; }
-.trader:hover { background: #f0f3fa; color: #2962ff; }
+.trader { padding: 2px 4px; margin: -2px -4px; border: 0; border-radius: 4px; background: none; color: var(--text); font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; }
+.trader:hover { background: var(--btn-hover); color: var(--accent); }
 .more { display: block; width: 100%; margin-top: 12px; padding: 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
-.more:hover { background: #f0f3fa; }
+.more:hover { background: var(--btn-hover); }
 /* The columns fit the space the table has (the chart column is narrow on
    small laptops): Trades and Last trade go first, then the token amounts. */
 .wrap { container-type: inline-size; }

@@ -90,8 +90,22 @@ func (t *Tracker) loadInfo(ctx context.Context) {
 	t.log.Printf("Token details loaded: total supply for %d tokens, %d logos", len(infos), logos)
 }
 
-// holdersLoop counts holders now, then again every HoldersEvery, until ctx ends.
+// holdersLoop waits for the first load, counts holders, then counts them again
+// every HoldersEvery, until ctx ends. Waiting matters: if Koios is down at
+// startup the list is empty, and counting then would leave every token without
+// holders for HoldersEvery.
 func (t *Tracker) holdersLoop(ctx context.Context) {
+	for {
+		t.mu.RLock()
+		ready := t.loaded
+		t.mu.RUnlock()
+		if ready {
+			break
+		}
+		if err := sleepCtx(ctx, 10*time.Second); err != nil {
+			return
+		}
+	}
 	for {
 		t.loadHolders(ctx)
 		if err := sleepCtx(ctx, HoldersEvery); err != nil {

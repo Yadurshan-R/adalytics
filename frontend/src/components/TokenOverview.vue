@@ -5,7 +5,7 @@
 <script setup>
 import { ref } from 'vue'
 import { formatPrice, fullPrice, formatUSD, formatCompact } from '../format.js'
-import { signedPct } from '../listSort.js'
+import { signedPct, changeTone } from '../listSort.js'
 
 const props = defineProps({
   token: { type: Object, required: true },
@@ -49,7 +49,7 @@ function copy() {
       <div class="box">
         <span class="label">Price</span>
         <span class="value num" :title="fullPrice(token.price_ada)">{{ formatPrice(token.price_ada) }}</span>
-        <span class="num chg" :class="[token.change_24h > 0 ? 'up' : token.change_24h < 0 ? 'down' : 'muted', { faded: !dayReady }]">{{ signedPct(token.change_24h) }} 24h</span>
+        <span class="num chg" :class="[changeTone(token.change_24h), { faded: !dayReady }]">{{ signedPct(token.change_24h) }} 24h</span>
       </div>
       <div class="box">
         <span class="label">Price USD</span>

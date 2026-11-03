@@ -49,15 +49,15 @@ onBeforeUnmount(close)
 
 <style scoped>
 .wrap { position: relative; }
-.open { display: inline-flex; align-items: center; gap: 6px; height: 30px; font: inherit; font-size: 13px; font-weight: 500; color: #6a6d78; background: none; border: 0; border-radius: 4px; padding: 0 8px; cursor: pointer; }
-.open:hover, .open[aria-expanded="true"] { background: #f0f3fa; color: #131722; }
-.open:focus-visible { outline: 2px solid #2962ff; outline-offset: -2px; }
+.open { display: inline-flex; align-items: center; gap: 6px; height: 30px; font: inherit; font-size: 13px; font-weight: 500; color: var(--subtle); background: none; border: 0; border-radius: 4px; padding: 0 8px; cursor: pointer; }
+.open:hover, .open[aria-expanded="true"] { background: var(--btn-hover); color: var(--text); }
+.open:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .open svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.n { min-width: 18px; padding: 0 5px; border-radius: 9px; background: #2962ff; color: #fff; font-size: 12px; line-height: 18px; text-align: center; }
-.menu { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; min-width: 240px; padding: 6px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(19, 23, 34, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12); }
-.item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px; border: 0; background: none; color: #131722; font: 14px Inter, system-ui, sans-serif; text-align: left; cursor: pointer; }
-.item:hover { background: #f0f3fa; }
+.n { min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 12px; line-height: 18px; text-align: center; }
+.menu { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; min-width: 240px; padding: 6px 0; background: var(--popup); border-radius: 8px; box-shadow: var(--popup-shadow); }
+.item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px; border: 0; background: none; color: var(--text); font: 14px Inter, system-ui, sans-serif; text-align: left; cursor: pointer; }
+.item:hover { background: var(--btn-hover); }
 .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .name { flex: 1; }
-.tick { width: 18px; height: 18px; fill: none; stroke: #2962ff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tick { width: 18px; height: 18px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 </style>

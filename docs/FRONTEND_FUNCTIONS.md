@@ -2,6 +2,23 @@
 
 Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHART_FUNCTIONS.md)) and the Large Trades page (see [TRADES_FUNCTIONS.md](TRADES_FUNCTIONS.md)), file by file. Each one also has the same comment above it in the code. See [CODE_GUIDE.md](CODE_GUIDE.md) for how the parts fit together.
 
+## `src/theme.js`
+
+| Function | What it does |
+|---|---|
+| `theme` | The theme in use, 'light' or 'dark'. The chart watches it and repaints. |
+| `setTheme` | Switches the whole site to light or dark and saves the choice in the browser, so it stays the same on the next visit. |
+| `toggleTheme` | Switches between light and dark. |
+| `color` | Reads one theme colour from style.css, for the parts drawn in JavaScript (the chart and its drawings). |
+| (index.html) | A few lines in index.html apply the saved theme before the page draws, so it never flashes white. A first visit follows the computer's own light or dark setting. |
+| (style.css) | Every colour on the site is a variable in style.css: one set for light, one for dark (Birdeye-style). In dark mode token logos get a soft light disc behind them, so dark logos like NIGHT's stay visible. |
+
+## `src/components/ThemeToggle.vue`
+
+| Function | What it does |
+|---|---|
+| (template) | The light / dark switch at the right of the top bar: a sun in dark mode, a moon in light mode. |
+
 ## `src/components/NavMenu.vue`
 
 | Function | What it does |
@@ -52,6 +69,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `rows` | The two lines under the tabs, like Birdeye's: volume in ADA and number of trades, each with buys, sells and net. |
 | `share` | The buyers' part of a green and red bar, in percent (50 when nothing traded). |
 | `ready` | True once a period's history is fully loaded; until then its tab shows the loading % and its numbers are faded. |
+| `tone` | Colours a net amount green or red, grey for none. The % changes use changeTone, where 0.00% is red. |
 
 ## `src/components/TokenOverview.vue`
 
@@ -110,6 +128,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns are for 24 hours. Holders sorts by the holder count (0 while still being counted). |
 | `sortRows` | Sorts the rows by a column, either way; equal values (often quiet tokens) keep the bigger pool first. |
 | `signedPct` | Shows a change like +3.65% or −0.64%. |
+| `changeTone` | Colours a % change: green when it shows a +, red otherwise, so 0.00% is red, like Birdeye and CoinMarketCap. Used by the list, the activity box and the token panel. |
 
 ## `src/pages/TokenList.vue`
 
@@ -141,7 +160,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `hidden` | Hides a column on a phone: only price, volume and the 24h change stay. |
 | (Holders) | How many wallets hold the token, like 64.4K (the exact number on hover); a grey "…" while it is still being counted after a restart. |
 | `faded` | True for numbers whose history is not fully loaded yet. |
-| `cell` / `tone` | Write one number in its column's style, and colour a change green or red. An hour with no trade means the price did not move, so it shows 0.00% in grey, like CoinGecko and TapTools. |
+| `cell` / `tone` | Write one number in its column's style, and colour a change green or red (changeTone): an hour with no trade shows 0.00% in red. |
 | `quiet` / `divider` / `lastTrade` | A token with no trade in 24 hours (found by search) shows "Last trade 3 days ago" instead of its changes ("3d" on a phone), below a "Not traded in the last 24 hours" line in Top Volume order. |
 | `age` | How long ago a token was created: 4d, 8mo, 2y. |
 | `copy` | Puts a policy ID on the clipboard without opening the row. |

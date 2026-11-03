@@ -6,6 +6,8 @@ Every function behind the price chart on a token page: the bar on top, the chart
 
 | Function | What it does |
 |---|---|
+| `colors` | Reads the chart's colours from the theme (style.css): background, grid, text, TradingView's green and red candles, the blue line. |
+| `themeOptions` / `applyTheme` | Repaint the chart, candles, line and volume in the current theme's colours when the light / dark switch is used; the zoom stays. |
 | `rgba` | Turns a colour like #089981 into rgba() with transparency a (0 to 1). |
 | `isCandles` | Reports whether the chart shows candles instead of a line. |
 | `showBar` | Puts a bar in the legend (the latest one when the mouse is off the chart), with the close before it for the line's change. |
@@ -18,6 +20,7 @@ Every function behind the price chart on a token page: the bar on top, the chart
 | Function | What it does |
 |---|---|
 | `change` | The move and percent: open to close for a candle, the close before to this close for the line. Values are written with the `fmt` the chart passes in (price or FDV). |
+| `volDir` | Colours the Vol number like its volume bar: green when the candle closed at or above its open, red when below, like TradingView. |
 
 ## `src/components/IndicatorMenu.vue`
 
@@ -120,6 +123,7 @@ Every function behind the price chart on a token page: the bar on top, the chart
 | `drawRuler` | Draws the measurement: teal if up, red if down, with the % change, the price change, the number of bars and the time. |
 | `extend` | Carries a line on to the edge of the chart, for rays and extended lines. |
 | `duration` | Turns seconds into short text: 5400 → "1h 30m". |
+| `ink` / `paper` | The theme's text colour and chart background, for text drawn on the chart and the drawings' round handles, so they read in light and dark. |
 
 ## `src/chart/useDrawings.js`
 

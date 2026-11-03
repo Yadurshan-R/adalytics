@@ -90,67 +90,6 @@ func (t *Tracker) loadInfo(ctx context.Context) {
 	t.log.Printf("Token details loaded: total supply for %d tokens, %d logos", len(infos), logos)
 }
 
-// holdersLoop waits for the first load, counts holders, then counts them again
-// every HoldersEvery, until ctx ends. Waiting matters: if Koios is down at
-// startup the list is empty, and counting then would leave every token without
-// holders for HoldersEvery.
-func (t *Tracker) holdersLoop(ctx context.Context) {
-	for {
-		t.mu.RLock()
-		ready := t.loaded
-		t.mu.RUnlock()
-		if ready {
-			break
-		}
-		if err := sleepCtx(ctx, 10*time.Second); err != nil {
-			return
-		}
-	}
-	for {
-		t.loadHolders(ctx)
-		if err := sleepCtx(ctx, HoldersEvery); err != nil {
-			return
-		}
-	}
-}
-
-// loadHolders counts the holders of each token in the current top list:
-// wallets with a stake key plus addresses without one. One slow asset_summary
-// request per token.
-func (t *Tracker) loadHolders(ctx context.Context) {
-	top := t.Quotes()
-	t.log.Printf("Counting holders for %d tokens in the background (slow, can take an hour)…", len(top))
-	for _, q := range top {
-		if ctx.Err() != nil {
-			return
-		}
-		var s *tokenState
-		t.mu.RLock()
-		for _, st := range t.states {
-			if st.slug == q.ID {
-				s = st
-			}
-		}
-		t.mu.RUnlock()
-		if s == nil {
-			continue
-		}
-		start := time.Now()
-		sum, err := t.client.AssetSummary(ctx, s.token.Asset)
-		if err != nil {
-			if !errors.Is(err, context.Canceled) {
-				t.log.Printf("  %-8s could not count holders: %v (trying again in %s)", q.Ticker, err, HoldersEvery)
-			}
-			continue
-		}
-		n := sum.StakedWallets + sum.UnstakedAddresses
-		t.mu.Lock()
-		s.holders = n
-		t.mu.Unlock()
-		t.log.Printf("  %-8s %s holders (counted in %s)", q.Ticker, group(float64(n)), time.Since(start).Round(time.Second))
-	}
-}
-
 // safeURL keeps a registry website only if it is a plain http(s) link, so a
 // token's metadata cannot put another kind of link on the page.
 func safeURL(raw string) string {

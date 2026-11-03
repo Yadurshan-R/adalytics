@@ -30,7 +30,7 @@ flowchart LR
 1. **First load (about half a minute).** The Tracker lists every Minswap transaction of the last 24 hours, reads the newest hour of them to get pool sizes (which give prices and trades), finds the pools of the other tokens, and loads supply, logos and links. While this runs, the website shows the loading box with live progress (`LoadingProgress.vue`). Then the list opens, and the rest of the 24 hours is read in the background (`day.go`); the 4h and 24h numbers are faded until they are complete. Batches of transactions are read three at a time.
 2. **Background history.** After the first load, older history (up to 30 days) loads in the background, so the 7D and 30D charts become available a few minutes later. The site can be used meanwhile.
 3. **Every minute after that.** The Tracker checks which pools were used since the last check and reads only those new swaps. This costs about 3 Koios requests a minute.
-4. **Every 6 hours.** Holder counts are refreshed in the background, because Koios is slow to count them.
+4. **Every 6 hours.** Holder counts are refreshed in the background, three tokens at a time, because Koios is slow to count them. A token whose count failed is tried again 5 minutes later.
 
 ### Reading the log
 
@@ -87,7 +87,8 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/traders.go` | A token's top traders, and one wallet's trades in it |
 | `internal/market/periods.go` | Trading over 5m, 1h, 4h and 24h for the activity box |
 | `internal/market/quotes.go` | What the API reads: token list, charts, trades, logos |
-| `internal/market/details.go` | Supply, logos, links and holder counts |
+| `internal/market/details.go` | Supply, logos and links |
+| `internal/market/holders.go` | Holder counts, three tokens at a time, failed ones retried after 5 minutes |
 | `internal/market/policy.go` | Whether a token's minting policy is locked or open |
 | `internal/market/progress.go` | Loading progress for the loading page |
 | `internal/market/activity.go` | The live activity feed for the loading page |
@@ -107,6 +108,9 @@ No file is longer than 300 lines. Each one has one job.
 | `src/main.js` | Starts the app, sets up the pages (token list, token page, Large Trades, Page not found) and names each in the browser tab |
 | `src/pages/NotFound.vue` | The Page not found page, for an address that does not exist |
 | `src/App.vue` | The top bar and the page frame |
+| `src/theme.js` | Light / dark theme: switches it, saves the choice, gives the chart its colours |
+| `src/components/ThemeToggle.vue` | The light / dark switch in the top bar |
+| `src/style.css` | Every colour on the site, as variables: one set for light, one for dark |
 | `src/components/NavMenu.vue` | The ☰ menu in the top bar: Tokens and Large Trades |
 | `src/useTokens.js` | Loads the token list from the backend and refreshes it |
 | `src/format.js` | Formats prices, percentages, amounts and dates |

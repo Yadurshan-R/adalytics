@@ -30,9 +30,16 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | Function | What it does |
 |---|---|
 | `loadInfo` | Reads total supply, ticker and logo for every tracked token with asset_info, and each minting policy with script_info, 25 tokens per request. If it fails, prices still work and it is tried again next minute. |
-| `holdersLoop` | Counts holders now, then again every HoldersEvery, until ctx ends. |
-| `loadHolders` | Counts the holders of each token in the current top list: wallets with a stake key plus addresses without one. One slow asset_summary request per token. |
 | `safeURL` | Keeps a registry website only if it is a plain http(s) link, so a token's metadata cannot put another kind of link on the page. |
+
+## `internal/market/holders.go`
+
+| Function | What it does |
+|---|---|
+| `holdersLoop` | Waits for the first load, counts every listed token's holders, then counts them all again every HoldersEvery (6 hours), until ctx ends. Tokens whose count failed are tried again every HoldersRetry (5 minutes) in between. |
+| `loadHolders` | Counts the holders of every token in the current list, busiest first, and returns the tokens whose count failed. |
+| `countHolders` | Counts the holders of the given tokens, HoldersWorkers (3) at a time: wallets with a stake key plus addresses without one, from one slow asset_summary request per token. Returns the tokens whose count failed. |
+| `stateByID` | Finds a token by its page id and returns it with its ticker. |
 
 ## `internal/market/policy.go`
 

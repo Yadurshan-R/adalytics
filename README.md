@@ -37,6 +37,7 @@ Adalytics tracks the 360 tokens that Minswap marks as verified and lists every o
 **Everywhere**
 
 * A ☰ menu beside the logo opens Tokens and Large Trades
+* A light / dark switch at the top right (dark like Birdeye's); the choice is remembered, and a first visit follows the computer's setting
 * Each browser tab names its page; a token page shows the live price, like "NIGHT ₳0.1890 +2.60% | Adalytics"
 * A wrong address shows "Page not found" with a way back
 
@@ -78,7 +79,7 @@ Whenever someone trades, the pool output is spent and a new one is created with 
 4. Load total supply, logos and project details (`asset_info`). The list opens now, about half a minute after the start
 5. Read the rest of the 24 hours in the background, newest first; the 4h and 24h numbers fill in over the next minute or two, faded until they are complete
 6. In the background, go back one day at a time until 30 days are loaded. The 7D and 30D charts, the 7 day change and the 7 day lines appear as soon as enough days are in
-7. Count holders in the background (`asset_summary`, one token at a time)
+7. Count holders in the background (`asset_summary`, three tokens at a time; a token that fails is tried again 5 minutes later)
 
 The number of days is set with `HISTORY_DAYS` in `.env` (1 to 30, default 30). Fewer days means a lighter startup.
 
@@ -177,7 +178,8 @@ backend/
     traders.go                  a token's top traders, and one wallet's trades in it
     periods.go                  trading over 5m, 1h, 4h and 24h
     quotes.go                   the token list, charts and trades for the API
-    details.go                  supply, logos, links and holder counts
+    details.go                  supply, logos and links
+    holders.go                  holder counts, three tokens at a time
     policy.go                   whether a token's minting policy is locked or open
     progress.go, activity.go    loading progress and live activity for the loading page
     history.go                  chart ranges (24H, 7D, 30D), line points and candles
@@ -225,6 +227,9 @@ frontend/src/
   tradeSizes.js                 small, big and whale: the trade sizes
   components/SizeTag.vue        the BIG / WHALE tag
   components/NavMenu.vue        the ☰ menu in the top bar
+  theme.js                      light / dark theme: switch, saved choice, chart colours
+  components/ThemeToggle.vue    the light / dark switch in the top bar
+  style.css                     every colour, as variables for light and dark
   pages/NotFound.vue            Page not found
   format.js                     number formats (₳, $, %, K/M/B)
 ```

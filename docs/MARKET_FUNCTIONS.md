@@ -94,7 +94,7 @@ Minswap does not swap each order on its own: a batcher swaps several people's or
 
 | Function | What it does |
 |---|---|
-| `fillsFrom` | Finds the token's pool by its LP asset, then sorts the transaction into pools, the batcher (its coins go in and come out at the same address), the orders and one payout per order, each order paired with its own payout (pairByReceiver). Each pair's payout minus order, less its share of the batcher fee, is what went into or out of the pool. Returns nil, so the swap shows as one trade without a wallet, when anything does not add up: as many payouts as orders, one order only when the swap is routed through other pools, every token accounted for, a fee of ₳0 to ₳10 per order, and with several orders each one near the pool's price. |
+| `fillsFrom` | Finds the token's pool by its LP asset, then sorts the transaction into pools, the batcher (its coins go in and come out at the same address), the orders and one payout per order, each order paired with its own payout (pairOrders). An order the batcher killed (refunded, no swap) is left out. Each pair's payout minus order, less its share of the batcher fee, is what went into or out of the pool. Returns nil, so the swap shows as one trade without a wallet, when anything does not add up: as many payouts as orders, one order only when the swap is routed through other pools, every token accounted for, a fee of ₳0 to ₳10 per order, and with several orders each one near the pool's price. |
 | `findPool` | The index of the pool holding a given LP asset, or -1. |
 | `isPool` | Whether an input or output is a Minswap pool. |
 | `walletOf` | The wallet a payout goes to: its stake address, or its payment address when it has none. |
@@ -243,13 +243,33 @@ Run them with `go test ./internal/market/` from `backend/`. They use a fake Koio
 
 | Function | What it does |
 |---|---|
-| `pairByReceiver` | Puts each order next to its own payout, using the order's datum: its success receiver is the wallet the payout goes to. Koios lists a transaction's inputs and outputs in no fixed order, so positions alone cannot pair them. Returns the pairs in the order the batcher swapped them. Several orders from one wallet are paired in order (the wallet is right either way). Returns nil, so the swap is not split, when only some orders have a datum, an order is for another pool, or an order has no payout to its receiver. Orders without any datum come back as they were. |
+| `ordersAndPayouts` | Sorts a transaction's inputs and outputs like Minswap's pool validator: the batcher's coins (in and out at the same address), the pools, the orders (sorted by UTxO, the ledger's order) and one payout per order (by place in the transaction). |
+| `pairOrders` | Puts each order next to its own payout. When every order names a different wallet in its datum, that pairs them (its own wallet first, then its refund wallet for an order the batcher killed). When one wallet placed several orders, the batcher's own list (minswap.BatchOrder) says which output pays which order, and each payout must still go to its order's wallet. Koios lists outputs in no fixed order, so positions alone cannot pair them. Returns nil, so the swap is not split, when the pairing is not certain. |
+| `sortPairs` | Orders the pairs by the payout's place in the transaction: the order the batcher swapped them in. |
+| `needsBatchOrder` | Reports whether a transaction needs the batcher's list: one wallet placed several orders in it. |
+
+## `internal/market/batches.go`
+
+| Function | What it does |
+|---|---|
+| `addBatchOrders` | Fetches the batcher's list (TxContracts) only for the transactions that need it, 50 per request: a few in each batch of 50, so one small extra request now and then instead of downloading every transaction's scripts. If it fails, those batches show as one trade without a wallet. |
+
+## `internal/market/batches_test.go`
+
+| Function | What it does |
+|---|---|
+| `multiOrderBatches` | testdata/multi_order_batches.json: 5 real batches (4 Nov 2026) in which one wallet placed several orders, one of them with an order the batcher killed. |
+| `poolAsset` | Finds the token and LP asset of the pool a transaction swapped in. |
+| `TestFillsSeveralOrdersOneWallet` | Every trade of the 5 batches: the wallet, the ADA and the tokens, in the order they were swapped; the killed order gives no trade. |
+| `TestFillsSeveralOrdersWithoutList` | Without the batcher's list such a batch is not split, never guessed. |
+| `TestBatchOrder` | Reads the batcher's list from a real batch. |
+| `TestAddBatchOrders` | The lists are fetched only for the transactions that need them, in one request, and attached to the right ones. |
 
 ## `internal/market/pairs_test.go`
 
 | Function | What it does |
 |---|---|
-| `nightBatch` | testdata/night_batch.json is a real mainnet batch (fa72d267…): 7 NIGHT sell orders from 6 wallets, with outputs that Koios lists out of order. |
+| `nightBatch` | testdata/night_batch.json is a real mainnet batch (fa72d267…): 7 NIGHT sell orders from 6 wallets, with outputs that Koios lists out of order, and the batcher's list. |
 | `TestFillsRealBatch` | Every order of the real batch goes to the wallet its datum names, with the exact amounts Cardanoscan shows, and together they add up to the pool's change. |
 | `TestFillsRealBatchUnsure` | The real batch changed so the pairing is uncertain (an order for another pool, a payout no order names, an order without a datum) is not split. |
 | `TestReadOrder` | Reads the receiver and the pool from a real order's datum. |

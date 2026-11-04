@@ -14,8 +14,10 @@ import (
 // A transaction holds the pool (in and out), the batcher's own coins (in and
 // out, at the same address), the orders being swapped and one payout per
 // order. The wallet that traded is the one the payout goes to: an order's own
-// address often has no stake key, or Minswap's. Each order's datum names the
-// wallet its payout goes to, which pairs orders with payouts (pairs.go).
+// address often has no stake key, or Minswap's. Orders and payouts are paired
+// by the wallet each order's datum names, or by the batcher's own list when a
+// wallet placed several orders (pairs.go). An order the batcher killed (it
+// could not be filled at its price) is paid back to its refund wallet.
 //
 // A routed swap passes through more than one pool, e.g. USDA → ADA → NIGHT:
 // the other pools are steps on the way. With one order, the token's own pool
@@ -50,29 +52,8 @@ func fillsFrom(tx koios.Tx, asset, lp koios.Asset) []fill {
 	poolADA := sub(lovelace(out), lovelace(in))
 	poolTok := sub(units(out, asset), units(in, asset))
 
-	// The batcher's coins go in and come back out at the same address; pools
-	// are skipped; every other input is an order, every other output a payout.
-	inAddr, outAddr := map[string]bool{}, map[string]bool{}
-	for _, o := range tx.Inputs {
-		inAddr[o.PaymentAddr.Bech32] = true
-	}
-	for _, o := range tx.Outputs {
-		outAddr[o.PaymentAddr.Bech32] = true
-	}
-	var orders, payouts []koios.TxOutput
-	pools := 0
-	for _, o := range tx.Inputs {
-		if isPool(o) {
-			pools++
-		} else if !outAddr[o.PaymentAddr.Bech32] {
-			orders = append(orders, o)
-		}
-	}
-	for _, o := range tx.Outputs {
-		if !isPool(o) && !inAddr[o.PaymentAddr.Bech32] {
-			payouts = append(payouts, o)
-		}
-	}
+	// The orders going in and one payout per order coming out (pairs.go).
+	orders, payouts, pools := ordersAndPayouts(tx)
 	n := len(orders)
 	if n == 0 || n != len(payouts) {
 		return nil
@@ -88,7 +69,8 @@ func fillsFrom(tx koios.Tx, asset, lp koios.Asset) []fill {
 	}
 
 	// Pair each order with its own payout; the amounts are then checked below.
-	if orders, payouts = pairByReceiver(orders, payouts, lp); orders == nil {
+	orders, payouts, sure := pairOrders(tx, orders, payouts, lp)
+	if orders == nil {
 		return nil
 	}
 
@@ -120,6 +102,10 @@ func fillsFrom(tx koios.Tx, asset, lp koios.Asset) []fill {
 		// Into the pool: what the order gave up, less its share of the fee.
 		ada := new(big.Int).Neg(new(big.Int).Add(net[i], f))
 		tok := sub(units(payouts[i], asset), units(orders[i], asset))
+		// An order the batcher killed got its funds back less the fee: no trade.
+		if sure && ada.Sign() == 0 && tok.Sign() == 0 {
+			continue
+		}
 		// A buy pays ADA for tokens; a sell gets ADA for tokens. With several
 		// orders, each must also trade near the pool's price, which shows the
 		// orders and payouts were paired right.

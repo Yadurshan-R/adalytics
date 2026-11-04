@@ -50,6 +50,7 @@ func (t *Tracker) readPools(ctx context.Context, txs []koios.AddressTx, progress
 	for _, b := range batches {
 		all = append(all, b...)
 	}
+	t.addBatchOrders(ctx, all) // only for batches where one wallet placed several orders
 
 	found := map[*tokenState][]poolState{}
 	for _, tx := range all {

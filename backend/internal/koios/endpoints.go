@@ -152,6 +152,20 @@ func (c *Client) AssetSummary(ctx context.Context, asset Asset) (AssetSummary, e
 	return out[0], nil
 }
 
+// TxContracts returns only the scripts each transaction ran, with their
+// redeemers (plutus_contracts): a separate request from TxInfo, used only for
+// the few transactions that need it, because scripts make a reply much larger.
+func (c *Client) TxContracts(ctx context.Context, hashes []string) ([]Tx, error) {
+	body := map[string]any{
+		"_tx_hashes": hashes,
+		"_inputs":    false, "_metadata": false, "_assets": false, "_withdrawals": false,
+		"_certs": false, "_scripts": true, "_bytecode": false, "_governance": false,
+	}
+	var out []Tx
+	err := c.do(ctx, c.http, http.MethodPost, "/tx_info?select=tx_hash,plutus_contracts", body, &out)
+	return out, err
+}
+
 // TxInfo returns transactions with their inputs and outputs, assets and inline
 // datums. The inputs show which wallets' orders a batch swapped.
 func (c *Client) TxInfo(ctx context.Context, hashes []string) ([]Tx, error) {

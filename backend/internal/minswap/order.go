@@ -19,6 +19,7 @@ import "cardano-analytics/internal/koios"
 // Order is what an order's datum says about where its result goes.
 type Order struct {
 	Receiver string      // payment credential (hex) of the success receiver
+	Refund   string      // payment credential (hex) of the refund receiver: paid when the batcher kills the order
 	LPAsset  koios.Asset // the pool the order is for
 }
 
@@ -29,13 +30,23 @@ func ReadOrder(d *koios.InlineDatum) (Order, bool) {
 		return Order{}, false
 	}
 	f := d.Value.Fields
-	addr := f[3].Fields // [payment credential, stake credential]
-	if len(addr) < 1 || len(addr[0].Fields) != 1 || addr[0].Fields[0].Bytes == nil || *addr[0].Fields[0].Bytes == "" {
+	success, refund := paymentCred(f[3]), paymentCred(f[1])
+	if success == "" || refund == "" {
 		return Order{}, false
 	}
 	lp, err := asset(f[5])
 	if err != nil || lp.PolicyID != LPPolicy {
 		return Order{}, false
 	}
-	return Order{Receiver: *addr[0].Fields[0].Bytes, LPAsset: lp}, true
+	return Order{Receiver: success, Refund: refund, LPAsset: lp}, true
+}
+
+// paymentCred reads the payment credential (hex) of an address in a datum:
+// Constr 0 [Constr 0|1 [hash], stake credential]. It is "" when the field is
+// not shaped like an address.
+func paymentCred(addr koios.PlutusData) string {
+	if len(addr.Fields) < 1 || len(addr.Fields[0].Fields) != 1 || addr.Fields[0].Fields[0].Bytes == nil {
+		return ""
+	}
+	return *addr.Fields[0].Fields[0].Bytes
 }

@@ -50,6 +50,7 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 | `ScriptInfos` | Reads scripts by hash, 25 per call. A token's policy ID is the hash of its minting script, so this tells whether more can be minted. |
 | `AssetSummary` | Asks Koios how many wallets hold a token. It uses the slow HTTP client, because Koios can take minutes to count big tokens. |
 | `TxInfo` | Returns transactions with their inputs and outputs, assets and inline datums. The inputs show which wallets' orders a batch swapped. |
+| `TxContracts` | Returns only the scripts each transaction ran, with their redeemers. A separate, smaller request than TxInfo, made only for the few batches where one wallet placed several orders. |
 
 ## `internal/koios/parallel.go`
 
@@ -93,7 +94,14 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 
 | Function | What it does |
 |---|---|
-| `ReadOrder` | Reads a Minswap V2 order's datum: the payment credential of the wallet that gets the swap's output (the success receiver, field 3) and the LP asset of the pool the order is for (field 5). Not ok when the datum is missing or not shaped like a Minswap V2 order. |
+| `ReadOrder` | Reads a Minswap V2 order's datum: the payment credential of the wallet that gets the swap's output (the success receiver, field 3), of the wallet paid back if the batcher kills the order (the refund receiver, field 1), and the LP asset of the pool the order is for (field 5). Not ok when the datum is missing or not shaped like a Minswap V2 order. |
+| `paymentCred` | Reads the payment credential of an address written in a datum. |
+
+## `internal/minswap/batch.go`
+
+| Function | What it does |
+|---|---|
+| `BatchOrder` | Reads the order the batcher swapped a transaction's orders in, from the batching redeemer (input_indexes, one byte per order). As Minswap's pool validator does: the orders are the inputs that are neither a pool nor the batcher, sorted by UTxO, and output k pays the order at position order[k]. Not ok when the transaction has no batching redeemer. |
 
 ## `internal/api/server.go`
 

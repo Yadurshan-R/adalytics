@@ -68,6 +68,21 @@ type Tx struct {
 	TxBlockIndex int        `json:"tx_block_index"`
 	Inputs       []TxOutput `json:"inputs"` // the outputs this transaction spent
 	Outputs      []TxOutput `json:"outputs"`
+	Contracts    []Contract `json:"plutus_contracts"` // only filled by TxContracts
+}
+
+// Contract is one script a transaction ran, from tx_info's plutus_contracts.
+// Only the redeemer is used: the instructions the script was run with.
+type Contract struct {
+	ScriptHash string `json:"script_hash"`
+	Input      struct {
+		Redeemer struct {
+			Purpose string `json:"purpose"` // spend, mint, reward (a withdrawal), ...
+			Datum   struct {
+				Value PlutusData `json:"value"`
+			} `json:"datum"`
+		} `json:"redeemer"`
+	} `json:"input"`
 }
 
 // TxOutput is one output of a transaction, as tx_info returns it. Inputs

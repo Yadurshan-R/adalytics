@@ -6,6 +6,7 @@ This guide explains how Adalytics is built. Read it to see how the pieces fit to
 - [Market functions](MARKET_FUNCTIONS.md): the market package (prices, history, candles) and its tests
 - [Frontend functions](FRONTEND_FUNCTIONS.md): the Vue website
 - [Chart functions](CHART_FUNCTIONS.md): the price chart, its units, indicators and drawing tools
+- [Chart guide](CHART_GUIDE.md): how to read and use the chart, for people using the site
 - [Large Trades functions](TRADES_FUNCTIONS.md): the Large Trades page, backend and frontend
 - [Top Traders functions](TOP_TRADERS_FUNCTIONS.md): the Top Traders tab on a token page, backend and frontend
 
@@ -93,6 +94,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/progress.go` | Loading progress for the loading page |
 | `internal/market/activity.go` | The live activity feed for the loading page |
 | `internal/market/history.go` | Chart ranges, chart points, candles and price changes |
+| `internal/market/candles.go` | Candle sizes (5m to 1D) and how far back each goes |
 | `internal/market/tokens.go` | The list of verified tokens (from `tokens.json`) |
 | `internal/market/format.go` | Small number and text helpers for the log |
 | `internal/api/server.go` | The API routes |
@@ -124,6 +126,7 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/TokenInfo.vue` | Trade on Minswap, 24h traders, holders, policy, price performance, links and IDs |
 | `src/components/ChartPanel.vue` | The chart and its data: the candles at the picked size, refreshed every minute |
 | `src/components/ChartHeader.vue` | The slim bar on top of the chart: candle size, candles or line, indicators, Price / FDV |
+| `src/chart/useUnits.js` | Price / FDV: the chart in ADA per token, or in fully diluted value |
 | `src/components/LoadingProgress.vue` | The loading box shown during the first load |
 | `src/components/PriceChart.vue` | The line and candle chart (TradingView Lightweight Charts) |
 | `src/components/ChartLegend.vue` | The open, high, low, close line at the top of the chart, and the indicator values |

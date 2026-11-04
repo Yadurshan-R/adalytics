@@ -1,6 +1,6 @@
 # Chart functions
 
-Every function behind the price chart on a token page: the bar on top, the chart itself, its legend, Price / FDV, indicators and drawing tools. Each one also has the same comment above it in the code. The rest of the website is in [FRONTEND_FUNCTIONS.md](FRONTEND_FUNCTIONS.md).
+Every function behind the price chart on a token page: the bar on top, the chart itself, its legend, Price / FDV, indicators and drawing tools. Each one also has the same comment above it in the code. The rest of the website is in [FRONTEND_FUNCTIONS.md](FRONTEND_FUNCTIONS.md). How to use the chart, for people using the site, is in [CHART_GUIDE.md](CHART_GUIDE.md).
 
 ## `src/components/PriceChart.vue`
 

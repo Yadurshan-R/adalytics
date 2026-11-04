@@ -16,18 +16,21 @@ import (
 const HoldersWorkers = 5
 
 // HoldersRetryWaits are the waits before tokens whose count failed are tried
-// again: a minute, then 5 and 15 minutes, then every hour (the last wait
-// repeats). Each wait is longer than the one before because a token Koios
-// keeps failing on is most likely too big for it to count (HOSKY: Koios gives
-// up after about two minutes, every time), and each try costs Koios minutes
-// of work that slow down the other counts. A failed count is not retried at
-// once (see koios.Client), only after these waits.
-var HoldersRetryWaits = []time.Duration{time.Minute, 5 * time.Minute, 15 * time.Minute, time.Hour}
+// again: a minute twice, then 5 and 15 minutes, then every hour (the last
+// wait repeats). Koios cuts a request off after about two minutes, and how
+// long a count takes varies with how busy it is: SNEK (3.4 million
+// transactions) took 70 seconds once and timed out straight after, so a token
+// like that gets a few quick chances. A token Koios fails on every time
+// (HOSKY) is most likely too big for it to count; the waits grow because each
+// try costs Koios minutes of work that slow down the other counts. A failed
+// count is not retried at once (see koios.Client), only after these waits.
+var HoldersRetryWaits = []time.Duration{time.Minute, time.Minute, 5 * time.Minute, 15 * time.Minute, time.Hour}
 
 // HoldersGiveUp is after how many failed counts in a row a token's holders
 // show as unknown ("—", Koios cannot count them) instead of "…" (being
-// counted). Such a token is still tried again every hour.
-const HoldersGiveUp = 3
+// counted). Five: a token that gets through about half the time (SNEK) almost
+// never fails five times in a row. Such a token is still tried every hour.
+const HoldersGiveUp = 5
 
 // holdersLoop waits for the first load, counts every listed token's holders,
 // then counts them all again every HoldersEvery, until ctx ends. Tokens whose

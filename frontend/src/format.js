@@ -96,6 +96,16 @@ export function formatAmount(v) {
   return Math.round(v).toLocaleString('en-US')
 }
 
+// holdersText writes a token's holder count: 64.4K, "…" while it is being
+// counted, or "—" when Koios could not count them (holders_unknown: it timed
+// out several times in a row, as on HOSKY).
+export const holdersText = (t) => (t.holders ? formatAmount(t.holders) : t.holders_unknown ? '—' : '…')
+// holdersTip is the tooltip for holdersText.
+export const holdersTip = (t) =>
+  t.holders ? `${t.holders.toLocaleString('en-US')} holders`
+    : t.holders_unknown ? 'Too many holders for Koios to count right now; tried again every hour'
+    : 'Being counted'
+
 // short shortens a long id for the info box: the first 8 and last 6 characters.
 export const short = (s) => (s && s.length > 16 ? `${s.slice(0, 8)}…${s.slice(-6)}` : s)
 

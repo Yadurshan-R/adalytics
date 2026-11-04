@@ -31,7 +31,7 @@ flowchart LR
 1. **First load (about half a minute).** The Tracker lists every Minswap transaction of the last 24 hours, reads the newest hour of them to get pool sizes (which give prices and trades), finds the pools of the other tokens, and loads supply, logos and links. While this runs, the website shows the loading box with live progress (`LoadingProgress.vue`). Then the list opens, and the rest of the 24 hours is read in the background (`day.go`); the 4h and 24h numbers are faded until they are complete. Batches of transactions are read three at a time.
 2. **Background history.** After the first load, older history (up to 30 days) loads in the background, so the 7D and 30D charts become available a few minutes later. The site can be used meanwhile.
 3. **Every minute after that.** The Tracker checks which pools were used since the last check and reads only those new swaps. This costs about 3 Koios requests a minute.
-4. **Every 6 hours.** Holder counts are refreshed in the background, five tokens at a time, because Koios is slow to count them. A token whose count failed is tried again a minute later.
+4. **Every 6 hours.** Holder counts are refreshed in the background, five tokens at a time, because Koios is slow to count them. A token whose count failed is tried again after 1, 5 and 15 minutes, then every hour. Koios cannot count a few very large tokens (HOSKY: it gives up after about two minutes, every time); after 3 failed counts in a row their holders show as "—" instead of "…".
 
 ### Reading the log
 

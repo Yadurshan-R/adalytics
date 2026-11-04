@@ -15,16 +15,23 @@ import (
 // request, and the rate limiter (90 requests per 10 seconds) still holds.
 const HoldersWorkers = 5
 
-// HoldersRetry is how soon tokens whose count failed are tried again (a busy
-// Koios often times out on big tokens), instead of waiting HoldersEvery. Each
-// count has already been tried 4 times by then (after 2, 5 and 15 seconds, see
-// koios.Client), so a minute gives Koios time to recover; retrying sooner
-// would mostly fail again and risks Koios blocking every request for a minute.
-const HoldersRetry = time.Minute
+// HoldersRetryWaits are the waits before tokens whose count failed are tried
+// again: a minute, then 5 and 15 minutes, then every hour (the last wait
+// repeats). Each wait is longer than the one before because a token Koios
+// keeps failing on is most likely too big for it to count (HOSKY: Koios gives
+// up after about two minutes, every time), and each try costs Koios minutes
+// of work that slow down the other counts. A failed count is not retried at
+// once (see koios.Client), only after these waits.
+var HoldersRetryWaits = []time.Duration{time.Minute, 5 * time.Minute, 15 * time.Minute, time.Hour}
+
+// HoldersGiveUp is after how many failed counts in a row a token's holders
+// show as unknown ("—", Koios cannot count them) instead of "…" (being
+// counted). Such a token is still tried again every hour.
+const HoldersGiveUp = 3
 
 // holdersLoop waits for the first load, counts every listed token's holders,
 // then counts them all again every HoldersEvery, until ctx ends. Tokens whose
-// count failed are tried again every HoldersRetry in between.
+// count failed are tried again in between, after HoldersRetryWaits.
 //
 // Waiting for the first load matters: if Koios is down at startup the list is
 // empty, and counting then would leave every token without holders.
@@ -43,8 +50,12 @@ func (t *Tracker) holdersLoop(ctx context.Context) {
 	for {
 		next := time.Now().Add(HoldersEvery)
 		failed := t.loadHolders(ctx)
-		for len(failed) > 0 && time.Until(next) > HoldersRetry {
-			if err := sleepCtx(ctx, HoldersRetry); err != nil {
+		for round := 0; len(failed) > 0; round++ {
+			wait := HoldersRetryWaits[min(round, len(HoldersRetryWaits)-1)]
+			if time.Until(next) <= wait {
+				break // the next full count comes first
+			}
+			if err := sleepCtx(ctx, wait); err != nil {
 				return
 			}
 			t.log.Printf("Counting holders again for %d tokens that failed…", len(failed))
@@ -70,8 +81,9 @@ func (t *Tracker) loadHolders(ctx context.Context) []string {
 
 // countHolders counts the holders of the tokens with these page ids,
 // HoldersWorkers at a time: wallets with a stake key plus addresses without
-// one, from one slow asset_summary request per token. It returns the ids whose
-// count failed, in the order given, so they can be tried again later.
+// one, from one slow asset_summary request per token. Each token keeps how
+// many counts in a row failed (shown as unknown from HoldersGiveUp on). It
+// returns the ids whose count failed, in the order given, to try them later.
 func (t *Tracker) countHolders(ctx context.Context, ids []string) []string {
 	failed := make([]bool, len(ids))
 	var mu sync.Mutex // keeps the log lines whole
@@ -85,15 +97,19 @@ func (t *Tracker) countHolders(ctx context.Context, ids []string) []string {
 		if err != nil {
 			failed[i] = true
 			if !errors.Is(err, context.Canceled) {
+				t.mu.Lock()
+				s.holdersFails++
+				fails := s.holdersFails
+				t.mu.Unlock()
 				mu.Lock()
-				t.log.Printf("  %-8s could not count holders: %v (trying again in %s)", ticker, err, HoldersRetry)
+				t.log.Printf("  %-8s could not count holders (%d in a row): %v (trying again later)", ticker, fails, err)
 				mu.Unlock()
 			}
 			return nil // keep counting the other tokens
 		}
 		n := sum.StakedWallets + sum.UnstakedAddresses
 		t.mu.Lock()
-		s.holders = n
+		s.holders, s.holdersFails = n, 0
 		t.mu.Unlock()
 		mu.Lock()
 		t.log.Printf("  %-8s %s holders (counted in %s)", ticker, group(float64(n)), time.Since(start).Round(time.Second))

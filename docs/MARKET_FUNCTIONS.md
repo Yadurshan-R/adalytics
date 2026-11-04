@@ -36,10 +36,18 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 
 | Function | What it does |
 |---|---|
-| `holdersLoop` | Waits for the first load, counts every listed token's holders, then counts them all again every HoldersEvery (6 hours), until ctx ends. Tokens whose count failed are tried again every HoldersRetry (1 minute) in between. |
+| `holdersLoop` | Waits for the first load, counts every listed token's holders, then counts them all again every HoldersEvery (6 hours), until ctx ends. Tokens whose count failed are tried again in between, after growing waits (HoldersRetryWaits: 1, 5 and 15 minutes, then every hour), because a token Koios keeps failing on is most likely too big for it to count, and each try costs Koios minutes of work. |
 | `loadHolders` | Counts the holders of every token in the current list, busiest first, and returns the tokens whose count failed. |
-| `countHolders` | Counts the holders of the given tokens, HoldersWorkers (5) at a time: wallets with a stake key plus addresses without one, from one slow asset_summary request per token. Returns the tokens whose count failed. |
+| `countHolders` | Counts the holders of the given tokens, HoldersWorkers (5) at a time: wallets with a stake key plus addresses without one, from one slow asset_summary request per token. Each token keeps how many counts in a row failed; from HoldersGiveUp (3) on, its holders show as unknown ("—") until a count works. Returns the tokens whose count failed. |
 | `stateByID` | Finds a token by its page id and returns it with its ticker. |
+
+## `internal/market/holders_test.go`
+
+| Function | What it does |
+|---|---|
+| `holdersFake` | A pretend Koios that only answers asset_summary, slowly, noting how many requests run at once, and timing out (504) the first few counts of one chosen token. |
+| `TestCountHolders` | Holders are counted HoldersWorkers at a time; a failed token is handed back to be tried again, and the second try fills it in. |
+| `TestHoldersUnknownAfterFailures` | A token Koios keeps timing out on is asked once per try (no retries at once), shows "…" until it failed HoldersGiveUp times in a row, then shows as unknown; one count that works brings its number back. |
 
 ## `internal/market/policy.go`
 

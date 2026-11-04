@@ -156,6 +156,7 @@ The [code guide](docs/CODE_GUIDE.md) explains how the parts fit together and lis
 
 * Prices come from Minswap V2 only. Tokens that mostly trade elsewhere may show lower volume than sites that combine every exchange, such as DexHunter.
 * History is kept in memory, so after every restart it is loaded again from Koios (holder counts too).
+* Koios cannot count the holders of a few very large tokens such as HOSKY (it gives up after about two minutes). Their holders show "—", and they are tried again every hour.
 * Tokens are ranked by 24 hour volume, because the circulating supply (needed for market cap) is not known for every token.
 * When the amounts in a batch of Minswap orders do not add up for certain, the swap is shown as one trade without a wallet, never with a wrong one.
 * Chart drawings stay in the browser only and are not saved.

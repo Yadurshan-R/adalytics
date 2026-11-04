@@ -10,32 +10,33 @@ import (
 
 // Quote is what the API returns for one token.
 type Quote struct {
-	Rank         int        `json:"rank"`
-	ID           string     `json:"id"` // unique, used in page addresses and API paths
-	Ticker       string     `json:"ticker"`
-	Name         string     `json:"name"`
-	PolicyID     string     `json:"policy_id"`
-	AssetName    string     `json:"asset_name"`
-	Status       string     `json:"status"` // "loading", "live" or "error"
-	Error        string     `json:"error,omitempty"`
-	PriceADA     float64    `json:"price_ada"`
-	PriceUSD     float64    `json:"price_usd,omitempty"` // via the USDM pool; 0 if unknown
-	Change1h     float64    `json:"change_1h"`
-	Change24h    float64    `json:"change_24h"`
-	Change7d     *float64   `json:"change_7d,omitempty"` // only once 7 days of history are loaded
-	Volume24hADA float64    `json:"volume_24h_ada"`
-	TotalSupply  float64    `json:"total_supply,omitempty"` // whole tokens
-	FDVADA       float64    `json:"fdv_ada,omitempty"`      // price × total supply
-	Holders      int        `json:"holders,omitempty"`      // wallets holding the token; 0 until loaded
-	HasLogo      bool       `json:"has_logo"`
-	Sparkline    []float64  `json:"sparkline"`              // prices over the last 24h (hourly), oldest first
-	Sparkline7d  []float64  `json:"sparkline_7d,omitempty"` // prices over the last 7 days (every 2 hours), once loaded
-	ReserveADA   float64    `json:"reserve_ada"`
-	ReserveToken float64    `json:"reserve_token"`
-	Decimals     int        `json:"decimals"`
-	PoolUTxO     string     `json:"pool_utxo,omitempty"`
-	LastSwap     *time.Time `json:"last_swap,omitempty"`
-	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
+	Rank           int        `json:"rank"`
+	ID             string     `json:"id"` // unique, used in page addresses and API paths
+	Ticker         string     `json:"ticker"`
+	Name           string     `json:"name"`
+	PolicyID       string     `json:"policy_id"`
+	AssetName      string     `json:"asset_name"`
+	Status         string     `json:"status"` // "loading", "live" or "error"
+	Error          string     `json:"error,omitempty"`
+	PriceADA       float64    `json:"price_ada"`
+	PriceUSD       float64    `json:"price_usd,omitempty"` // via the USDM pool; 0 if unknown
+	Change1h       float64    `json:"change_1h"`
+	Change24h      float64    `json:"change_24h"`
+	Change7d       *float64   `json:"change_7d,omitempty"` // only once 7 days of history are loaded
+	Volume24hADA   float64    `json:"volume_24h_ada"`
+	TotalSupply    float64    `json:"total_supply,omitempty"`    // whole tokens
+	FDVADA         float64    `json:"fdv_ada,omitempty"`         // price × total supply
+	Holders        int        `json:"holders,omitempty"`         // wallets holding the token; 0 until loaded
+	HoldersUnknown bool       `json:"holders_unknown,omitempty"` // Koios failed to count them HoldersGiveUp times in a row
+	HasLogo        bool       `json:"has_logo"`
+	Sparkline      []float64  `json:"sparkline"`              // prices over the last 24h (hourly), oldest first
+	Sparkline7d    []float64  `json:"sparkline_7d,omitempty"` // prices over the last 7 days (every 2 hours), once loaded
+	ReserveADA     float64    `json:"reserve_ada"`
+	ReserveToken   float64    `json:"reserve_token"`
+	Decimals       int        `json:"decimals"`
+	PoolUTxO       string     `json:"pool_utxo,omitempty"`
+	LastSwap       *time.Time `json:"last_swap,omitempty"`
+	UpdatedAt      *time.Time `json:"updated_at,omitempty"`
 
 	// The last 24 hours of trades (MinTradeADA and up).
 	Trades24h     int      `json:"trades_24h"`
@@ -112,7 +113,7 @@ func (t *Tracker) Quotes() []Quote {
 		q.PolicyState = s.mint.state(now)
 		q.Periods = periodsOf(s, now)
 		q.HasLogo = len(s.logo) > 0
-		q.Holders = s.holders
+		q.Holders, q.HoldersUnknown = s.holders, s.holders == 0 && s.holdersFails >= HoldersGiveUp
 		if len(s.points) > 0 {
 			q.Change1h = changePct(s.points, now.Add(-time.Hour).Unix())
 			q.Change24h = changePct(s.points, now.Add(-24*time.Hour).Unix())

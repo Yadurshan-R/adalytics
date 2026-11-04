@@ -9,7 +9,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { formatPrice, fullPrice, formatCompact, formatAgo, formatAmount } from '../format.js'
+import { formatPrice, fullPrice, formatCompact, formatAgo, holdersText, holdersTip } from '../format.js'
 import { COLUMNS, HOURS, periodOf, signedPct, changeTone } from '../listSort.js'
 
 const props = defineProps({
@@ -50,11 +50,11 @@ function cell(c, t) {
     case 'volume': return p.volume_ada ? formatCompact(p.volume_ada) : '—'
     case 'txns': return p.buys + p.sells ? (p.buys + p.sells).toLocaleString('en-US') : '—'
     case 'liquidity': return formatCompact(t.reserve_ada * 2)
-    case 'holders': return t.holders ? formatAmount(t.holders) : '…' // counted in the background after a restart
+    case 'holders': return holdersText(t) // counted in the background after a restart
   }
-  // No trade in that hour or 4 hours means the price did not move: 0.00% in
-  // grey, as CoinGecko and TapTools show a flat price (a token with no trade
-  // in 24 hours shows its last trade instead, see quiet).
+  // No trade in that hour or 4 hours means the price did not move: 0.00%, in
+  // red (changeTone); a token with no trade in 24 hours shows its last trade
+  // instead (see quiet).
   return signedPct(periodOf(t, c.change).change_pct)
 }
 // quiet is true for a token with no trade in the last 24 hours.
@@ -141,7 +141,7 @@ function copy(t) {
           </td>
           <template v-for="c in COLUMNS" :key="c.key">
             <td v-if="!(c.change && quiet(t))" class="num" :class="[tone(c, t), { 'hide-sm': hidden(c), faded: faded(c) }]"
-                :title="c.key === 'price' ? fullPrice(t.price_ada) : c.key === 'holders' ? (t.holders ? t.holders.toLocaleString('en-US') + ' holders' : 'Being counted') : null">{{ cell(c, t) }}</td>
+                :title="c.key === 'price' ? fullPrice(t.price_ada) : c.key === 'holders' ? holdersTip(t) : null">{{ cell(c, t) }}</td>
           </template>
           <td v-if="quiet(t)" :colspan="changes.length" class="note muted wide">{{ lastTrade(t) }}</td>
           <td v-if="quiet(t)" class="note muted narrow">{{ t.last_swap ? shortAgo(t.last_swap) : '—' }}</td>

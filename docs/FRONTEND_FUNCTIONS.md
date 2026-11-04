@@ -50,6 +50,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `formatCompact` | ₳3.71T, ₳3.35M, ₳309.9K, ₳812, like CoinGecko's stats column. |
 | `formatDateTime` | "Oct 5, 2026, 13:20:00 GMT+5:30" for chart tooltips. |
 | `formatAmount` | 76.72B, 21.0M, 940K: token amounts without the ₳ sign. |
+| `holdersText` / `holdersTip` | A token's holders and their tooltip: 64.4K (the exact number on hover), "…" while being counted, or "—" when Koios could not count them ("Too many holders for Koios to count right now"). Used by the list and the token page. |
 | `short` | Shortens a long id for the info box: the first 8 and last 6 characters. |
 | `host` | Shows only the website's name, e.g. https://www.snek.com/x → snek.com. |
 | `createdDate` | Shows a date like Apr 24, 2023. |
@@ -158,7 +159,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `sortedBy` | Which way the rows are in order of a column (1 up, -1 down, 0 not that column), for the ▲▼ arrows. |
 | `title` | A column's heading; Vol and Txns name their period (24h). |
 | `hidden` | Hides a column on a phone: only price, volume and the 24h change stay. |
-| (Holders) | How many wallets hold the token, like 64.4K (the exact number on hover); a grey "…" while it is still being counted after a restart. |
+| (Holders) | How many wallets hold the token (holdersText): 64.4K with the exact number on hover, "…" while it is still being counted after a restart, "—" when Koios cannot count them. |
 | `faded` | True for numbers whose history is not fully loaded yet. |
 | `cell` / `tone` | Write one number in its column's style, and colour a change green or red (changeTone): an hour with no trade shows 0.00% in red. |
 | `quiet` / `divider` / `lastTrade` | A token with no trade in 24 hours (found by search) shows "Last trade 3 days ago" instead of its changes ("3d" on a phone), below a "Not traded in the last 24 hours" line in Top Volume order. |

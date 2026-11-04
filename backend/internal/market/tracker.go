@@ -54,23 +54,24 @@ const HoldersEvery = 6 * time.Hour
 
 // tokenState is everything the Tracker keeps in memory for one token.
 type tokenState struct {
-	token      Token
-	slug       string // unique id for page addresses
-	lp         koios.Asset
-	poolRef    string          // current pool UTxO "tx_hash#index"; empty until found
-	address    string          // address the pool lives at
-	lastHeight int             // block height of the newest pool state we read
-	history    []poolState     // every pool state in the kept history, oldest first
-	refs       map[string]bool // pool UTxOs already in history, so none is added twice
-	points     []Point         // one per pool state, oldest first (built from history)
-	trades     []Trade         // swaps with amounts, oldest first (built from history)
-	readFrom   int             // when the pool is spent but its swap not read yet: block to read from
-	supply     *big.Int        // total supply in the smallest unit, from asset_info
-	logo       []byte          // PNG from the token registry
-	holders    int             // from asset_summary, loaded in the background
-	mint       *mintPolicy     // the minting policy from script_info; nil until read
-	info       Quote           // fingerprint, created, description and website from asset_info
-	quote      Quote
+	token        Token
+	slug         string // unique id for page addresses
+	lp           koios.Asset
+	poolRef      string          // current pool UTxO "tx_hash#index"; empty until found
+	address      string          // address the pool lives at
+	lastHeight   int             // block height of the newest pool state we read
+	history      []poolState     // every pool state in the kept history, oldest first
+	refs         map[string]bool // pool UTxOs already in history, so none is added twice
+	points       []Point         // one per pool state, oldest first (built from history)
+	trades       []Trade         // swaps with amounts, oldest first (built from history)
+	readFrom     int             // when the pool is spent but its swap not read yet: block to read from
+	supply       *big.Int        // total supply in the smallest unit, from asset_info
+	logo         []byte          // PNG from the token registry
+	holders      int             // from asset_summary, loaded in the background
+	holdersFails int             // holder counts that failed in a row (see HoldersGiveUp)
+	mint         *mintPolicy     // the minting policy from script_info; nil until read
+	info         Quote           // fingerprint, created, description and website from asset_info
+	quote        Quote
 }
 
 // poolState is a pool right after one transaction.

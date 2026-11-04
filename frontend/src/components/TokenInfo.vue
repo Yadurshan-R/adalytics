@@ -7,7 +7,7 @@
        last trade as a plain list like CoinMarketCap's, and the description. -->
 <script setup>
 import { ref, computed } from 'vue'
-import { formatPrice, formatCompact, formatAmount, formatAgo, short, host, createdDate } from '../format.js'
+import { formatPrice, formatCompact, formatAmount, formatAgo, short, host, createdDate, holdersText, holdersTip } from '../format.js'
 
 const props = defineProps({
   token: { type: Object, required: true },
@@ -48,7 +48,7 @@ function copy(text, key) {
     <h2>Token Info</h2>
     <div class="cards">
       <div class="card"><b class="num">{{ token.traders_24h != null ? token.traders_24h.toLocaleString('en-US') : '…' }}</b><span>24h Traders</span></div>
-      <div class="card"><b class="num">{{ token.holders ? formatAmount(token.holders) : '…' }}</b><span>Holders</span></div>
+      <div class="card" :title="holdersTip(token)"><b class="num">{{ holdersText(token) }}</b><span>Holders</span></div>
       <div class="card" :title="security.tip">
         <b :class="security.tone">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 2.5 3.5v4c0 3.3 2.3 5.9 5.5 7 3.2-1.1 5.5-3.7 5.5-7v-4z" /></svg>{{ security.text }}

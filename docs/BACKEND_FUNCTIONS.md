@@ -35,7 +35,7 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 | `Requests` | The number of requests sent to Koios since start, retries included. |
 | `BytesReceived` | How much data Koios has sent back since start. |
 | `report` | Tells OnResponse about one request and its answer, for the log. |
-| `do` | Sends a request and decodes the JSON answer into out. It waits for the rate limiter and retries when Koios is busy (429), slow or briefly down (5xx). |
+| `do` | Sends a request and decodes the JSON answer into out. It waits for the rate limiter and retries when Koios is busy (429), slow or briefly down (5xx), after 2, 5 and 15 seconds. Slow queries (holder counts) are not retried at once: Koios took minutes to give up and would most likely give up again, so the holder counting tries them later. |
 
 ## `internal/koios/endpoints.go`
 

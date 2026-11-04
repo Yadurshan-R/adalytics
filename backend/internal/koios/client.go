@@ -87,6 +87,9 @@ func (c *Client) report(call Call) {
 
 // do sends a request and decodes the JSON answer into out. It waits for the
 // rate limiter and retries when Koios is busy (429), slow or briefly down (5xx).
+// Slow queries (hc is c.slow, e.g. holder counts) are not retried at once:
+// Koios took minutes before giving up and would most likely give up again, so
+// the caller tries them later instead (see market/holders.go).
 func (c *Client) do(ctx context.Context, hc *http.Client, method, path string, body any, out any) error {
 	var payload []byte
 	if body != nil {
@@ -104,6 +107,9 @@ func (c *Client) do(ctx context.Context, hc *http.Client, method, path string, b
 	}
 
 	backoff := []time.Duration{2 * time.Second, 5 * time.Second, 15 * time.Second}
+	if hc == c.slow {
+		backoff = nil
+	}
 	var lastErr error
 	for attempt := 0; attempt <= len(backoff); attempt++ {
 		if attempt > 0 {

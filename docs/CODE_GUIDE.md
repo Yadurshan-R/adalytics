@@ -41,7 +41,7 @@ Everything the backend does is written to its terminal, one line each: `api` for
 
 Each Minswap pool holds ADA and one token. The price is the ratio of the two: if a pool holds 2,000,000 ADA and 744,260,765 SNEK, one SNEK costs about ₳0.0027. When someone swaps, the pool's amounts change. ADA going in and tokens coming out is a buy; the other way round is a sell. That is how the trades list is built (`tradeFrom` in `pools.go`).
 
-Minswap does not swap each order on its own: a batcher swaps several people's orders in one transaction, and pays each person back. `fills.go` splits the transaction into one trade per order; the trader is the wallet the payout goes to. When the amounts do not add up for certain, the swap is shown as one trade without a wallet, never with a wrong one.
+Minswap does not swap each order on its own: a batcher swaps several people's orders in one transaction, and pays each person back. `fills.go` splits the transaction into one trade per order; the trader is the wallet the payout goes to. Each order's datum names that wallet, which is how orders and payouts are paired (`pairs.go`): Koios lists a transaction's outputs in no fixed order, so their positions cannot be trusted. When the amounts do not add up for certain, the swap is shown as one trade without a wallet, never with a wrong one.
 
 ## The API
 
@@ -76,6 +76,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/koios/retry.go` | Retry timing and the rate limiter (stays under the free tier's limit) |
 | `internal/koios/parallel.go` | Runs batches of requests three at a time |
 | `internal/minswap/pool.go` | Reads a Minswap pool and its price from a Koios UTxO |
+| `internal/minswap/order.go` | Reads a Minswap order: which wallet gets its payout and which pool it is for |
 | `internal/market/tracker.go` | The Tracker type, its settings and the main loop |
 | `internal/market/startup.go` | The first load: the newest hour, then the list opens |
 | `internal/market/day.go` | The rest of the first 24 hours, in the background |
@@ -83,6 +84,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/update.go` | The check for new swaps every minute |
 | `internal/market/pools.go` | Turns transactions into pool states, prices and trades |
 | `internal/market/fills.go` | Splits a batch of orders into one trade per wallet |
+| `internal/market/pairs.go` | Pairs each order with its own payout, by the wallet its datum names |
 | `internal/market/wallets.go` | One wallet's trades across tokens, and the whale level |
 | `internal/market/whales.go` | The big trades across every token, for the Large Trades page |
 | `internal/market/traders.go` | A token's top traders, and one wallet's trades in it |

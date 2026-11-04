@@ -14,8 +14,8 @@ import (
 // A transaction holds the pool (in and out), the batcher's own coins (in and
 // out, at the same address), the orders being swapped and one payout per
 // order. The wallet that traded is the one the payout goes to: an order's own
-// address often has no stake key, or Minswap's. Orders and payouts come in
-// the same order, so the first order belongs to the first payout, and so on.
+// address often has no stake key, or Minswap's. Each order's datum names the
+// wallet its payout goes to, which pairs orders with payouts (pairs.go).
 //
 // A routed swap passes through more than one pool, e.g. USDA → ADA → NIGHT:
 // the other pools are steps on the way. With one order, the token's own pool
@@ -85,6 +85,11 @@ func fillsFrom(tx koios.Tx, asset, lp koios.Asset) []fill {
 			return nil
 		}
 		return []fill{{wallet: walletOf(payouts[0]), ada: ada, token: tok}}
+	}
+
+	// Pair each order with its own payout; the amounts are then checked below.
+	if orders, payouts = pairByReceiver(orders, payouts, lp); orders == nil {
+		return nil
 	}
 
 	// Each order's net change (payout minus order), and the fee: the ADA the

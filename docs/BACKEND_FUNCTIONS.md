@@ -89,6 +89,12 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 | `pow10` | Returns 10 to the power n, used to apply a token's decimals. |
 | `scaled` | Turns an amount in the smallest unit into whole units, e.g. 1,500,000 lovelace with 6 decimals is 1.5 ADA. |
 
+## `internal/minswap/order.go`
+
+| Function | What it does |
+|---|---|
+| `ReadOrder` | Reads a Minswap V2 order's datum: the payment credential of the wallet that gets the swap's output (the success receiver, field 3) and the LP asset of the pool the order is for (field 5). Not ok when the datum is missing or not shaped like a Minswap V2 order. |
+
 ## `internal/api/server.go`
 
 | Function | What it does |

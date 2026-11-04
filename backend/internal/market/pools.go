@@ -138,6 +138,15 @@ func (t *Tracker) rebuild(s *tokenState) {
 			diffB := new(big.Int).Sub(p.ReserveB, prev.ReserveB)
 			vol = math.Abs(scaled(diffA, 6))
 			s.trades = append(s.trades, tradesFrom(*p, s.history[i].fills, diffA, diffB)...)
+		} else if prev == nil && p.LastSwap.Unix() > cut {
+			// The oldest state loaded (only the newest hour, just after a start)
+			// has no state before it to compare with, but its own transaction
+			// already says who traded what (fills), so its trades count too.
+			trades := tradesFrom(*p, s.history[i].fills, new(big.Int), new(big.Int))
+			for _, tr := range trades {
+				vol += tr.AmountADA
+			}
+			s.trades = append(s.trades, trades...)
 		}
 		s.points = append(s.points, Point{Time: p.LastSwap.Unix(), Price: p.PriceADA(), VolumeADA: vol})
 		prev = p

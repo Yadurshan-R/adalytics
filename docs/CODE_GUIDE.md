@@ -131,7 +131,7 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/ChartPanel.vue` | The chart and its data: the candles at the picked size, refreshed every minute |
 | `src/components/ChartHeader.vue` | The slim bar on top of the chart: candle size, candles or line, indicators, Price / FDV |
 | `src/chart/useUnits.js` | Price / FDV: the chart in ADA per token, or in fully diluted value |
-| `src/components/LoadingProgress.vue` | The loading box shown during the first load |
+| `src/components/LoadingProgress.vue` | The loading box shown during the first load (the last hour of trades) |
 | `src/components/PriceChart.vue` | The line and candle chart (TradingView Lightweight Charts) |
 | `src/components/ChartLegend.vue` | The open, high, low, close line at the top of the chart, and the indicator values |
 | `src/components/IndicatorMenu.vue` | The Indicators button and its list |

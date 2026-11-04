@@ -57,8 +57,10 @@ function cell(c, t) {
   // instead (see quiet).
   return signedPct(periodOf(t, c.change).change_pct)
 }
-// quiet is true for a token with no trade in the last 24 hours.
-const quiet = (t) => !(periodOf(t, '24h').buys + periodOf(t, '24h').sells)
+// quiet is true for a token with no trade in the last 24 hours. Only once
+// all 24 hours are loaded: before that, a token that traded earlier today
+// would wrongly show as not traded.
+const quiet = (t) => props.hours >= HOURS['24h'] && !(periodOf(t, '24h').buys + periodOf(t, '24h').sells)
 // changes are the change columns, which a quiet row replaces with one note.
 const changes = COLUMNS.filter((c) => c.change)
 // divider is the index of the first quiet row in Top Volume order (-1: none).

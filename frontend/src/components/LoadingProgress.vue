@@ -1,5 +1,7 @@
 <!-- The first load's live progress: one percentage and bar, and the four steps
-     the backend goes through (done ✓, happening now ●, still to come ○). -->
+     the backend goes through (done ✓, happening now ●, still to come ○). It
+     reads only the newest hour, so prices are live quickly; the rest of the
+     24 hours loads after, shown by the bar above the token list. -->
 <script setup>
 const props = defineProps({
   loading: { type: Object, required: true }, // { percent, steps: [{ key, state, done, total }] }
@@ -26,8 +28,8 @@ function count(s) {
 </script>
 
 <template>
-  <div class="box" role="progressbar" aria-label="Loading 24H" :aria-valuenow="loading.percent" aria-valuemin="0" aria-valuemax="100">
-    <span class="title">Loading 24H</span>
+  <div class="box" role="progressbar" aria-label="Loading the last hour of trades" :aria-valuenow="loading.percent" aria-valuemin="0" aria-valuemax="100">
+    <span class="title">Loading the last hour of trades</span>
     <span class="pct num">{{ loading.percent }}%</span>
     <span class="bar"><span :style="{ width: Math.max(loading.percent, 1) + '%' }"></span></span>
 

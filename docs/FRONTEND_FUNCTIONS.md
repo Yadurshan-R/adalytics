@@ -59,6 +59,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 
 | Function | What it does |
 |---|---|
+| (template) | "Loading the last hour of trades": the first load reads only the newest hour, so prices are live quickly. The rest of the 24 hours then loads under the bar "Loading the last 24 hours of trades" above the token list. |
 | `n` | Formats a whole number with thousands separators: 12345 → "12,345". |
 | `count` | The number next to a step, e.g. "1,200 / 3,400". Steps not started yet, and the details step, show nothing. |
 
@@ -162,7 +163,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | (Holders) | How many wallets hold the token (holdersText): 64.4K with the exact number on hover, "…" while it is still being counted after a restart, "—" when Koios cannot count them. |
 | `faded` | True for numbers whose history is not fully loaded yet. |
 | `cell` / `tone` | Write one number in its column's style, and colour a change green or red (changeTone): an hour with no trade shows 0.00% in red. |
-| `quiet` / `divider` / `lastTrade` | A token with no trade in 24 hours (found by search) shows "Last trade 3 days ago" instead of its changes ("3d" on a phone), below a "Not traded in the last 24 hours" line in Top Volume order. |
+| `quiet` / `divider` / `lastTrade` | A token with no trade in 24 hours (found by search) shows "Last trade 3 days ago" instead of its changes ("3d" on a phone), below a "Not traded in the last 24 hours" line in Top Volume order. Only once all 24 hours are loaded: before that, a token that traded earlier today would wrongly show as not traded. |
 | `age` | How long ago a token was created: 4d, 8mo, 2y. |
 | `copy` | Puts a policy ID on the clipboard without opening the row. |
 

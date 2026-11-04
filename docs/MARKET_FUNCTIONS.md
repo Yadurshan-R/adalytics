@@ -92,7 +92,7 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 |---|---|
 | `readPools` | Reads transactions with tx_info (50 per request, several requests at a time: KOIOS_PARALLEL, default 8) and returns, for each token, the pool state after each of its transactions, oldest first. |
 | `merge` | Adds pool states to a token's history (skipping ones it already has), keeps the history in chain order and rebuilds prices, volume and trades. It returns how many states were new. Call with t.mu held. |
-| `rebuild` | Works out a token's price points, volume and trades from its pool history, drops history older than the kept span (keeping the last state before it, so the price at the start is known) and updates the quote from the newest pool state. Call with t.mu held. |
+| `rebuild` | Works out a token's price points, volume and trades from its pool history, drops history older than the kept span (keeping the last state before it, so the price at the start is known) and updates the quote from the newest pool state. A trade is the change from one pool state to the next; the oldest state loaded (just after a start only the newest hour is read) has none before it, but its own transaction's fills still count as trades. Call with t.mu held. |
 | `replaceCurrent` | Swaps a pool state found at startup (as the pool is now) for the same pool output read from its transaction, which has the wallets and its place in the block. |
 | `tradesFrom` | Turns a swap into trades: one per wallet when the transaction was split into fills, otherwise one trade without a wallet from the change in the pool's reserves. Each trade keeps its order's number (`Fill`), because one wallet can have two orders in one batch. |
 | `tradeFrom` | Makes one trade from ADA into the pool and tokens to the trader: both positive is a buy, both negative a sell. Dust below MinTradeADA is left out. |
@@ -215,6 +215,13 @@ Run them with `go test ./internal/market/` from `backend/`. They use a fake Koio
 | Function | What it does |
 |---|---|
 | `TestBackfillSeveralPages` | Loads 2,500 older transactions (three pages of the list): every page is read, every transaction ends up in the history, and the next page's list is asked for while the current page is still being read. |
+
+## `internal/market/rebuild_test.go`
+
+| Function | What it does |
+|---|---|
+| `minToken` | MIN from tokens.json. |
+| `TestFirstStateTrades` | A real routed trade (NIGHT → MIN → ADA, ₳677.89, testdata/min_routed.json): as the only pool change loaded it still counts as a trade in the 1h numbers, and once the state before it is loaded too it is still one trade, not two. |
 
 ## `internal/market/history_test.go`
 

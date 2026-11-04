@@ -106,7 +106,7 @@ const emptyText = computed(() => {
     <LoadingProgress v-if="history.loading && !error" :loading="history.loading" />
     <template v-else>
       <div v-if="!day.ready" class="day" role="status">
-        <span>Loading the last 24 hours <b class="num">{{ day.progress }}%</b> · prices are live, longer periods are filling in</span>
+        <span>Loading the last 24 hours of trades <b class="num">{{ day.progress }}%</b> · prices are live, longer periods are filling in</span>
         <span class="bar"><span :style="{ width: Math.max(day.progress, 2) + '%' }"></span></span>
       </div>
       <TokenTable :rows="shown" :period="period" :sort="sort" :view="view" :loading="loading && !error"

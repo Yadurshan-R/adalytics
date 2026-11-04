@@ -39,10 +39,11 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	mainLog.Info(fmt.Sprintf("Tracking %d verified Cardano tokens, showing the top %d, from Koios (%s) every %s, with %d days of history",
-		len(market.Tokens), market.TopN, cfg.KoiosBaseURL, cfg.PollInterval, cfg.HistoryDays), "log_level", cfg.LogLevel.String())
+	mainLog.Info(fmt.Sprintf("Tracking %d verified Cardano tokens, showing the top %d, from Koios (%s) every %s, with %d days of history, %d requests at a time",
+		len(market.Tokens), market.TopN, cfg.KoiosBaseURL, cfg.PollInterval, cfg.HistoryDays, cfg.Parallel), "log_level", cfg.LogLevel.String())
 
 	client := koios.New(cfg.KoiosBaseURL, cfg.KoiosToken)
+	client.SetWorkers(cfg.Parallel)
 	tracker := market.NewTracker(client, market.Tokens, cfg.PollInterval, logx.StdLogger(logger, "market"))
 	tracker.SetHistoryDays(cfg.HistoryDays)
 	client.OnRetry = func(endpoint string, reason error, wait time.Duration, attempt int) {

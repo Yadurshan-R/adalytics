@@ -28,7 +28,8 @@ func (t *Tracker) backfillLoop(ctx context.Context) {
 
 // backfill loads the history older than the first 24 hours, newest first, one
 // page of 1,000 transactions at a time, so 7 days are ready long before 30.
-// A page that fails is tried again a minute later.
+// The next page's list is fetched while this page is read. A page that fails
+// is tried again a minute later.
 func (t *Tracker) backfill(ctx context.Context) {
 	start, before := time.Now(), t.client.Requests()
 	tip, err := t.client.Tip(ctx)
@@ -53,18 +54,24 @@ func (t *Tracker) backfill(ctx context.Context) {
 	t.log.Printf("Loading %d days of history in the background…", days)
 	seen := map[string]bool{}
 	lastDays := 1
+	// The next page's list is fetched while this page's transactions are read
+	// (fetchPage), so no time is lost between pages.
+	next := t.fetchPage(ctx, from, 0)
 	for offset := 0; ; offset += koios.AddressTxsPageSize {
-		rows, err := t.client.AddressTxsPage(ctx, []string{PoolAddress}, from, offset)
-		if err != nil {
+		page := <-next
+		for page.err != nil {
 			if ctx.Err() != nil {
 				return
 			}
-			t.log.Printf("History: %v (trying again in 1m)", err)
+			t.log.Printf("History: %v (trying again in 1m)", page.err)
 			if sleepCtx(ctx, time.Minute) != nil {
 				return
 			}
-			offset -= koios.AddressTxsPageSize
-			continue
+			page = <-t.fetchPage(ctx, from, offset)
+		}
+		rows := page.rows
+		if len(rows) == koios.AddressTxsPageSize {
+			next = t.fetchPage(ctx, from, offset+koios.AddressTxsPageSize)
 		}
 		var todo []koios.AddressTx
 		for _, r := range rows {
@@ -75,7 +82,7 @@ func (t *Tracker) backfill(ctx context.Context) {
 			todo = append(todo, r)
 		}
 		found, err := t.readPools(ctx, todo, nil)
-		if err != nil {
+		for err != nil {
 			if ctx.Err() != nil {
 				return
 			}
@@ -83,11 +90,7 @@ func (t *Tracker) backfill(ctx context.Context) {
 			if sleepCtx(ctx, time.Minute) != nil {
 				return
 			}
-			offset -= koios.AddressTxsPageSize
-			for _, r := range todo {
-				delete(seen, r.TxHash)
-			}
-			continue
+			found, err = t.readPools(ctx, todo, nil)
 		}
 
 		t.mu.Lock()
@@ -107,7 +110,7 @@ func (t *Tracker) backfill(ctx context.Context) {
 		}
 		if loaded > lastDays && loaded < days {
 			lastDays = loaded
-			t.log.Printf("History: %d of %d days loaded (%d Koios requests so far)", loaded, days, t.client.Requests()-before)
+			t.log.Printf("History: %d of %d days loaded (%d Koios requests so far, %s)", loaded, days, t.client.Requests()-before, time.Since(start).Round(time.Second))
 		}
 	}
 	t.finishHistory(target)
@@ -122,4 +125,21 @@ func (t *Tracker) finishHistory(target time.Time) {
 	}
 	t.historyDone = true
 	t.mu.Unlock()
+}
+
+// historyPage is one page of the list of Minswap transactions, or why it failed.
+type historyPage struct {
+	rows []koios.AddressTx
+	err  error
+}
+
+// fetchPage asks Koios for one page of the list of Minswap transactions since
+// block from, in the background, and hands it over when it arrives.
+func (t *Tracker) fetchPage(ctx context.Context, from, offset int) <-chan historyPage {
+	out := make(chan historyPage, 1) // buffered: never blocks if nobody reads it
+	go func() {
+		rows, err := t.client.AddressTxsPage(ctx, []string{PoolAddress}, from, offset)
+		out <- historyPage{rows, err}
+	}()
+	return out
 }

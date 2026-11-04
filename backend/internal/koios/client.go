@@ -37,6 +37,7 @@ type Client struct {
 	http    *http.Client
 	slow    *http.Client // for queries Koios takes minutes to answer
 	limit   *limiter
+	workers int // requests at the same time for long lists (see SetWorkers)
 	count   atomic.Int64
 	bytes   atomic.Int64 // response bytes received since start
 
@@ -68,7 +69,8 @@ func New(baseURL, token string) *Client {
 		http: &http.Client{Timeout: 2 * time.Minute},
 		slow: &http.Client{Timeout: 3 * time.Minute},
 		// Free tier allows 100 requests per 10 seconds; keep a margin.
-		limit: &limiter{max: 90, window: 10 * time.Second},
+		limit:   &limiter{max: 90, window: 10 * time.Second},
+		workers: DefaultWorkers,
 	}
 }
 

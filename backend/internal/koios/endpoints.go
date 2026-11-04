@@ -33,7 +33,7 @@ func (c *Client) UTxOInfo(ctx context.Context, refs []string) ([]UTxO, error) {
 // assets. Each Minswap pool holds its own LP token, so asking for the LP tokens
 // at the pool address returns exactly those pools, traded recently or not.
 // Requests are split so each body stays under Koios's size limit, and run
-// three at a time (Workers).
+// several at a time (Workers).
 func (c *Client) PoolUTxOs(ctx context.Context, address string, assets []Asset, progress func(done, total int)) ([]UTxO, error) {
 	const perRequest = 30 // 30 LP tokens make a body of about 3.9 KB
 	q := url.Values{}
@@ -43,7 +43,7 @@ func (c *Client) PoolUTxOs(ctx context.Context, address string, assets []Asset, 
 	found := make([][]UTxO, batches)
 	var mu sync.Mutex
 	done := 0
-	err := Parallel(ctx, batches, Workers, func(i int) error {
+	err := Parallel(ctx, batches, c.Workers(), func(i int) error {
 		start := i * perRequest
 		end := min(start+perRequest, len(assets))
 		list := make([][2]string, 0, end-start)

@@ -15,7 +15,8 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | Function | What it does |
 |---|---|
 | `backfillLoop` | Waits for the first 24 hours, then loads the rest of the history. |
-| `backfill` | Loads the history older than the first 24 hours, newest first, one page of 1,000 transactions at a time, so 7 days are ready long before 30. A page that fails is tried again a minute later. |
+| `backfill` | Loads the history older than the first 24 hours, newest first, one page of 1,000 transactions at a time, so 7 days are ready long before 30. The next page's list is fetched while this page's transactions are read, so no time is lost between pages. A page that fails is tried again a minute later. |
+| `fetchPage` / `historyPage` | Asks Koios for one page of the list of Minswap transactions in the background and hands it over when it arrives. |
 | `finishHistory` | Marks the whole history span as loaded, so every chart range is ready. |
 
 ## `internal/market/candles.go`
@@ -89,7 +90,7 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 
 | Function | What it does |
 |---|---|
-| `readPools` | Reads transactions with tx_info (50 per request, three requests at a time) and returns, for each token, the pool state after each of its transactions, oldest first. |
+| `readPools` | Reads transactions with tx_info (50 per request, several requests at a time: KOIOS_PARALLEL, default 8) and returns, for each token, the pool state after each of its transactions, oldest first. |
 | `merge` | Adds pool states to a token's history (skipping ones it already has), keeps the history in chain order and rebuilds prices, volume and trades. It returns how many states were new. Call with t.mu held. |
 | `rebuild` | Works out a token's price points, volume and trades from its pool history, drops history older than the kept span (keeping the last state before it, so the price at the start is known) and updates the quote from the newest pool state. Call with t.mu held. |
 | `replaceCurrent` | Swaps a pool state found at startup (as the pool is now) for the same pool output read from its transaction, which has the wallets and its place in the block. |
@@ -208,6 +209,12 @@ Run them with `go test ./internal/market/` from `backend/`. They use a fake Koio
 | `serve` | Answers each Koios endpoint the Tracker uses from the fake's data, and records every request. |
 | `snekToken` | SNEK from tokens.json. |
 | `newTracker` | Starts a fake Koios server and a Tracker for SNEK that uses it, with the clock fixed at testNow. |
+
+## `internal/market/backfill_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestBackfillSeveralPages` | Loads 2,500 older transactions (three pages of the list): every page is read, every transaction ends up in the history, and the next page's list is asked for while the current page is still being read. |
 
 ## `internal/market/history_test.go`
 

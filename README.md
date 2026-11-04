@@ -58,6 +58,7 @@ The backend needs about half a minute to load the first data; the site shows a l
 | `PORT` | `8080` | The backend's port |
 | `POLL_INTERVAL` | `60s` | How often to check for new trades |
 | `HISTORY_DAYS` | `30` | Days of history to load, 1 to 30. Fewer means a lighter startup |
+| `KOIOS_PARALLEL` | `8` | Koios requests at the same time when loading history, 1 to 20. Higher loads faster until Koios starts timing out (`504` in the log); then lower it |
 | `LOG_LEVEL` | `info` | `debug` shows every Koios request; also `warn`, `error` |
 
 ## How it works

@@ -12,8 +12,8 @@ import (
 	"cardano-analytics/internal/minswap"
 )
 
-// readPools reads transactions with tx_info (50 per request, three requests
-// at a time) and returns, for each token, the pool state after each of its
+// readPools reads transactions with tx_info (50 per request, several requests
+// at a time: KOIOS_PARALLEL) and returns, for each token, the pool state after each of its
 // transactions, oldest first.
 func (t *Tracker) readPools(ctx context.Context, txs []koios.AddressTx, progress func(done, total int)) (map[*tokenState][]poolState, error) {
 	byLP := map[string]*tokenState{}
@@ -24,7 +24,7 @@ func (t *Tracker) readPools(ctx context.Context, txs []koios.AddressTx, progress
 	batches := make([][]koios.Tx, (len(txs)+49)/50)
 	var mu sync.Mutex
 	done := 0
-	err := koios.Parallel(ctx, len(batches), koios.Workers, func(i int) error {
+	err := koios.Parallel(ctx, len(batches), t.client.Workers(), func(i int) error {
 		start, end := i*50, min(i*50+50, len(txs))
 		hashes := make([]string, 0, end-start)
 		for _, tx := range txs[start:end] {

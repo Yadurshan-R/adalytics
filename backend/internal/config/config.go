@@ -21,6 +21,7 @@ type Config struct {
 	Port         string
 	PollInterval time.Duration
 	HistoryDays  int        // days of history to load and keep, 1 to 30
+	Parallel     int        // Koios requests at the same time for long lists, 1 to 20 (default 8)
 	LogLevel     slog.Level // how much the log shows: debug, info (default), warn or error
 }
 
@@ -49,6 +50,12 @@ func Load() (Config, error) {
 		return cfg, fmt.Errorf("HISTORY_DAYS %q must be a whole number from 1 to 30", os.Getenv("HISTORY_DAYS"))
 	}
 	cfg.HistoryDays = days
+
+	parallel, err := strconv.Atoi(getenv("KOIOS_PARALLEL", "8"))
+	if err != nil || parallel < 1 || parallel > 20 {
+		return cfg, fmt.Errorf("KOIOS_PARALLEL %q must be a whole number from 1 to 20", os.Getenv("KOIOS_PARALLEL"))
+	}
+	cfg.Parallel = parallel
 
 	level, err := logx.ParseLevel(getenv("LOG_LEVEL", "info"))
 	if err != nil {

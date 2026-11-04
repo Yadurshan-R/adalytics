@@ -10,14 +10,17 @@ import (
 )
 
 // HoldersWorkers is how many tokens are counted at the same time. Koios takes
-// from a few seconds to over a minute per token, so three at a time fill the
-// Holders column about three times as fast. Each count is one request, and
-// the rate limiter (90 requests per 10 seconds) still holds.
-const HoldersWorkers = 3
+// from a few seconds to over a minute per token, so five at a time fill the
+// Holders column about five times as fast as one by one. Each count is one
+// request, and the rate limiter (90 requests per 10 seconds) still holds.
+const HoldersWorkers = 5
 
 // HoldersRetry is how soon tokens whose count failed are tried again (a busy
-// Koios often times out on big tokens), instead of waiting HoldersEvery.
-const HoldersRetry = 5 * time.Minute
+// Koios often times out on big tokens), instead of waiting HoldersEvery. Each
+// count has already been tried 4 times by then (after 2, 5 and 15 seconds, see
+// koios.Client), so a minute gives Koios time to recover; retrying sooner
+// would mostly fail again and risks Koios blocking every request for a minute.
+const HoldersRetry = time.Minute
 
 // holdersLoop waits for the first load, counts every listed token's holders,
 // then counts them all again every HoldersEvery, until ctx ends. Tokens whose

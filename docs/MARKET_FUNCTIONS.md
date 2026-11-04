@@ -36,9 +36,9 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 
 | Function | What it does |
 |---|---|
-| `holdersLoop` | Waits for the first load, counts every listed token's holders, then counts them all again every HoldersEvery (6 hours), until ctx ends. Tokens whose count failed are tried again every HoldersRetry (5 minutes) in between. |
+| `holdersLoop` | Waits for the first load, counts every listed token's holders, then counts them all again every HoldersEvery (6 hours), until ctx ends. Tokens whose count failed are tried again every HoldersRetry (1 minute) in between. |
 | `loadHolders` | Counts the holders of every token in the current list, busiest first, and returns the tokens whose count failed. |
-| `countHolders` | Counts the holders of the given tokens, HoldersWorkers (3) at a time: wallets with a stake key plus addresses without one, from one slow asset_summary request per token. Returns the tokens whose count failed. |
+| `countHolders` | Counts the holders of the given tokens, HoldersWorkers (5) at a time: wallets with a stake key plus addresses without one, from one slow asset_summary request per token. Returns the tokens whose count failed. |
 | `stateByID` | Finds a token by its page id and returns it with its ticker. |
 
 ## `internal/market/policy.go`

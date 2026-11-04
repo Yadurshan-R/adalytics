@@ -79,7 +79,7 @@ price in ADA = ADA in the pool / tokens in the pool
 
 **US dollars.** Koios has no USD prices, so Adalytics uses the USDM stablecoin's Minswap pool: if 1 USDM costs ₳3.70, then ₳1 is about $0.27.
 
-**At startup** the backend lists every Minswap transaction of the last 24 hours, reads the newest hour (prices, trades), finds the other tokens' pools and loads supply, logos and details. The list opens then; the rest of the 24 hours, the older history and the holder counts (three tokens at a time) load in the background.
+**At startup** the backend lists every Minswap transaction of the last 24 hours, reads the newest hour (prices, trades), finds the other tokens' pools and loads supply, logos and details. The list opens then; the rest of the 24 hours, the older history and the holder counts (five tokens at a time) load in the background.
 
 **Every minute** it asks Koios which pools were used since the last check and reads only those new trades.
 

@@ -172,7 +172,9 @@ func (c *Client) do(ctx context.Context, hc *http.Client, method, path string, b
 			lastErr = retryAfter{wait: parseRetryAfter(resp.Header.Get("Retry-After")), msg: "rate limit reached (429)"}
 			continue
 		case resp.StatusCode == http.StatusGatewayTimeout:
-			lastErr = errors.New("query took longer than 30s (504)")
+			// Koios's gateway gave up on the query; say after how long, since
+			// that varies (about two minutes for holder counts).
+			lastErr = fmt.Errorf("Koios gave up on the query after %s (504)", time.Since(sent).Round(time.Second))
 			continue
 		case resp.StatusCode >= 500:
 			lastErr = fmt.Errorf("Koios returned %d: %s", resp.StatusCode, snippet(data))

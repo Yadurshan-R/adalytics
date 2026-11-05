@@ -87,7 +87,7 @@ func TestCountHolders(t *testing.T) {
 // TestHoldersUnknownAfterFailures checks that a token Koios keeps timing out
 // on is counted once per try (no retries at once), shows "…" until it failed
 // HoldersGiveUp times in a row, then shows as unknown, and that one count
-// that works brings its number back.
+// that works brings its number back, with the time it was counted.
 func TestHoldersUnknownAfterFailures(t *testing.T) {
 	f := &holdersFake{failFor: Tokens[0].Asset.PolicyID, failsLeft: HoldersGiveUp}
 	srv := httptest.NewServer(http.HandlerFunc(f.serve))
@@ -112,7 +112,7 @@ func TestHoldersUnknownAfterFailures(t *testing.T) {
 	if failed := tr.countHolders(ctx, []string{id}); len(failed) != 0 {
 		t.Fatalf("count after Koios recovered failed: %v", failed)
 	}
-	if q := quote(); q.Holders != 105 || q.HoldersUnknown {
-		t.Errorf("after a count that works: %d holders, unknown %v; want 105, false", q.Holders, q.HoldersUnknown)
+	if q := quote(); q.Holders != 105 || q.HoldersUnknown || q.HoldersAt == nil {
+		t.Errorf("after a count that works: %d holders, unknown %v, counted at %v; want 105, false, a time", q.Holders, q.HoldersUnknown, q.HoldersAt)
 	}
 }

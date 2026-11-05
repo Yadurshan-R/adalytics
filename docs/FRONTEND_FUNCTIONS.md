@@ -50,7 +50,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `formatCompact` | ₳3.71T, ₳3.35M, ₳309.9K, ₳812, like CoinGecko's stats column. |
 | `formatDateTime` | "Oct 5, 2026, 13:20:00 GMT+5:30" for chart tooltips. |
 | `formatAmount` | 76.72B, 21.0M, 940K: token amounts without the ₳ sign. |
-| `holdersText` / `holdersTip` | A token's holders and their tooltip: 64.4K (the exact number on hover), "…" while being counted, or "—" when Koios could not count them ("Too many holders for Koios to count right now"). Used by the list and the token page. |
+| `holdersText` / `holdersTip` | A token's holders and their tooltip: 64.4K, "…" while being counted, or "—" when Koios could not count them ("Too many holders for Koios to count right now"). The tooltip says exactly what is counted (staked wallets plus addresses without a stake key, contracts such as the token's own pool included) and when ("counted 2 hours ago"; refreshed every 6 hours). Used by the list and the token page. |
 | `short` | Shortens a long id for the info box: the first 8 and last 6 characters. |
 | `host` | Shows only the website's name, e.g. https://www.snek.com/x → snek.com. |
 | `createdDate` | Shows a date like Apr 24, 2023. |
@@ -127,8 +127,8 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `periodOf` | A token's trading over one period (5m, 1h, 4h or 24h): change, volume, buys and sells. |
 | `PERIODS` | The change columns in the table: 1h, 4h and 24h (5m is left out; it was mostly empty). |
-| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns are for 24 hours. Holders sorts by the holder count (0 while still being counted). |
-| `sortRows` | Sorts the rows by a column, either way; equal values (often quiet tokens) keep the bigger pool first. |
+| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns are for 24 hours. A value not known (yet) is null, not 0: holders still being counted or that Koios could not count, and FDV without a known supply. |
+| `sortRows` | Sorts the rows by a column, either way. Unknown values go last whichever way (unknown is not zero: HOSKY has many holders); equal values (often quiet tokens) keep the bigger pool first. |
 | `signedPct` | Shows a change like +3.65% or −0.64%. |
 | `changeTone` | Colours a % change: green when it shows a +, red otherwise, so 0.00% is red, like Birdeye and CoinMarketCap. Used by the list, the activity box and the token panel. |
 

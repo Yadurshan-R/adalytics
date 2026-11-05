@@ -26,7 +26,8 @@ type Quote struct {
 	Volume24hADA   float64    `json:"volume_24h_ada"`
 	TotalSupply    float64    `json:"total_supply,omitempty"`    // whole tokens
 	FDVADA         float64    `json:"fdv_ada,omitempty"`         // price × total supply
-	Holders        int        `json:"holders,omitempty"`         // wallets holding the token; 0 until loaded
+	Holders        int        `json:"holders,omitempty"`         // staked wallets plus addresses without a stake key holding the token, contracts included (e.g. its pool); 0 until counted
+	HoldersAt      *time.Time `json:"holders_at,omitempty"`      // when Holders was counted (refreshed every HoldersEvery)
 	HoldersUnknown bool       `json:"holders_unknown,omitempty"` // Koios failed to count them HoldersGiveUp times in a row
 	HasLogo        bool       `json:"has_logo"`
 	Sparkline      []float64  `json:"sparkline"`              // prices over the last 24h (hourly), oldest first
@@ -114,6 +115,10 @@ func (t *Tracker) Quotes() []Quote {
 		q.Periods = periodsOf(s, now)
 		q.HasLogo = len(s.logo) > 0
 		q.Holders, q.HoldersUnknown = s.holders, s.holders == 0 && s.holdersFails >= HoldersGiveUp
+		if !s.holdersAt.IsZero() {
+			at := s.holdersAt
+			q.HoldersAt = &at
+		}
 		if len(s.points) > 0 {
 			q.Change1h = changePct(s.points, now.Add(-time.Hour).Unix())
 			q.Change24h = changePct(s.points, now.Add(-24*time.Hour).Unix())

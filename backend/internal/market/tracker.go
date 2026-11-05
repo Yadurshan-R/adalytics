@@ -69,6 +69,7 @@ type tokenState struct {
 	logo         []byte          // PNG from the token registry
 	holders      int             // from asset_summary, loaded in the background
 	holdersFails int             // holder counts that failed in a row (see HoldersGiveUp)
+	holdersAt    time.Time       // when holders was counted; zero until then
 	mint         *mintPolicy     // the minting policy from script_info; nil until read
 	info         Quote           // fingerprint, created, description and website from asset_info
 	quote        Quote

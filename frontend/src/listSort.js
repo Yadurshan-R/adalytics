@@ -14,23 +14,32 @@ export function periodOf(t, key) {
 }
 
 // COLUMNS is every sortable column: its key, title and the value it sorts by.
-// Volume and Txns follow the period picked above the table.
+// Volume and Txns follow the period picked above the table. A value not known
+// (yet) is null, not 0: holders still being counted, or that Koios could not
+// count, and FDV without a known supply. Unknown is not zero (HOSKY has many
+// holders), so sortRows puts these last whichever way the column is sorted.
 export const COLUMNS = [
   { key: 'price', title: 'Price', value: (t) => t.price_ada },
-  { key: 'fdv', title: 'FDV', value: (t) => t.fdv_ada ?? 0 },
+  { key: 'fdv', title: 'FDV', value: (t) => t.fdv_ada || null },
   { key: 'volume', title: 'Vol', value: (t, p) => periodOf(t, p).volume_ada, period: true },
   { key: 'txns', title: 'Txns', value: (t, p) => periodOf(t, p).buys + periodOf(t, p).sells, period: true },
   { key: 'liquidity', title: 'Liquidity', value: (t) => t.reserve_ada * 2 },
-  { key: 'holders', title: 'Holders', value: (t) => t.holders ?? 0 },
+  { key: 'holders', title: 'Holders', value: (t) => t.holders || null },
   ...PERIODS.map((k) => ({ key: `c${k}`, title: `${k} %`, value: (t) => periodOf(t, k).change_pct, change: k })),
 ]
 
 // sortRows sorts a copy of the rows by a column ({ key, dir: 1 up or -1 down}).
-// Equal values (often quiet tokens) keep the bigger pool first.
+// Unknown values (null) go last either way; equal values (often quiet tokens)
+// keep the bigger pool first.
 export function sortRows(rows, sort, period) {
   const col = COLUMNS.find((c) => c.key === sort.key)
   if (!col) return rows
-  return [...rows].sort((a, b) => (col.value(a, period) - col.value(b, period)) * sort.dir || b.reserve_ada - a.reserve_ada)
+  return [...rows].sort((a, b) => {
+    const x = col.value(a, period)
+    const y = col.value(b, period)
+    if (x == null || y == null) return (x == null) - (y == null) || b.reserve_ada - a.reserve_ada
+    return (x - y) * sort.dir || b.reserve_ada - a.reserve_ada
+  })
 }
 
 // signedPct shows a change like +3.65% or −0.64%, with 0.00% for no change.

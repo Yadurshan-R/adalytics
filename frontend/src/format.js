@@ -100,9 +100,12 @@ export function formatAmount(v) {
 // counted, or "—" when Koios could not count them (holders_unknown: it timed
 // out several times in a row, as on HOSKY).
 export const holdersText = (t) => (t.holders ? formatAmount(t.holders) : t.holders_unknown ? '—' : '…')
-// holdersTip is the tooltip for holdersText.
+// holdersTip is the tooltip for holdersText: what is counted, and when. Koios
+// counts staked wallets plus addresses without a stake key, contracts included
+// (such as the token's own pool); counts are refreshed every 6 hours.
 export const holdersTip = (t) =>
-  t.holders ? `${t.holders.toLocaleString('en-US')} holders`
+  t.holders ? `${t.holders.toLocaleString('en-US')} holders: wallets, plus addresses without a stake key (contracts included)` +
+      (t.holders_at ? ` · counted ${formatAgo(t.holders_at)}` : '')
     : t.holders_unknown ? 'Too many holders for Koios to count right now; tried again every hour'
     : 'Being counted'
 

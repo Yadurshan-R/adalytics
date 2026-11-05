@@ -84,7 +84,8 @@ func (t *Tracker) loadHolders(ctx context.Context) []string {
 
 // countHolders counts the holders of the tokens with these page ids,
 // HoldersWorkers at a time: wallets with a stake key plus addresses without
-// one, from one slow asset_summary request per token. Each token keeps how
+// one (contracts included, such as the token's own pool), from one slow
+// asset_summary request per token, and notes when. Each token keeps how
 // many counts in a row failed (shown as unknown from HoldersGiveUp on). It
 // returns the ids whose count failed, in the order given, to try them later.
 func (t *Tracker) countHolders(ctx context.Context, ids []string) []string {
@@ -112,7 +113,7 @@ func (t *Tracker) countHolders(ctx context.Context, ids []string) []string {
 		}
 		n := sum.StakedWallets + sum.UnstakedAddresses
 		t.mu.Lock()
-		s.holders, s.holdersFails = n, 0
+		s.holders, s.holdersFails, s.holdersAt = n, 0, t.now()
 		t.mu.Unlock()
 		mu.Lock()
 		t.log.Printf("  %-8s %s holders (counted in %s)", ticker, group(float64(n)), time.Since(start).Round(time.Second))

@@ -14,7 +14,7 @@ Adalytics follows every token that Minswap marks as verified and shows its price
 * Search by name, ticker or policy ID (press `/`); refreshes by itself every minute
 
 **Token page**
-* A live price chart (TradingView Lightweight Charts) with candles from 5 minutes to 1 day, up to 30 days back, volume bars, indicators (MA, EMA, Bollinger Bands, VWAP, RSI), Price / FDV, and drawing tools: trend lines, Fibonacci, channels, rectangles, text and a ruler. **See the [chart guide](docs/CHART_GUIDE.md) for what each part means and how to use it.**
+* A live price chart (TradingView Lightweight Charts) with candles from 5 minutes to 1 day, up to 30 days back, volume bars, indicators (MA, EMA, Bollinger Bands, VWAP, RSI), Price / FDV, and a drawing toolbar like Birdeye's: trend lines, rays, horizontal and vertical lines, channels, Fibonacci retracement and extension, long and short positions, measuring, brush, arrow, rectangle, text and price labels, with magnet, lock and hide. **See the [chart guide](docs/CHART_GUIDE.md) for what each part means and how to use it.**
 * A token panel: price, liquidity, FDV, 5m / 1h / 4h / 24h volume and trades with buys, sells and net, holders, whether the minting policy is locked, price range, links and the project description
 * **Trades**: the latest trades with the wallet behind each (Minswap fills many orders in one transaction; Adalytics splits them into one trade per wallet), filter by buys or sells, BIG and WHALE tags for ₳10K and ₳50K+
 * **Top Traders**: the 50 wallets that traded the token most in 24 hours, 7 or 30 days. Click a trader to see only its trades and what else it traded
@@ -44,6 +44,7 @@ go build -o adalytics . && ./adalytics
 # 3. Frontend, in a second terminal, on http://localhost:5173
 cd frontend
 npm install
+npm test
 npm run dev
 ```
 
@@ -151,7 +152,7 @@ The [code guide](docs/CODE_GUIDE.md) explains how the parts fit together and lis
 * **One job per file, at most 200 lines.** A file that grows past that is split by job. (A few older files are still longer and are being split.)
 * **Every function has a comment** above it saying what it does, in plain words.
 * **Every function is listed in the docs**, with the same words, so the code can be understood without reading it.
-* **Tests pass before every push:** `cd backend && go test ./...` and `cd frontend && npm run build`.
+* **Tests pass before every push:** `cd backend && go test ./...`, and `cd frontend && npm test && npm run build`.
 
 ## Current limits
 
@@ -164,6 +165,6 @@ The [code guide](docs/CODE_GUIDE.md) explains how the parts fit together and lis
 
 ## Built with
 
-Go, Vue 3 (Composition API), Vite, Vue Router, TradingView Lightweight Charts, the Koios API and the Minswap verified token list.
+Go, Vue 3 (Composition API), Vite, Vue Router, TradingView Lightweight Charts, lightweight-charts-drawing (TradingView's drawing tools for it, MIT), Vitest, the Koios API and the Minswap verified token list.
 
 ![Phone view](docs/screenshots/phone.png)

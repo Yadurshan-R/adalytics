@@ -1,5 +1,5 @@
-<!-- The icon of a drawing tool: an SVG path on a 20 × 20 grid, with small
-     circles for the points the visitor clicks. -->
+<!-- The icon of a toolbar button or menu item (toolIcons.js): an SVG path on
+     a 20 × 20 grid, with small circles for the points the visitor clicks. -->
 <script setup>
 defineProps({ tool: { type: Object, required: true } }) // { icon, dots }
 </script>
@@ -13,5 +13,5 @@ defineProps({ tool: { type: Object, required: true } }) // { icon, dots }
 
 <style scoped>
 .icon { width: 30px; height: 30px; flex: none; fill: none; stroke: currentColor; stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round; }
-.dot { fill: var(--bg); }
+.dot { fill: none; }
 </style>

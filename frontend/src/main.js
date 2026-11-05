@@ -2,10 +2,13 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import TokenList from './pages/TokenList.vue'
-import TokenPage from './pages/TokenPage.vue'
 import LargeTrades from './pages/LargeTrades.vue'
 import NotFound from './pages/NotFound.vue'
 import './style.css'
+
+// The token page (the chart and its drawing tools, most of the code) is
+// loaded only when a token is opened, so the token list opens faster.
+const TokenPage = () => import('./pages/TokenPage.vue')
 
 const router = createRouter({
   history: createWebHistory(),

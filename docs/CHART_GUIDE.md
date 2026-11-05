@@ -62,35 +62,44 @@ Indicators describe the past; none of them predicts the price.
 
 ## Drawing tools
 
-Pick a tool on the left, then click on the chart. After one drawing the tool goes back to the cross (✛), like TradingView.
+The toolbar on the left works like Birdeye's (TradingView's). Each button holds a group of tools: click it to use the tool it shows, or hover it and click the small arrow tab on its right to open the group's menu. The button then keeps the last tool you picked. The tool you are using has a grey square behind it. After one drawing the tool goes back to the cross (✛), like TradingView. The drawings are TradingView's own tools, from the open-source library lightweight-charts-drawing.
 
-| Tool | Clicks | What it is for |
-|---|---|---|
-| **Cross** ✛ | | The normal mouse: point, drag the chart, pick drawings. |
-| **Trend line** | 2 | Joins two points, like two low points of a rising price: while the price stays above the line, the uptrend holds. |
-| **Ray** | 2 | A trend line that carries on to the right, to see where the trend would be later. |
-| **Extended line** | 2 | Carries on both ways. |
-| **Horizontal line** | 1 | A price level across the chart, with its price on the right: support (where the price keeps stopping on the way down) or resistance (on the way up). |
-| **Vertical line** | 1 | Marks a moment, like a big announcement. |
-| **Fib retracement** | 2 | Click a low and a high (or the other way). Draws the 0.236, 0.382, 0.5, 0.618 and 0.786 levels in between with their prices: after a big move, prices often pull back to one of these before going on. |
-| **Parallel channel** | 3 | Click two points for the first line, then a third for the width. The price often moves between the two lines. |
-| **Rectangle** | 2 | Marks an area: a range where the price went sideways, or a zone you watch. |
-| **Text** | 1 | Click, type a note (up to 80 characters), press Enter. |
+| Button | Tool | Clicks | What it is for |
+|---|---|---|---|
+| Cross ✛ | **Cross** | | The normal mouse: point, drag the chart, pick drawings. |
+| Lines | **Trend line** | 2 | Joins two points, like two low points of a rising price: while the price stays above the line, the uptrend holds. |
+| | **Ray** | 2 | A trend line that carries on to the right, to see where the trend would be later. |
+| | **Horizontal line** | 1 | A price level across the chart, with its price on the right: support (where the price keeps stopping on the way down) or resistance (on the way up). |
+| | **Horizontal ray** | 1 | A price level from one candle on to the right: a level that started at a certain moment. |
+| | **Vertical line** | 1 | Marks a moment, like a big announcement. |
+| | **Parallel channel** | 3 | Click two points for the first line, then a third for the width. The price often moves between the two lines. |
+| Fibonacci | **Fib retracement** | 2 | Click a high and a low (or the other way). Draws the 0.236, 0.382, 0.5, 0.618 and 0.786 levels in between with their prices (and 1.618, 2.618… beyond): after a big move, prices often pull back to one of these before going on. |
+| | **Trend-based Fib extension** | 3 | Click the start of a move, its end, and the end of the pullback. Draws where the next move may reach, as levels of the first move's size measured from the pullback (0.618, 1, 1.618, 2.618…). |
+| Projection | **Long position** | 1 | Plans a buy: click the entry price. Green above is the target, red below the stop-loss; drag them. When selected it shows the target, the stop, the risk/reward ratio and the profit or loss so far, for a pretend account of 1,000 ADA risking 25% (TradingView's defaults). |
+| | **Short position** | 1 | The same for a sell: target below, stop above. |
+| | **Date and price range** | 2 | Measures between two points and keeps the measurement on the chart. |
+| Shapes | **Brush** | drag | Draws freehand while the button is held. |
+| | **Arrow** | 2 | Points at something. |
+| | **Rectangle** | 2 | Marks an area: a range where the price went sideways, or a zone you watch. |
+| Text | **Text** | 1 | Click, type a note (up to 80 characters), press Enter. Double-click it later to change it. |
+| | **Price label** | 1 | A label with the price at that point. |
 
-The **line tools** (trend, ray, extended, horizontal, vertical) share one button: the small › beside it opens the list, and the button keeps the last one you used.
+Hold **Shift** while drawing for straight angles (45° steps) and to turn the magnet off for a moment.
 
 ## Measure, zoom and the other buttons
 
 | Button | What it does |
 |---|---|
-| **Measure** (ruler) | Click a start and an end point. Shows the change in % and ADA, how many candles and how much time lies between them; green when up, red when down. Click the chart again to remove it. |
+| **Measure** (ruler) | Click a start and an end point. Shows the change in ADA, in % and in ticks (steps of the fifth digit of the price), how many candles and how much time lies between them, and the volume traded. Click the chart again to remove it. |
 | **Zoom in / out** | Fewer or more candles on screen, keeping the newest on the right. |
 | **Reset view** | Fits all the history loaded so far on screen. |
-| **Magnet** | While drawing, points snap to the nearest open, high, low or close of the candle under the mouse, so a line starts exactly on a low or a high. |
+| **Magnet** | While drawing, points snap to the open, high, low or close of the candle under the mouse, so a line starts exactly on a low or a high. Its menu has **Weak magnet** (snaps when the mouse is near one) and **Strong magnet** (always snaps). |
 | **Stay in drawing mode** | Keeps the tool on after a drawing, to draw several in a row. Press Esc to stop. |
-| **Lock drawings** | Drawings can no longer be picked or moved by accident. |
-| **Hide drawings** | Hides them all to see the chart clean; click again to show them. |
-| **Delete all** (bin) | Removes every drawing and the ruler. |
+| **Lock all drawings** | Drawings can still be selected, but not moved or deleted with the Delete key, so nothing changes by accident. New drawings are locked too while it is on. |
+| **Hide** (eye) | Hides every drawing to see the chart clean; click again to show them. Its menu can also hide the indicators, or both. |
+| **Remove** (bin) | Removes every drawing. Its menu can also remove the indicators, or both. |
+
+A switch between candles and line keeps the drawings.
 
 **Changing a drawing:** with the cross on, click a drawing to select it. Drag it to move it, drag one of its round points to reshape it, and press Delete or Backspace (or the Delete button above the chart) to remove it. Esc unselects it or stops a drawing halfway.
 
@@ -118,7 +127,8 @@ The **line tools** (trend, ray, extended, horizontal, vertical) share one button
 6. Pick **Horizontal line** and click on a price where the candles stopped falling several times: that is support.
 7. Pick **Fib retracement**, click the lowest point of a big rise, then its top. Did the price pull back to one of the levels?
 8. Pick **Measure** and click two candles to see how much the price moved between them.
-9. Click your horizontal line to select it, drag it, then press Delete.
-10. Switch to **FDV** and compare with another token's FDV: which project is bigger?
+9. Open the Projection menu, pick **Long position** and click a price: drag the green and red parts to a target and a stop-loss, and read the risk/reward ratio.
+10. Click your horizontal line to select it, drag it, then press Delete.
+11. Switch to **FDV** and compare with another token's FDV: which project is bigger?
 
 This chart is for looking at the market, not advice on what to buy or sell.

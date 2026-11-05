@@ -17,6 +17,9 @@
   --line: #eff2f5;        /* borders and table lines */
   --hover: #f8fafd;       /* row hover */
   --btn-hover: #f0f3fa;   /* button hover */
+  --tool-active-bg: #e0e3eb; /* chart toolbar: behind the tool picked */
+  --tool-on-bg: #131722;  /* chart toolbar: a setting that is on (magnet, lock), and the item on in a menu */
+  --tool-on-fg: #ffffff;
   --chip: #eff2f5;
   --chip-hover: #e3e8ef;
   --panel: #fafbfd;       /* loading box */
@@ -60,6 +63,9 @@
   --line: #1f2229;
   --hover: #15171d;
   --btn-hover: #1f232b;
+  --tool-active-bg: #2a2e39;
+  --tool-on-bg: #e8eaef;
+  --tool-on-fg: #0e0f13;
   --chip: #1d2027;
   --chip-hover: #282c35;
   --panel: #14161b;

@@ -138,14 +138,18 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/CandleSizePicker.vue` | The candle size buttons and the list of every size |
 | `src/chart/indicators.js` | The indicator math: MA, EMA, Bollinger Bands, VWAP, RSI |
 | `src/chart/useIndicators.js` | Puts the picked indicators on the chart |
-| `src/components/ChartToolbar.vue` | The drawing toolbar beside the chart |
-| `src/components/ToolGroup.vue` | The line tools button and its list |
-| `src/components/ToolIcon.vue` | A drawing tool's icon |
-| `src/chart/drawingLayer.js` | A chart plugin that puts the drawings and the ruler on the chart |
-| `src/chart/shapes.js` | Draws each kind of drawing and the ruler |
-| `src/chart/useDrawings.js` | Turns clicks into drawings, and handles zoom, the magnet and the lock |
-| `src/chart/useSelect.js` | Select, move, reshape and delete one drawing |
-| `src/chart/hitTest.js` | Finds the drawing under the mouse |
+| `src/chart/chartOptions.js` | How the chart looks: theme colours, axes, crosshair |
+| `src/chart/view.js` | Dragging and zooming the chart, the zoom and reset buttons |
+| `src/components/DrawToolbar.vue` | The drawing toolbar beside the chart, laid out like Birdeye's |
+| `src/components/ToolButton.vue` | One toolbar button, with its arrow tab and menu |
+| `src/components/ToolMenu.vue` | A toolbar menu with section headings |
+| `src/components/ToolIcon.vue` | A toolbar or menu icon |
+| `src/components/ChartTextBox.vue` | The box for typing a text on the chart |
+| `src/chart/toolList.js` | The 16 drawing tools on the toolbar, in groups and sections |
+| `src/chart/toolIcons.js` | The toolbar's icons |
+| `src/chart/priceStep.js` | The price step the drawings count ticks in |
+| `src/chart/useDrawTools.js` | Connects the toolbar to the drawing library: lock, hide, Measure, text, candles / line |
+| `src/chart/*.test.js` | Frontend tests (Vitest): price step, tool list, drawing tools |
 | `src/components/TradesSection.vue` | The Trades and Top Traders tabs on a token page |
 | `src/components/RecentTrades.vue` | The recent trades table on a token page, with filters and Show more |
 | `src/components/TopTraders.vue` | The Top Traders table on a token page |

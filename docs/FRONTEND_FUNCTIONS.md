@@ -172,6 +172,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | (routes) | The pages: token list (/), token page (/token/night), Large Trades (/trades), and Page not found for any other address. |
+| `TokenPage` | The token page (the chart and its drawing tools, most of the code) is loaded only when a token is opened, so the token list opens faster. |
 | `afterEach` | Names each page in the browser tab, e.g. "Large Trades \| Adalytics", so several open tabs can be told apart. A token page puts its price there instead. |
 
 ## `src/pages/NotFound.vue`

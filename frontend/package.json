@@ -6,15 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "lightweight-charts": "^5.2.1",
+    "lightweight-charts-drawing": "0.6.3",
     "vue": "^3.5.43",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.9",
-    "vite": "^8.3.2"
+    "vite": "^8.3.2",
+    "vitest": "5.1.0"
   }
 }

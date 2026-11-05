@@ -13,6 +13,7 @@ const rsiHeight = () => (window.innerWidth <= 700 ? 70 : 110)
 export function useIndicators(getChart, priceFormat) {
   const series = {} // indicator key → its lines on the chart
   const lookup = ref({}) // indicator key → { time: value } for the legend
+  const shown = ref(true) // false while the toolbar hides the indicators
 
   // line adds one line for an indicator, on the price or in pane 1 (RSI).
   function line(color, pane, opts = {}) {
@@ -64,7 +65,10 @@ export function useIndicators(getChart, priceFormat) {
         delete series[ind.key]
         continue
       }
-      series[ind.key] ??= create(ind)
+      if (!series[ind.key]) {
+        series[ind.key] = create(ind)
+        series[ind.key].forEach((s) => s.applyOptions({ visible: shown.value }))
+      }
       const data = dataOf(ind.key, bars)
       data.forEach((d, i) => series[ind.key][i].setData(d))
       next[ind.key] = Object.fromEntries(data[ind.key === 'bb' ? 1 : 0].map((p) => [p.time, p.value]))
@@ -74,10 +78,18 @@ export function useIndicators(getChart, priceFormat) {
 
   // at is what the legend shows for the bar at this time: [{ name, color, value, price }].
   function at(time) {
+    if (!shown.value) return []
     return INDICATORS.filter((ind) => lookup.value[ind.key]).map((ind) => ({
       name: ind.name, color: ind.color, value: lookup.value[ind.key][time], price: ind.onPrice,
     }))
   }
 
-  return { set, at }
+  // show hides (false) or shows (true) every indicator, lines and legend;
+  // indicators added while hidden stay hidden.
+  function show(on) {
+    shown.value = on
+    for (const lines of Object.values(series)) lines.forEach((s) => s.applyOptions({ visible: on }))
+  }
+
+  return { set, at, show }
 }

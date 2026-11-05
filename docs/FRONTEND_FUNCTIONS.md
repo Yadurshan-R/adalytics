@@ -160,7 +160,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `sortedBy` | Which way the rows are in order of a column (1 up, -1 down, 0 not that column), for the ▲▼ arrows. |
 | `title` | A column's heading; Vol and Txns name their period (24h). |
 | `hidden` | Hides a column on a phone: only price, volume and the 24h change stay. |
-| (Holders) | How many wallets hold the token (holdersText): 64.4K with the exact number on hover, "…" while it is still being counted after a restart, "—" when Koios cannot count them. |
+| (Holders) | How many wallets hold the token (holdersText): 64.4K with the exact number on hover, "…" while it is still being counted after a restart, "—" when Koios could not count them in its last 5 tries. |
 | `faded` | True for numbers whose history is not fully loaded yet. |
 | `cell` / `tone` | Write one number in its column's style, and colour a change green or red (changeTone): an hour with no trade shows 0.00% in red. |
 | `quiet` / `divider` / `lastTrade` | A token with no trade in 24 hours (found by search) shows "Last trade 3 days ago" instead of its changes ("3d" on a phone), below a "Not traded in the last 24 hours" line in Top Volume order. Only once all 24 hours are loaded: before that, a token that traded earlier today would wrongly show as not traded. |

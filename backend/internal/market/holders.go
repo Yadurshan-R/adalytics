@@ -9,32 +9,48 @@ import (
 	"cardano-analytics/internal/koios"
 )
 
-// HoldersWorkers is how many tokens are counted at the same time. Koios takes
-// from a few seconds to over a minute per token, so five at a time fill the
-// Holders column about five times as fast as one by one. Each count is one
-// request, and the rate limiter (90 requests per 10 seconds) still holds.
+// HoldersWorkers is how many tokens are counted at the same time in a full
+// count. Koios takes from a few seconds to over a minute per token, so five
+// at a time fill the Holders column about five times as fast as one by one.
+// Each count is one request, and the rate limiter (90 requests per 10
+// seconds) still holds.
 const HoldersWorkers = 5
+
+// HoldersRetryWorkers is how many failed tokens are counted again at the same
+// time: one. A token whose count failed is a heavy one by definition (Koios
+// needed more than its two-minute limit), and heavy counts running together
+// share Koios's effort, so each takes longer. How busy Koios is matters most
+// (five retried at once all timed out one afternoon; four at once, three got
+// through fifteen minutes later), but one at a time gives each try the best
+// chance. A round of five retries takes up to ten minutes instead of two.
+const HoldersRetryWorkers = 1
 
 // HoldersRetryWaits are the waits before tokens whose count failed are tried
 // again: a minute twice, then 5 and 15 minutes, then every hour (the last
-// wait repeats). Koios cuts a request off after about two minutes, and how
-// long a count takes varies with how busy it is: SNEK (3.4 million
-// transactions) took 70 seconds once and timed out straight after, so a token
-// like that gets a few quick chances. A token Koios fails on every time
-// (HOSKY) is most likely too big for it to count; the waits grow because each
-// try costs Koios minutes of work that slow down the other counts. A failed
-// count is not retried at once (see koios.Client), only after these waits.
+// wait repeats). Each wait starts when the previous round has finished; the
+// first starts when the full count of every token is done, so a token that
+// failed early in it waits for the rest of that count too (sending more
+// two-minute queries on top of a running count would slow it all down).
+// How long a count takes varies with how busy Koios is: SNEK (3.4 million
+// transactions) took 59 seconds once and timed out straight before, and HOSKY
+// was counted in 26 seconds and timed out four times later the same day. So a
+// heavy token gets a few quick chances; the waits then grow because each try
+// costs Koios minutes of work. A failed count is not retried at once (see
+// koios.Client), only after these waits.
 var HoldersRetryWaits = []time.Duration{time.Minute, time.Minute, 5 * time.Minute, 15 * time.Minute, time.Hour}
 
 // HoldersGiveUp is after how many failed counts in a row a token's holders
-// show as unknown ("—", Koios cannot count them) instead of "…" (being
-// counted). Five: a token that gets through about half the time (SNEK) almost
-// never fails five times in a row. Such a token is still tried every hour.
+// show as unknown ("—", Koios could not count them lately) instead of "…"
+// (being counted). Five: a token that gets through about half the time
+// (SNEK) almost never fails five times in a row. Such a token is still tried
+// every hour.
 const HoldersGiveUp = 5
 
 // holdersLoop waits for the first load, counts every listed token's holders,
 // then counts them all again every HoldersEvery, until ctx ends. Tokens whose
-// count failed are tried again in between, after HoldersRetryWaits.
+// count failed are tried again in between, one at a time
+// (HoldersRetryWorkers), after HoldersRetryWaits counted from the end of the
+// previous round.
 //
 // Waiting for the first load matters: if Koios is down at startup the list is
 // empty, and counting then would leave every token without holders.
@@ -62,7 +78,7 @@ func (t *Tracker) holdersLoop(ctx context.Context) {
 				return
 			}
 			t.log.Printf("Counting holders again for %d tokens that failed…", len(failed))
-			failed = t.countHolders(ctx, failed)
+			failed = t.countHolders(ctx, failed, HoldersRetryWorkers)
 		}
 		if err := sleepCtx(ctx, time.Until(next)); err != nil {
 			return
@@ -79,19 +95,19 @@ func (t *Tracker) loadHolders(ctx context.Context) []string {
 		ids[i] = q.ID
 	}
 	t.log.Printf("Counting holders for %d tokens in the background, %d at a time (slow, can take a while)…", len(ids), HoldersWorkers)
-	return t.countHolders(ctx, ids)
+	return t.countHolders(ctx, ids, HoldersWorkers)
 }
 
-// countHolders counts the holders of the tokens with these page ids,
-// HoldersWorkers at a time: wallets with a stake key plus addresses without
+// countHolders counts the holders of the tokens with these page ids, workers
+// at a time (HoldersWorkers in a full count, HoldersRetryWorkers for retries): wallets with a stake key plus addresses without
 // one (contracts included, such as the token's own pool), from one slow
 // asset_summary request per token, and notes when. Each token keeps how
 // many counts in a row failed (shown as unknown from HoldersGiveUp on). It
 // returns the ids whose count failed, in the order given, to try them later.
-func (t *Tracker) countHolders(ctx context.Context, ids []string) []string {
+func (t *Tracker) countHolders(ctx context.Context, ids []string, workers int) []string {
 	failed := make([]bool, len(ids))
 	var mu sync.Mutex // keeps the log lines whole
-	koios.Parallel(ctx, len(ids), HoldersWorkers, func(i int) error {
+	koios.Parallel(ctx, len(ids), workers, func(i int) error {
 		s, ticker := t.stateByID(ids[i])
 		if s == nil {
 			return nil // left the list since; nothing to count

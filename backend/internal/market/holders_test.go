@@ -15,15 +15,14 @@ import (
 
 // holdersFake is a pretend Koios that only answers asset_summary. It is slow
 // (so several requests overlap), notes the most requests running at once, and
-// times out (504, like Koios on a token too big to count) the first failsLeft
-// requests for one chosen token.
+// times out (504, like Koios on a heavy token) the first few requests for the
+// chosen tokens.
 type holdersFake struct {
-	mu        sync.Mutex
-	running   int
-	most      int
-	calls     int
-	failFor   string // policy ID whose first counts fail
-	failsLeft int
+	mu      sync.Mutex
+	running int
+	most    int
+	calls   int
+	fails   map[string]int // policy ID -> how many of its next counts fail
 }
 
 // serve answers one asset_summary request.
@@ -32,9 +31,10 @@ func (f *holdersFake) serve(w http.ResponseWriter, r *http.Request) {
 	f.running++
 	f.calls++
 	f.most = max(f.most, f.running)
-	fail := r.URL.Query().Get("_asset_policy") == f.failFor && f.failsLeft > 0
+	policy := r.URL.Query().Get("_asset_policy")
+	fail := f.fails[policy] > 0
 	if fail {
-		f.failsLeft--
+		f.fails[policy]--
 	}
 	f.mu.Unlock()
 	time.Sleep(40 * time.Millisecond)
@@ -48,11 +48,15 @@ func (f *holdersFake) serve(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`[{"staked_wallets":100,"unstaked_addresses":5}]`))
 }
 
-// TestCountHolders checks that holders are counted HoldersWorkers at a time,
-// that a failed token is handed back to be tried again, and that the second
-// try fills it in.
+// TestCountHolders checks that a full count runs HoldersWorkers at a time,
+// that failed tokens are handed back to be tried again, and that the retry
+// counts them one at a time (HoldersRetryWorkers) and fills them in.
 func TestCountHolders(t *testing.T) {
-	f := &holdersFake{failFor: Tokens[2].Asset.PolicyID, failsLeft: 1}
+	bad := []int{2, 3, 5} // tokens whose first count times out
+	f := &holdersFake{fails: map[string]int{}}
+	for _, i := range bad {
+		f.fails[Tokens[i].Asset.PolicyID] = 1
+	}
 	srv := httptest.NewServer(http.HandlerFunc(f.serve))
 	t.Cleanup(srv.Close)
 	tr := NewTracker(koios.New(srv.URL, "test-token"), Tokens[:7], time.Minute, log.New(io.Discard, "", 0))
@@ -66,21 +70,39 @@ func TestCountHolders(t *testing.T) {
 	if f.most != HoldersWorkers {
 		t.Errorf("%d counted at once, want %d", f.most, HoldersWorkers)
 	}
-	want := tr.states[2].slug
-	if len(failed) != 1 || failed[0] != want {
-		t.Fatalf("failed %v, want [%s]", failed, want)
+	isBad, want := map[int]bool{}, map[string]bool{}
+	for _, i := range bad {
+		isBad[i], want[tr.states[i].slug] = true, true
+	}
+	got := map[string]bool{}
+	for _, id := range failed {
+		got[id] = true
+	}
+	if len(failed) != len(want) || len(got) != len(want) {
+		t.Fatalf("failed %v, want the %d tokens %v", failed, len(want), want)
+	}
+	for id := range want {
+		if !got[id] {
+			t.Fatalf("failed %v, want the %d tokens %v", failed, len(want), want)
+		}
 	}
 	for i, s := range tr.states {
-		if got, wantN := s.holders, map[bool]int{true: 0, false: 105}[i == 2]; got != wantN {
+		if got, wantN := s.holders, map[bool]int{true: 0, false: 105}[isBad[i]]; got != wantN {
 			t.Errorf("%s: %d holders, want %d", s.slug, got, wantN)
 		}
 	}
 
-	if again := tr.countHolders(ctx, failed); len(again) != 0 {
+	f.most = 0
+	if again := tr.countHolders(ctx, failed, HoldersRetryWorkers); len(again) != 0 {
 		t.Errorf("still failed after retry: %v", again)
 	}
-	if h := tr.states[2].holders; h != 105 {
-		t.Errorf("after retry %d holders, want 105", h)
+	if f.most != HoldersRetryWorkers {
+		t.Errorf("retry counted %d at once, want %d", f.most, HoldersRetryWorkers)
+	}
+	for _, i := range bad {
+		if h := tr.states[i].holders; h != 105 {
+			t.Errorf("%s after retry: %d holders, want 105", tr.states[i].slug, h)
+		}
 	}
 }
 
@@ -89,7 +111,7 @@ func TestCountHolders(t *testing.T) {
 // HoldersGiveUp times in a row, then shows as unknown, and that one count
 // that works brings its number back, with the time it was counted.
 func TestHoldersUnknownAfterFailures(t *testing.T) {
-	f := &holdersFake{failFor: Tokens[0].Asset.PolicyID, failsLeft: HoldersGiveUp}
+	f := &holdersFake{fails: map[string]int{Tokens[0].Asset.PolicyID: HoldersGiveUp}}
 	srv := httptest.NewServer(http.HandlerFunc(f.serve))
 	t.Cleanup(srv.Close)
 	tr := NewTracker(koios.New(srv.URL, "test-token"), Tokens[:1], time.Minute, log.New(io.Discard, "", 0))
@@ -99,7 +121,7 @@ func TestHoldersUnknownAfterFailures(t *testing.T) {
 	ctx := context.Background()
 
 	for try := 1; try <= HoldersGiveUp; try++ {
-		if failed := tr.countHolders(ctx, []string{id}); len(failed) != 1 {
+		if failed := tr.countHolders(ctx, []string{id}, HoldersRetryWorkers); len(failed) != 1 {
 			t.Fatalf("try %d: failed %v, want [%s]", try, failed, id)
 		}
 		if f.calls != try {
@@ -109,7 +131,7 @@ func TestHoldersUnknownAfterFailures(t *testing.T) {
 			t.Errorf("after %d failed counts: unknown = %v, want %v", try, got, want)
 		}
 	}
-	if failed := tr.countHolders(ctx, []string{id}); len(failed) != 0 {
+	if failed := tr.countHolders(ctx, []string{id}, HoldersRetryWorkers); len(failed) != 0 {
 		t.Fatalf("count after Koios recovered failed: %v", failed)
 	}
 	if q := quote(); q.Holders != 105 || q.HoldersUnknown || q.HoldersAt == nil {

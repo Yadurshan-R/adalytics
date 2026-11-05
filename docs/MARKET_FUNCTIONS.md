@@ -37,17 +37,17 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 
 | Function | What it does |
 |---|---|
-| `holdersLoop` | Waits for the first load, counts every listed token's holders, then counts them all again every HoldersEvery (6 hours), until ctx ends. Tokens whose count failed are tried again in between, after growing waits (HoldersRetryWaits: a minute twice, then 5 and 15 minutes, then every hour). How long Koios takes varies with how busy it is, so a token that sometimes gets through (SNEK) gets a few quick chances; a token Koios fails on every time (HOSKY) is most likely too big for it to count, and each try costs Koios minutes of work. |
+| `holdersLoop` | Waits for the first load, counts every listed token's holders, then counts them all again every HoldersEvery (6 hours), until ctx ends. Tokens whose count failed are tried again in between, one at a time (HoldersRetryWorkers), after growing waits (HoldersRetryWaits: a minute twice, then 5 and 15 minutes, then every hour). Each wait starts when the previous round is done; the first starts when the full count of every token is done. How long Koios takes varies with how busy it is (HOSKY: 26 seconds once, timed out later the same day), so a heavy token gets a few quick chances, then the waits grow because each try costs Koios minutes of work. One at a time because heavy counts running together share Koios's effort and time out together. |
 | `loadHolders` | Counts the holders of every token in the current list, busiest first, and returns the tokens whose count failed. |
-| `countHolders` | Counts the holders of the given tokens, HoldersWorkers (5) at a time: wallets with a stake key plus addresses without one (contracts included, such as the token's own pool), from one slow asset_summary request per token, noting when (holders_at in the API, shown as "counted 2 hours ago"). Each token keeps how many counts in a row failed; from HoldersGiveUp (5) on, its holders show as unknown ("—") until a count works. Returns the tokens whose count failed. |
+| `countHolders` | Counts the holders of the given tokens, a given number at a time (HoldersWorkers, 5, in a full count; HoldersRetryWorkers, 1, for retries): wallets with a stake key plus addresses without one (contracts included, such as the token's own pool), from one slow asset_summary request per token, noting when (holders_at in the API, shown as "counted 2 hours ago"). Each token keeps how many counts in a row failed; from HoldersGiveUp (5) on, its holders show as unknown ("—") until a count works. Returns the tokens whose count failed. |
 | `stateByID` | Finds a token by its page id and returns it with its ticker. |
 
 ## `internal/market/holders_test.go`
 
 | Function | What it does |
 |---|---|
-| `holdersFake` | A pretend Koios that only answers asset_summary, slowly, noting how many requests run at once, and timing out (504) the first few counts of one chosen token. |
-| `TestCountHolders` | Holders are counted HoldersWorkers at a time; a failed token is handed back to be tried again, and the second try fills it in. |
+| `holdersFake` | A pretend Koios that only answers asset_summary, slowly, noting how many requests run at once, and timing out (504) the first few counts of the chosen tokens. |
+| `TestCountHolders` | A full count runs HoldersWorkers at a time; the failed tokens are handed back, and the retry counts them one at a time (HoldersRetryWorkers) and fills them in. |
 | `TestHoldersUnknownAfterFailures` | A token Koios keeps timing out on is asked once per try (no retries at once), shows "…" until it failed HoldersGiveUp times in a row, then shows as unknown; one count that works brings its number back, with the time it was counted. |
 
 ## `internal/market/policy.go`

@@ -31,7 +31,7 @@ flowchart LR
 1. **First load (about half a minute).** The Tracker lists every Minswap transaction of the last 24 hours, reads the newest hour of them to get pool sizes (which give prices and trades), finds the pools of the other tokens, and loads supply, logos and links. While this runs, the website shows the loading box with live progress (`LoadingProgress.vue`). Then the list opens, and the rest of the 24 hours is read in the background (`day.go`); the 4h and 24h numbers are faded until they are complete. Batches of transactions are read 8 at a time (KOIOS_PARALLEL in .env).
 2. **Background history.** After the first load, older history (up to 30 days) loads in the background, so the 7D and 30D charts become available a few minutes later. The site can be used meanwhile.
 3. **Every minute after that.** The Tracker checks which pools were used since the last check and reads only those new swaps. This costs about 3 Koios requests a minute.
-4. **Every 6 hours.** Holder counts are refreshed in the background, five tokens at a time, because Koios is slow to count them. A token whose count failed is tried again after a minute twice, then 5 and 15 minutes, then every hour: Koios cuts a request off after about two minutes, and how long a count takes varies, so a token like SNEK gets through about half the time. Koios cannot count a few very large tokens (HOSKY: it gives up every time); after 5 failed counts in a row their holders show as "—" instead of "…".
+4. **Every 6 hours.** Holder counts are refreshed in the background, five tokens at a time, because Koios is slow to count them. Tokens whose count failed are tried again one at a time, a minute after the full count is done, again a minute later, then after 5 and 15 minutes, then every hour. Koios cuts a request off after two minutes, and how long a count takes depends on how busy it is: SNEK, MIN and HOSKY sometimes take 30 seconds and sometimes time out. After 5 failed counts in a row a token's holders show as "—" instead of "…".
 
 ### Reading the log
 
@@ -93,7 +93,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/periods.go` | Trading over 5m, 1h, 4h and 24h for the activity box |
 | `internal/market/quotes.go` | What the API reads: token list, charts, trades, logos |
 | `internal/market/details.go` | Supply, logos and links |
-| `internal/market/holders.go` | Holder counts, five tokens at a time, failed ones retried after a minute |
+| `internal/market/holders.go` | Holder counts, five tokens at a time; failed ones retried one at a time, after growing waits |
 | `internal/market/policy.go` | Whether a token's minting policy is locked or open |
 | `internal/market/progress.go` | Loading progress for the loading page |
 | `internal/market/activity.go` | The live activity feed for the loading page |

@@ -22,7 +22,7 @@ Every function behind the price chart on a token page: the bar on top, the chart
 | `rgba` | Turns a colour like #089981 into rgba() with transparency a (0 to 1). |
 | `themeOptions` | The chart options that change with light / dark: background, text, grid, crosshair labels. |
 | `tickMark` | Writes the time axis: hours like "16:00"; a new day as "5 Oct", like CoinGecko; a new month or year as its name. |
-| `chartOptions` | The options the chart is created with: theme colours, axes, dashed crosshair, the date under the mouse ("Tue 13 Oct, 10:00"), drag and zoom (view.js). |
+| `chartOptions` | The options the chart is created with: theme colours, axes, dashed crosshair, the date under the mouse ("Tue 13 Oct, 10:00"), drag and zoom (view.js). `maxBarSpacing` 40 keeps charts with few candles (1W, 1M) at a normal candle width, like Birdeye, instead of a few huge candles. |
 
 ## `src/chart/view.js`
 
@@ -72,8 +72,7 @@ Every function behind the price chart on a token page: the bar on top, the chart
 
 | Function | What it does |
 |---|---|
-| `buttons` | The quick sizes (5m, 15m, 1h, 4h, 1D), plus the picked size when it came from the list, or the range (7D, 30D) while one is on. |
-| `pickRange` | 1 week or 30 days from the list: picked only once its history is fully loaded; until then it is grey with "Loading 35%". |
+| `buttons` | The quick sizes (5m, 15m, 1h, 4h, 1D, 1W, 1M), plus the picked size when it came from the list. Every button is a candle size, like Birdeye's; there are no range buttons. |
 | `pick` | Chooses a size and closes the list. |
 
 ## `src/components/ChartPanel.vue`
@@ -89,9 +88,6 @@ Every function behind the price chart on a token page: the bar on top, the chart
 |---|---|
 | (template) | The slim bar on top of the chart, like Birdeye's: candle size, candles or line, Indicators, and Price / FDV on the right (only when the total supply is known). One bar for both chart styles, so switching style keeps the size. |
 | `loaded` | How much of the whole history is in; a quiet "History 16%" note shows until it is all loaded. |
-| `ready` | How much of a time range (7D, 30D) is loaded, as the backend reports it. |
-| `pickRange` | Shows a time range with a fitting candle size (1 week: 1h, 30 days: 4h); picking it again goes back to the normal view. |
-| `pickSize` | A candle size picked by hand; no range is on any more. |
 
 ## Drawing tools
 

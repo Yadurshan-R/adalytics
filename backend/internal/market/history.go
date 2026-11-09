@@ -133,27 +133,32 @@ func volumeSince(points []Point, t int64) float64 {
 	return v
 }
 
-// candles groups swaps into candlesticks between from and to. A slot with no
-// swaps is a flat candle at the previous close, and each candle opens at the
-// previous close so the candles join up.
+// candles groups swaps into candlesticks of a fixed interval between from
+// and to (see candlesAt).
 func candles(points []Point, from, to time.Time, interval time.Duration) []Candle {
-	step := int64(interval / time.Second)
-	start := from.Unix() / step * step
-	end := to.Unix()
-	if start > end {
+	return candlesAt(points, candleStarts(CandleSize{Interval: interval}, from, to), to)
+}
+
+// candlesAt groups swaps into one candlestick per start time (Unix seconds,
+// oldest first); each candle lasts until the next start, the last one until
+// to. A slot with no swaps is a flat candle at the previous close, and each
+// candle opens at the previous close so the candles join up.
+func candlesAt(points []Point, starts []int64, to time.Time) []Candle {
+	if len(starts) == 0 {
 		return nil
 	}
-	n := int((end-start)/step) + 1
-	out := make([]Candle, n)
-	price := priceAt(points, start-1)
+	out := make([]Candle, len(starts))
+	price := priceAt(points, starts[0]-1)
 
 	i := 0
-	for i < len(points) && points[i].Time < start {
+	for i < len(points) && points[i].Time < starts[0] {
 		i++
 	}
-	for b := 0; b < n; b++ {
-		bStart := start + int64(b)*step
-		bEnd := bStart + step
+	for b, bStart := range starts {
+		bEnd := to.Unix() + 1
+		if b+1 < len(starts) {
+			bEnd = starts[b+1]
+		}
 		c := Candle{Time: bStart, Open: price, High: price, Low: price, Close: price}
 		for i < len(points) && points[i].Time < bEnd {
 			p := points[i].Price

@@ -1,8 +1,6 @@
 <!-- The slim bar on top of the chart, like Birdeye's and TradingView's:
      candle size | candles or line | indicators                Price / FDV
-     One bar for both chart styles, so changing the style keeps the size.
-     The candle size list also has 1 week and 30 days: each shows that span
-     with a fitting candle size, once that much history is loaded. -->
+     One bar for both chart styles, so changing the style keeps the size. -->
 <script setup>
 import { computed } from 'vue'
 import CandleSizePicker from './CandleSizePicker.vue'
@@ -13,11 +11,10 @@ const props = defineProps({
   type: { type: String, required: true }, // 'candles' or 'line'
   indicators: { type: Array, required: true }, // picked indicators
   unit: { type: String, required: true }, // 'price' or 'fdv'
-  range: { type: String, default: '' }, // '7D', '30D' or '' (see chartPrefs.js)
   history: { type: Object, required: true }, // loading progress from the backend
   canFdv: { type: Boolean, default: false }, // false when the total supply is unknown
 })
-const emit = defineEmits(['update:size', 'update:type', 'update:indicators', 'update:unit', 'update:range'])
+const emit = defineEmits(['update:size', 'update:type', 'update:indicators', 'update:unit'])
 
 // loaded is how much of the history is in, while older days still load.
 const loaded = computed(() => {
@@ -25,33 +22,6 @@ const loaded = computed(() => {
   return h.done || !h.days ? 100 : Math.min(99, Math.floor(((h.loaded_hours || 0) / (h.days * 24)) * 100))
 })
 
-// RANGES are the time ranges in the candle size list and the size each uses.
-const RANGES = [
-  { key: '7D', label: '1 week', days: 7, size: '1h' },
-  { key: '30D', label: '30 days', days: 30, size: '4h' },
-]
-// ready is how much of a range's history is loaded, 0 to 100, as the backend
-// reports it.
-function ready(r) {
-  const h = props.history
-  const x = h.ranges?.find((k) => k.key === r.key)
-  if (x) return x.ready ? 100 : Math.min(99, x.progress)
-  return h.done ? 100 : Math.min(100, Math.floor(((h.loaded_hours || 0) / (r.days * 24)) * 100))
-}
-// ranges are RANGES with how much of each is loaded, for the list.
-const ranges = computed(() => RANGES.map((r) => ({ ...r, ready: ready(r) })))
-// pickRange shows a range with its candle size; picking it again goes back.
-function pickRange(r) {
-  if (r.ready < 100) return
-  if (props.range === r.key) return emit('update:range', '')
-  emit('update:size', r.size)
-  emit('update:range', r.key)
-}
-// pickSize is a candle size picked by hand, so no range is on any more.
-function pickSize(size) {
-  emit('update:size', size)
-  emit('update:range', '')
-}
 
 const STYLES = [
   { key: 'candles', label: 'Candles', icon: 'M6 3v3M6 14v3M4 6h4v8H4zM14 3v5M14 15v2M12 8h4v7h-4z' },
@@ -61,7 +31,7 @@ const STYLES = [
 
 <template>
   <div class="bar">
-    <CandleSizePicker :model-value="size" :ranges="ranges" :range="range" @update:model-value="pickSize" @range="pickRange" />
+    <CandleSizePicker :model-value="size" @update:model-value="emit('update:size', $event)" />
     <span class="sep"></span>
     <div class="group" role="group" aria-label="Chart style">
       <button v-for="s in STYLES" :key="s.key" type="button" class="btn icon" :aria-pressed="s.key === type" :title="s.label"

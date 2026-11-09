@@ -49,7 +49,9 @@ export function chartOptions(C) {
     layout: { ...theme.layout, fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12 },
     grid: theme.grid,
     rightPriceScale: { borderVisible: false },
-    timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, timeVisible: true, secondsVisible: false, tickMarkFormatter: tickMark },
+    // maxBarSpacing keeps a candle at most 40px wide, so a chart with only a
+    // few candles (1W, 1M) shows them at a normal width, like Birdeye.
+    timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, maxBarSpacing: 40, timeVisible: true, secondsVisible: false, tickMarkFormatter: tickMark },
     crosshair: {
       mode: CrosshairMode.Normal,
       vertLine: { ...theme.crosshair.vertLine, style: LineStyle.Dashed, width: 1 },

@@ -28,8 +28,7 @@ const props = defineProps({
   candles: { type: Array, default: () => [] }, // [{ time, open, high, low, close, volume }], oldest first
   indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma20', 'atr']
   fmt: { type: Function, default: formatPrice }, // writes a value: a price, or a compact FDV
-  fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, size, unit, range)
-  span: { type: Number, default: 0 }, // seconds to show when a time range is picked; 0 = the latest candles
+  fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, size, unit)
   token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
 
@@ -99,9 +98,7 @@ function load() {
   if (fitted !== props.fitKey && bars.length) {
     const n = bars.length
     const show = Math.max(20, Math.round(el.value.clientWidth / (line ? 3.5 : 14)))
-    const last = bars[n - 1].time
-    if (props.span) chart.timeScale().setVisibleRange({ from: Math.max(bars[0].time, last - props.span), to: last })
-    else if (n > show) chart.timeScale().setVisibleLogicalRange({ from: n - show, to: n - 1 })
+    if (n > show) chart.timeScale().setVisibleLogicalRange({ from: n - show, to: n - 1 })
     else chart.timeScale().fitContent()
     fitted = props.fitKey
   }

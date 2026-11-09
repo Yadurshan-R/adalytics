@@ -3,7 +3,8 @@
 This guide explains how Adalytics is built. Read it to see how the pieces fit together. Every function is listed in plain words in these files, so no file is too long:
 
 - [Backend functions](BACKEND_FUNCTIONS.md): the Go backend and its tests
-- [Market functions](MARKET_FUNCTIONS.md): the market package (prices, history, candles) and its tests
+- [Market functions](MARKET_FUNCTIONS.md): the market package (prices, history, candles)
+- [Market tests](MARKET_TESTS.md): the market package's tests
 - [Frontend functions](FRONTEND_FUNCTIONS.md): the Vue website
 - [Chart functions](CHART_FUNCTIONS.md): the price chart, its units, indicators and drawing tools
 - [Chart guide](CHART_GUIDE.md): how to read and use the chart, for people using the site
@@ -51,7 +52,7 @@ The backend serves these routes. Each one reads from memory, so they answer inst
 |---|---|
 | `GET /api/tokens` | Every listed token with price, FDV, liquidity and its 5m, 1h, 4h and 24h change, volume, buys and sells, plus how much history is loaded (and the loading progress during the first load) |
 | `GET /api/tokens/{id}/chart?range=24H` | One token's line chart. `range` is 24H, 7D or 30D |
-| `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h or 1D (30 days) |
+| `GET /api/tokens/{id}/chart?type=candles&size=1h` | One token's candles. `size` is 5m (2 days back), 15m or 30m (7 days), 1h, 2h, 4h, 12h, 1D, 1W or 1M (30 days; 1W and 1M are calendar candles from Monday and the 1st, UTC) |
 | `GET /api/tokens/{id}/trades?limit=50` | One token's latest trades, newest first, each with its wallet. With `wallet=stake1…&hours=168`: that wallet's trades in the token (the latest 200) and its totals |
 | `GET /api/tokens/{id}/traders?hours=24&sort=volume` | One token's top 50 wallets over 24 hours, 7 or 30 days, by volume or net buying (`sort=net`) |
 | `GET /api/whales?hours=24&min=10000&max=50000` | The Large Trades page: one page of big trades across every token (up to 30 days back), the token list and how much history is loaded |
@@ -98,7 +99,8 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/progress.go` | Loading progress for the loading page |
 | `internal/market/activity.go` | The live activity feed for the loading page |
 | `internal/market/history.go` | Chart ranges, chart points, candles and price changes |
-| `internal/market/candles.go` | Candle sizes (5m to 1D) and how far back each goes |
+| `internal/market/candles.go` | Candle sizes (5m to 1M) and how far back each goes |
+| `internal/market/calendar.go` | Where each candle starts: fixed steps, or Mondays and the 1st for 1W and 1M |
 | `internal/market/tokens.go` | The list of verified tokens (from `tokens.json`) |
 | `internal/market/format.go` | Small number and text helpers for the log |
 | `internal/api/server.go` | The API routes |

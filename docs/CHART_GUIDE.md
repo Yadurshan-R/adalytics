@@ -4,7 +4,7 @@ How to read the price chart on a token page and what every button does. It works
 
 ```
 +-----------------------------------------------------------------------+
-| 5m 15m 1h 4h 1D v | candles  line | Indicators          Price / FDV   |  <- top bar
+| 5m 15m 1h 4h 1D 1W 1M v | candles line | Indicators      Price / FDV   |  <- top bar
 +------+----------------------------------------------------------------+
 | tools| O 0.1868  H 0.1905  L 0.1862  C 0.1887  +1.05%  Vol 37,877    |  <- legend
 |      |                                                   [0.1914]     |  <- latest price
@@ -37,8 +37,8 @@ How to read the price chart on a token page and what every button does. It works
 
 | Button | What it does |
 |---|---|
-| **5m 15m 1h 4h 1D** | The candle size: one candle per 5 minutes, 15 minutes, 1 hour, 4 hours or 1 day. The **⌄** list has every size (also 30m, 2h and 12h). Small candles show detail, big ones show the trend. 5m goes 2 days back, 15m and 30m 7 days, the rest 30 days. |
-| **1 week / 30 days** (in the ⌄ list) | Shows that whole span at a fitting candle size (1h for a week, 4h for 30 days), once that much history has loaded. |
+| **5m 15m 1h 4h 1D 1W 1M** | The candle size: one candle per 5 minutes, 15 minutes, 1 hour, 4 hours, 1 day, 1 week or 1 month. The **⌄** list has every size (also 30m, 2h and 12h). Small candles show detail, big ones show the trend. 5m goes 2 days back, 15m and 30m 7 days, the rest 30 days. |
+| **1W / 1M** | Calendar candles, as on Birdeye, Binance and TradingView: a week candle starts on Monday 00:00 UTC, a month candle on the 1st 00:00 UTC. Adalytics keeps 30 days of history, so 1W shows about 5 candles and 1M one or two. A first week or month that starts before the history does is left out, because it would be missing days. The last candle is the running one and grows until its week or month ends. |
 | **Candles / line** | Candles show open, high, low and close; the line joins the closes only, which is calmer to read for a trend. |
 | **Indicators** | Adds lines worked out from the candles (see below). The number shows how many are on. |
 | **History 64%** | Only while older history is still loading after the backend starts. The chart grows as it loads. |

@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 
 export const chartType = ref('candles') // 'candles' or 'line'
-export const candleSize = ref('15m') // '5m', '15m', '30m', '1h', '2h', '4h', '12h' or '1D'
+export const candleSize = ref('15m') // '5m', '15m', '30m', '1h', '2h', '4h', '12h', '1D', '1W' or '1M'
 export const indicators = ref([]) // picked indicators, e.g. ['ma20', 'atr']
 export const chartUnit = ref('price') // 'price', or 'fdv': the chart in fully diluted value
-export const chartRange = ref('') // '24H', '7D' or '30D' when a time range was picked; '' otherwise

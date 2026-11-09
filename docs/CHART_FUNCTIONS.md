@@ -9,7 +9,8 @@ Every function behind the price chart on a token page: the bar on top, the chart
 | `applyTheme` | Repaints the chart, candles, line and volume in the current theme's colours when the light / dark switch is used; the zoom stays. |
 | `isCandles` | Reports whether the chart shows candles instead of a line. |
 | `showBar` | Puts a bar in the legend (the latest one when the mouse is off the chart), with the close before it for the line's change. |
-| `load` | Puts the candles into the chart, as candles or as a line through each close. The view is set only when the token, size or unit changes, so a zoom or scroll survives the minute refresh and a switch between candles and line. Candles open on the latest ones, about 14px wide each; the line shows about four times as many, so it reads as a trend. The latest price has a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap. It also sets the price step (priceStep) and puts the drawings on the series on screen. The times are moved to the visitor's clock first (localTime.js), so the new day starts at local midnight. |
+| `load` | Puts the candles into the chart, as candles or as a line through each close. The view is set only when the token, size or unit changes, so a zoom or scroll survives the minute refresh and a switch between candles and line. Candles open on the latest ones, about 14px wide each; the line shows about four times as many, so it reads as a trend. The latest price has a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap. It also sets the price step (priceStep) and puts the drawings on the series on screen. 5m to 12h are moved to the visitor's clock first (localTime.js), so the new day starts at local midnight. |
+| `timeAxis` | Sets the time axis and the date under the mouse for the candle size (`size` prop): clock times for 5m to 12h, dates only for 1D, 1W and 1M. |
 | `hide` | The toolbar's hide menu: hides or shows the drawings or the indicators; "Hide all" hides both, or shows both when both are hidden. |
 | `remove` | The toolbar's remove menu: removes the drawings, the indicators (unpicks them in the Indicators menu) or both. |
 | `fmt` (prop) | How the axis and the legend write values: a price, or a compact FDV. |
@@ -28,10 +29,11 @@ Every function behind the price chart on a token page: the bar on top, the chart
 
 | Function | What it does |
 |---|---|
-| `localShift` | The seconds between UTC and the visitor's clock (19,800 in Sri Lanka). One offset for the whole chart, so times stay in order across a daylight saving change. |
-| `toLocal` | Moves the candles to the visitor's clock before they are drawn, as the library's docs advise: it starts a new day at midnight UTC (05:30 in Sri Lanka), which would put "9 Nov" at 05:30. Only the drawing moves; 1D, 1W and 1M stay on UTC days. |
-| `tickMark` | Writes the time axis: hours like "16:00"; a new day as "5 Oct", like CoinGecko; a new month or year as its name. Written as UTC, because the times are already moved. |
-| `crosshairTime` | Writes the date under the mouse: "Tue 13 Oct, 10:00". |
+| `isDaySize` / `chartShift` | 1D, 1W and 1M are whole UTC days, like Birdeye's and Binance's: they are not moved and show only their date. 5m to 12h are moved by the visitor's offset (19,800 seconds in Sri Lanka), so the new day starts at local midnight, as the library's docs advise. |
+| `localShift` | The seconds between UTC and the visitor's clock. One offset for the whole chart, so times stay in order across a daylight saving change. |
+| `toLocal` | Moves the candles by that shift before they are drawn. |
+| `tickMarkFor` | The time axis for a size: hours like "16:00"; a new day as "5 Oct"; a month or year as its name. 1M writes "Nov"; no day candle gets a clock time. Written as UTC, because the times are already moved. |
+| `crosshairFor` | The date under the mouse: "Tue 13 Oct, 10:00"; "Mon 9 Nov" (1D); "Week of 2 Nov" (1W); "November 2026" (1M). |
 
 ## `src/chart/view.js`
 
@@ -123,7 +125,7 @@ Every function behind the price chart on a token page: the bar on top, the chart
 | `priceStep.test.js` | The step is one unit of the fifth significant digit (SNEK, HOSKY, LQ, an FDV); a real move counts 3,297 ticks, not 329 million; no price gives the fallback. |
 | `toolList.test.js` | Every tool on the toolbar exists in the library and has a name and an icon; each tool is in one group; the 14 tools chosen. |
 | `indicators.test.js` | The menu lists MA 20, MA 50, RSI 14, ATR 14; the moving average, RSI (100 all up, 0 all down, 50 for equal moves), the true range with gaps, and ATR give the textbook values on hand-checked bars; with too few candles they give no value (not a wrong one), and the first value comes exactly at `minBars`. |
-| `localTime.test.js` | The offset of Colombo and New York; every candle moved by the same shift; the moved times written as the local clock (00:45 UTC is 06:15 in Colombo), and "9 Nov" at local midnight. |
+| `localTime.test.js` | The offset of Colombo and New York; only 5m to 12h are moved (a 1D candle stays on 9 Nov in New York); intraday times written as the local clock, "9 Nov" at local midnight; 1D, 1W, 1M written as dates ("Nov", "Week of 2 Nov", "Mon 9 Nov"), never a clock time. |
 | `loadWait.test.js` | 20 candles per size (1h after 20 hours, 4h after 80, 1D after 20 days, 1W after all 30 days), capped by the history kept; never 100% while something is missing. |
 | `useDrawTools.test.js` | With a pretend manager: drawings move with a switch between candles and line (with the magnet and hide settings); the measurement is not counted and goes on the next click; lock all locks new drawings too and keeps locked ones from Delete; a button picking the tool on goes back to the cursor, a menu does not; typed text is written, and an empty new text removed. |
 

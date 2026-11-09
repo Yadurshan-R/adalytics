@@ -18,7 +18,7 @@ import { useDrawTools } from '../chart/useDrawTools.js'
 import { useIndicators } from '../chart/useIndicators.js'
 import { zoom, resetView } from '../chart/view.js'
 import { priceStep } from '../chart/priceStep.js'
-import { localShift, toLocal } from '../chart/localTime.js'
+import { chartShift, toLocal, isDaySize, tickMarkFor, crosshairFor } from '../chart/localTime.js'
 import { indicators as picked } from '../chartPrefs.js'
 import DrawToolbar from './DrawToolbar.vue'
 import ChartTextBox from './ChartTextBox.vue'
@@ -29,6 +29,7 @@ const props = defineProps({
   candles: { type: Array, default: () => [] }, // [{ time, open, high, low, close, volume }], oldest first
   indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma20', 'atr']
   fmt: { type: Function, default: formatPrice }, // writes a value: a price, or a compact FDV
+  size: { type: String, default: '1h' }, // candle size: sets the time axis (localTime.js)
   fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, size, unit)
   token: { type: String, default: '' }, // drawings are cleared when the token changes
 })
@@ -40,7 +41,7 @@ const shown = ref(null) // the bar the legend shows
 const base = ref(0) // line: the close before the bar shown, for the legend's change
 
 let chart, area, candleSeries, volume
-let bars = [] // the candles on the chart, moved to the visitor's clock (localTime.js)
+let bars = [] // the candles on the chart, intraday ones moved to the visitor's clock (localTime.js)
 let fitted = null // the fitKey the view was last fitted for
 
 // isCandles reports whether the chart shows candles instead of a line.
@@ -79,7 +80,8 @@ function showBar(i) {
 function load() {
   if (!chart) return
   const line = !isCandles()
-  bars = toLocal(props.candles.filter((c) => c.close > 0), localShift())
+  bars = toLocal(props.candles.filter((c) => c.close > 0), chartShift(props.size))
+  timeAxis()
   candleSeries.setData(line ? [] : bars.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })))
   area.setData(line ? bars.map((c) => ({ time: c.time, value: c.close })) : [])
   // The latest price: a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap.
@@ -103,6 +105,15 @@ function load() {
     else chart.timeScale().fitContent()
     fitted = props.fitKey
   }
+}
+
+// timeAxis sets how the time axis and the date under the mouse are written
+// for the candle size: clock times for 5m to 12h, dates only for 1D, 1W, 1M.
+function timeAxis() {
+  chart.applyOptions({
+    timeScale: { timeVisible: !isDaySize(props.size), tickMarkFormatter: tickMarkFor(props.size) },
+    localization: { timeFormatter: crosshairFor(props.size) },
+  })
 }
 
 // The axis writes values the way the fmt prop says (a price or an FDV).

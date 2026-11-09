@@ -3,7 +3,7 @@
 import { LineStyle, CrosshairMode } from 'lightweight-charts'
 import { color } from '../theme.js'
 import { SCROLL, SCALE } from './view.js'
-import { tickMark, crosshairTime } from './localTime.js'
+import { tickMarkFor, crosshairFor } from './localTime.js'
 
 // chartColors reads the chart's colours from the current theme (style.css):
 // TradingView's green and red candles, CoinMarketCap's blue line.
@@ -41,14 +41,14 @@ export function chartOptions(C) {
     rightPriceScale: { borderVisible: false },
     // maxBarSpacing keeps a candle at most 40px wide, so a chart with only a
     // few candles (1W, 1M) shows them at a normal width, like Birdeye.
-    timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, maxBarSpacing: 40, timeVisible: true, secondsVisible: false, tickMarkFormatter: tickMark },
+    timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, maxBarSpacing: 40, timeVisible: true, secondsVisible: false, tickMarkFormatter: tickMarkFor('1h') },
     crosshair: {
       mode: CrosshairMode.Normal,
       vertLine: { ...theme.crosshair.vertLine, style: LineStyle.Dashed, width: 1 },
       horzLine: { ...theme.crosshair.horzLine, style: LineStyle.Dashed, width: 1 },
     },
     // The date under the mouse, on the time axis: "Tue 13 Oct, 10:00".
-    localization: { timeFormatter: crosshairTime },
+    localization: { timeFormatter: crosshairFor('1h') }, // set per size by PriceChart (timeAxis)
     handleScroll: SCROLL,
     handleScale: SCALE,
   }

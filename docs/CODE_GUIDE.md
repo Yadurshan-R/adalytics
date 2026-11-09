@@ -144,7 +144,7 @@ No file is longer than 300 lines. Each one has one job.
 | `src/chart/indicators.js` | The indicator math: MA, RSI, ATR |
 | `src/chart/useIndicators.js` | Puts the picked indicators on the chart |
 | `src/chart/chartOptions.js` | How the chart looks: theme colours, axes, crosshair |
-| `src/chart/localTime.js` | The chart's times on the visitor's clock, and how the time axis writes them |
+| `src/chart/localTime.js` | Intraday times on the visitor's clock, day candles on UTC dates, and how the time axis writes them |
 | `src/chart/view.js` | Dragging and zooming the chart, the zoom and reset buttons |
 | `src/components/DrawToolbar.vue` | The drawing toolbar beside the chart, laid out like Birdeye's |
 | `src/components/ToolButton.vue` | One toolbar button, with its arrow tab and menu |

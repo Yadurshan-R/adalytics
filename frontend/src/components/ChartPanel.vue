@@ -74,7 +74,7 @@ watch(candles, () => {
     <ChartHeader v-model:size="candleSize" v-model:type="chartType" v-model:indicators="indicators" v-model:unit="chartUnit"
                  :can-fdv="supply > 0" />
     <p v-if="error" class="notice">{{ error }}</p>
-    <PriceChart :type="chartType" :candles="units.shown.value" :indicators="indicators" :fmt="units.fmt.value"
+    <PriceChart :type="chartType" :size="candleSize" :candles="units.shown.value" :indicators="indicators" :fmt="units.fmt.value"
                 :fit-key="`${id}-${candleSize}-${units.key.value}`" :token="`${id}-${units.key.value}`">
       <ChartWaiting v-if="!error && (wait || empty)" :size="candleSize" :wait="wait" />
     </PriceChart>

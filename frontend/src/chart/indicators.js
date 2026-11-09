@@ -15,6 +15,13 @@ export const INDICATORS = [
   { key: 'atr', name: 'ATR 14', color: '#00acc1', n: 14, panel: true, price: true },
 ]
 
+// minBars is how many bars an indicator needs for its first value: n, and
+// one more for RSI, which works on the moves between bars. With fewer, the
+// legend says "needs 15 candles" (1W and 1M have only a few in 30 days).
+export function minBars(ind) {
+  return ind.key === 'rsi' ? ind.n + 1 : ind.n
+}
+
 // sma is the simple moving average: the average close of the last n bars.
 // Above it the price is in an uptrend, below it in a downtrend.
 export function sma(bars, n) {

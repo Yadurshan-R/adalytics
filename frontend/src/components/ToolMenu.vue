@@ -1,5 +1,5 @@
 <!-- The menu a toolbar button opens, laid out like Birdeye's (TradingView's):
-     section headings in small capitals (FIBONACCI, PROJECTION…), then one row
+     section headings in small capitals (LINES, PROJECTION…), then one row
      per item with its icon and name. The item that is on (the tool picked,
      the magnet in use) is drawn inverted. It opens beside the button (under
      it on a phone) and closes on a click anywhere else. -->

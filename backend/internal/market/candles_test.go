@@ -33,9 +33,12 @@ func TestCandleSizes(t *testing.T) {
 	}
 
 	tr.backfill(ctx) // 7 days
+	// testNow is on a whole 2 hours but not on a whole 4 hours, 12 hours or day,
+	// so those sizes leave out their first candle: it began before the
+	// history and would be missing its first hours. The +1 is the running one.
 	want := map[string]int{
 		"5m": 2*24*12 + 1, "15m": 7*24*4 + 1, "30m": 7*24*2 + 1, "1h": 7*24 + 1,
-		"2h": 7*12 + 1, "4h": 7*6 + 1, "12h": 7*2 + 1, "1D": 7 + 1,
+		"2h": 7*12 + 1, "4h": 7 * 6, "12h": 7 * 2, "1D": 7,
 	}
 	for key, n := range want {
 		_, _, got, err := tr.Candles("snek", key)

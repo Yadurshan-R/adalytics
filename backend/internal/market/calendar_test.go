@@ -1,6 +1,6 @@
-// Tests for calendar candles (1W, 1M): weeks start on Monday and months on
-// the 1st, at 00:00 UTC, and a week or month that began before the history
-// is left out instead of shown with its first days missing.
+// Tests for where candles start: weeks on Monday and months on the 1st, at
+// 00:00 UTC, and a candle that began before the history (week, month or
+// fixed size) is left out instead of shown with its first part missing.
 package market
 
 import (
@@ -21,6 +21,25 @@ func TestWeekAndMonthStart(t *testing.T) {
 	}
 	if got := monthStart(utc(2026, 11, 30, 12)); !got.Equal(utc(2026, 11, 1, 0)) {
 		t.Errorf("month of 30 Nov starts %v, want 1 Nov", got)
+	}
+}
+
+// TestCandleStartsFixed checks that a fixed size also leaves out a candle that
+// began before the history: from 10:30, the first 1h candle is 11:00, the
+// first 1D candle is the next day.
+func TestCandleStartsFixed(t *testing.T) {
+	from, to := utc(2026, 11, 7, 10).Add(30*time.Minute), utc(2026, 11, 9, 2)
+	hour, _ := CandleSizeByKey("1h")
+	day, _ := CandleSizeByKey("1D")
+	if got := candleStarts(hour, from, to); got[0] != utc(2026, 11, 7, 11).Unix() {
+		t.Errorf("first 1h candle %v, want 11:00", time.Unix(got[0], 0).UTC())
+	}
+	if got := candleStarts(day, from, to); len(got) != 2 || got[0] != utc(2026, 11, 8, 0).Unix() {
+		t.Errorf("1D candles %v, want 8 and 9 Nov", got)
+	}
+	// History starting on a whole hour keeps that hour.
+	if got := candleStarts(hour, utc(2026, 11, 7, 10), to); got[0] != utc(2026, 11, 7, 10).Unix() {
+		t.Errorf("from 10:00: first 1h candle %v, want 10:00", time.Unix(got[0], 0).UTC())
 	}
 }
 

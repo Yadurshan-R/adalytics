@@ -163,6 +163,7 @@ onBeforeUnmount(() => {
     <div class="wrap">
       <div ref="el" class="chart"></div>
       <ChartTextBox v-if="textBox" :key="textBox.id" :box="textBox" @submit="draw.submitText" @cancel="draw.cancelText" />
+      <slot /><!-- e.g. the loading box (ChartWaiting) -->
       <ChartLegend :type="type" :bar="shown" :base="base" :fmt="fmt" :extras="shown ? ind.at(shown.time) : []" />
       <button v-if="selection.length" type="button" class="remove" title="Delete drawing (Del)" @click="draw.removeSelected">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l1 11h7l1-11M8.5 8.5v5M11.5 8.5v5" /></svg>

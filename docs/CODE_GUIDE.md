@@ -6,7 +6,8 @@ This guide explains how Adalytics is built. Read it to see how the pieces fit to
 - [Market functions](MARKET_FUNCTIONS.md): the market package (prices, history, candles)
 - [Market tests](MARKET_TESTS.md): the market package's tests
 - [Frontend functions](FRONTEND_FUNCTIONS.md): the Vue website
-- [Chart functions](CHART_FUNCTIONS.md): the price chart, its units, indicators and drawing tools
+- [Chart functions](CHART_FUNCTIONS.md): the price chart, its units, the loading box and indicators
+- [Drawing tool functions](DRAW_FUNCTIONS.md): the drawing toolbar beside the chart
 - [Chart guide](CHART_GUIDE.md): how to read and use the chart, for people using the site
 - [Large Trades functions](TRADES_FUNCTIONS.md): the Large Trades page, backend and frontend
 - [Top Traders functions](TOP_TRADERS_FUNCTIONS.md): the Top Traders tab on a token page, backend and frontend
@@ -100,7 +101,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/activity.go` | The live activity feed for the loading page |
 | `internal/market/history.go` | Chart ranges, chart points, candles and price changes |
 | `internal/market/candles.go` | Candle sizes (5m to 1M) and how far back each goes |
-| `internal/market/calendar.go` | Where each candle starts: fixed steps, or Mondays and the 1st for 1W and 1M |
+| `internal/market/calendar.go` | Where each candle starts: whole steps, or Mondays and the 1st for 1W and 1M, without a first candle that began before the history |
 | `internal/market/tokens.go` | The list of verified tokens (from `tokens.json`) |
 | `internal/market/format.go` | Small number and text helpers for the log |
 | `internal/api/server.go` | The API routes |
@@ -131,6 +132,8 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/TokenOverview.vue` | The token panel: name, links, policy ID and the main numbers in boxes |
 | `src/components/TokenInfo.vue` | Trade on Minswap, 24h traders, holders, policy, price performance, links and IDs |
 | `src/components/ChartPanel.vue` | The chart and its data: the candles at the picked size, refreshed every minute |
+| `src/components/ChartWaiting.vue` | The loading box over the chart while the picked size has too little history |
+| `src/chart/loadWait.js` | When a candle size has enough history to show (20 candles) |
 | `src/components/ChartHeader.vue` | The slim bar on top of the chart: candle size, candles or line, indicators, Price / FDV |
 | `src/chart/useUnits.js` | Price / FDV: the chart in ADA per token, or in fully diluted value |
 | `src/components/LoadingProgress.vue` | The loading box shown during the first load (the last hour of trades) |

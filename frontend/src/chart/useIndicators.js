@@ -4,7 +4,7 @@
 // value at the bar under the mouse.
 import { ref } from 'vue'
 import { LineSeries, LineStyle } from 'lightweight-charts'
-import { INDICATORS, sma, rsi, atr } from './indicators.js'
+import { INDICATORS, sma, rsi, atr, minBars } from './indicators.js'
 
 // panelHeight is an indicator panel's height in pixels: smaller on a phone.
 const panelHeight = () => (window.innerWidth <= 700 ? 70 : 110)
@@ -23,7 +23,7 @@ const RSI_LEVELS = [
 // getChart() returns the chart. Prices use priceFormat, like the price itself.
 export function useIndicators(getChart, priceFormat) {
   const series = {} // indicator key → its line on the chart
-  const lookup = ref({}) // indicator key → { time: value } for the legend
+  const lookup = ref({}) // indicator key → { values: { time: value } } or { need } for the legend
   const shown = ref(true) // false while the toolbar hides the indicators
 
   // create adds an indicator's line: on the price (panel 0), or in a new
@@ -53,29 +53,35 @@ export function useIndicators(getChart, priceFormat) {
   }
 
   // set shows the picked indicators (keys) for these bars and removes the rest.
+  // One picked but with too few bars for any value gets no line and no empty
+  // panel; the legend says how many candles it needs instead.
   function set(keys, bars) {
     const chart = getChart()
     if (!chart) return
     const next = {}
     for (const ind of INDICATORS) {
-      if (!keys.includes(ind.key) || !bars.length) {
+      const data = keys.includes(ind.key) && bars.length ? dataOf(ind, bars) : null
+      if (!data?.length) {
         if (series[ind.key]) chart.removeSeries(series[ind.key])
         delete series[ind.key]
+        if (data) next[ind.key] = { need: minBars(ind) }
         continue
       }
       series[ind.key] ??= create(ind)
-      const data = dataOf(ind, bars)
       series[ind.key].setData(data)
-      next[ind.key] = Object.fromEntries(data.map((p) => [p.time, p.value]))
+      next[ind.key] = { values: Object.fromEntries(data.map((p) => [p.time, p.value])) }
     }
     lookup.value = next
   }
 
-  // at is what the legend shows for the bar at this time: [{ name, color, value, price }].
+  // at is what the legend shows for the bar at this time:
+  // [{ name, color, value, price, need }] (need: the candles it needs for a value,
+  // set only when there are fewer).
   function at(time) {
     if (!shown.value) return []
     return INDICATORS.filter((ind) => lookup.value[ind.key]).map((ind) => ({
-      name: ind.name, color: ind.color, value: lookup.value[ind.key][time], price: ind.price,
+      name: ind.name, color: ind.color, value: lookup.value[ind.key].values?.[time], price: ind.price,
+      need: lookup.value[ind.key].need,
     }))
   }
 

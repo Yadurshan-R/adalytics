@@ -14,6 +14,7 @@ Every test in `internal/market`, file by file. Run them with `go test ./internal
 
 | Function | What it does |
 |---|---|
+| `TestCandleStartsFixed` | Checks that 1h and 1D also leave out a first candle that began before the history (from 10:30: 11:00, and the next day), and keep it when the history starts on a whole step. |
 | `TestWeekAndMonthStart` / `TestCandleStartsCalendar` | Checks that weeks start on Monday and months on the 1st (UTC), and that a first week or month missing days is left out. |
 | `TestWeekCandleCountsItsWholeWeek` | Checks that a week candle holds every swap of its week, with the right open, high, low, close and volume. |
 
@@ -21,7 +22,7 @@ Every test in `internal/market`, file by file. Run them with `go test ./internal
 
 | Function | What it does |
 |---|---|
-| `TestCandleSizes` | Checks that each candle size covers all the history loaded so far: 24 hours at first, then 7 days once the background load is done, and that a wrong size or token is an error. |
+| `TestCandleSizes` | Checks that each candle size covers all the history loaded so far: 24 hours at first, then 7 days once the background load is done, without a first candle that began before the history (4h, 12h, 1D), and that a wrong size or token is an error. |
 
 ## `internal/market/charts_test.go`
 

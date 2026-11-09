@@ -1,7 +1,7 @@
 // Tests for indicators.js: the moving average, RSI and ATR give the textbook
 // values on small hand-checked examples.
 import { describe, it, expect } from 'vitest'
-import { INDICATORS, sma, rsi, atr, trueRange } from './indicators.js'
+import { INDICATORS, sma, rsi, atr, trueRange, minBars } from './indicators.js'
 
 // bar makes one bar at time t (open is not used by these indicators).
 const bar = (t, high, low, close) => ({ time: t, open: close, high, low, close })
@@ -55,5 +55,27 @@ describe('atr', () => {
   it('is 0 for bars where the price never moved (a token nobody traded)', () => {
     const flat = [1, 2, 3, 4].map((t) => bar(t, 5, 5, 5))
     expect(atr(flat, 3).every((p) => p.value === 0)).toBe(true)
+  })
+})
+
+describe('too few bars', () => {
+  // A 1W chart has about 5 candles in 30 days, a 1D chart 30: fewer than some
+  // indicators need. They must give no value at all, not a wrong one or NaN.
+  const five = [1, 2, 3, 4, 5].map((c, i) => bar(i, c + 1, c - 1, c))
+  it('gives no value with fewer bars than needed', () => {
+    expect(sma(five, 20)).toEqual([])
+    expect(rsi(five, 14)).toEqual([])
+    expect(atr(five, 14)).toEqual([])
+    expect(sma([], 20)).toEqual([])
+    expect(rsi([], 14)).toEqual([])
+  })
+
+  it('gives the first value exactly at minBars', () => {
+    const many = Array.from({ length: 60 }, (_, i) => bar(i, i + 2, i, i + 1))
+    for (const ind of INDICATORS) {
+      const f = { ma20: sma, ma50: sma, rsi, atr }[ind.key]
+      expect(f(many.slice(0, minBars(ind) - 1), ind.n), ind.name).toEqual([])
+      expect(f(many.slice(0, minBars(ind)), ind.n), ind.name).toHaveLength(1)
+    }
   })
 })

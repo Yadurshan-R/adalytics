@@ -1,6 +1,6 @@
 # Chart guide
 
-How to read the price chart on a token page and what every button does. It works like TradingView's and Birdeye's charts, so what you learn here carries over. For the code behind it, see [CHART_FUNCTIONS.md](CHART_FUNCTIONS.md).
+How to read the price chart on a token page and what every button does. It works like TradingView's and Birdeye's charts, so what you learn here carries over. For the code behind it, see [CHART_FUNCTIONS.md](CHART_FUNCTIONS.md) and [DRAW_FUNCTIONS.md](DRAW_FUNCTIONS.md).
 
 ```
 +-----------------------------------------------------------------------+
@@ -38,10 +38,10 @@ How to read the price chart on a token page and what every button does. It works
 | Button | What it does |
 |---|---|
 | **5m 15m 1h 4h 1D 1W 1M** | The candle size: one candle per 5 minutes, 15 minutes, 1 hour, 4 hours, 1 day, 1 week or 1 month. The **⌄** list has every size (also 30m, 2h and 12h). Small candles show detail, big ones show the trend. 5m goes 2 days back, 15m and 30m 7 days, the rest 30 days. |
-| **1W / 1M** | Calendar candles, as on Birdeye, Binance and TradingView: a week candle starts on Monday 00:00 UTC, a month candle on the 1st 00:00 UTC. Adalytics keeps 30 days of history, so 1W shows about 5 candles and 1M one or two. A first week or month that starts before the history does is left out, because it would be missing days. The last candle is the running one and grows until its week or month ends. |
+| **1W / 1M** | Calendar candles, as on Birdeye, Binance and TradingView: a week candle starts on Monday 00:00 UTC, a month candle on the 1st 00:00 UTC. Adalytics keeps 30 days of history, so 1W shows about 5 candles and 1M one or two. A first candle that starts before the history does is left out, at every size, because it would be missing part of its time. The last candle is the running one and grows until its week or month ends. |
 | **Candles / line** | Candles show open, high, low and close; the line joins the closes only, which is calmer to read for a trend. |
 | **Indicators** | Adds lines worked out from the candles (see below). The number shows how many are on. |
-| **History 64%** | Only while older history is still loading after the backend starts. The chart grows as it loads. |
+| **Loading 1 day candles 35%** | Only after the backend starts, while the history loads. Each size shows once it has about 20 candles, so it looks like a real chart: 5m to 1h almost at once, 4h after about 3 days of history, 1D after 20 days, 1W and 1M after all 30. Then older candles fill in by themselves. |
 | **Price / FDV** | Shown when the token's total supply is known. Price is ADA per token. FDV (fully diluted value) is the price × the total supply: what all the tokens would be worth. Use FDV to compare the size of two projects; price alone says nothing about that. |
 
 Your choices (size, style, indicators, Price / FDV) stay the same when you open another token, until you reload the page.
@@ -56,6 +56,8 @@ They are worked out in your browser from the candles on screen, so they follow t
 | **MA 50** (pink) | The average close of the last 50 candles. | The slower trend. When MA 20 crosses above MA 50, the trend may be turning up; below, down. |
 | **RSI 14** (violet, own panel) | Relative strength index, 0 to 100, from the last 14 candles' ups and downs. Dashed lines at 70 and 30, a dotted one at 50, like TradingView. | Above 70: overbought (rose fast, may pull back). Below 30: oversold (fell fast, may bounce). |
 | **ATR 14** (cyan, own panel) | Average true range: how much the price usually moves in one candle, in ADA, from the last 14 candles (gaps included), worked out the way TradingView's ATR is. | Size, not direction: a high ATR means wild moves. Traders set a stop-loss beyond the normal swing, for example 1.5 × ATR from the entry. A token nobody trades shows a low ATR, because its price did not move. |
+
+An indicator needs a number of candles before its first value: 20 for MA 20, 50 for MA 50, 15 for RSI 14, 14 for ATR 14. Adalytics keeps 30 days, which is only 30 daily candles and about 5 weekly ones, so MA 50 cannot show on 1D and none of them on 1W or 1M. The legend then says "needs 50 candles" in grey instead of drawing nothing. RSI and ATR start from the oldest candle loaded (as on TradingView), so they can shift a little while the history still loads.
 
 Indicators describe the past; none of them predicts the price.
 

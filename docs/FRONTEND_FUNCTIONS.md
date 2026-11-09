@@ -1,6 +1,6 @@
 # Frontend functions
 
-Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHART_FUNCTIONS.md)) and the Large Trades page (see [TRADES_FUNCTIONS.md](TRADES_FUNCTIONS.md)), file by file. Each one also has the same comment above it in the code. See [CODE_GUIDE.md](CODE_GUIDE.md) for how the parts fit together.
+Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHART_FUNCTIONS.md) and [DRAW_FUNCTIONS.md](DRAW_FUNCTIONS.md)) and the Large Trades page (see [TRADES_FUNCTIONS.md](TRADES_FUNCTIONS.md)), file by file. Each one also has the same comment above it in the code. See [CODE_GUIDE.md](CODE_GUIDE.md) for how the parts fit together.
 
 ## `src/theme.js`
 

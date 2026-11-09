@@ -29,11 +29,11 @@ func monthStart(t time.Time) time.Time {
 // candleStarts lists the start times (Unix seconds) of the candles between
 // from and to, oldest first.
 //
-// Fixed sizes start at the step before from, like before. Week and month
-// candles start at the first Monday or 1st at or after from: a week or month
-// that began before the history loaded would be missing its first days, so
-// its open, high and low would be wrong. The last candle is the one still
-// running, as on every chart.
+// Every size starts at its first step at or after from: Fixed sizes at a
+// multiple of their length, week and month candles at the first Monday or
+// 1st. A candle that began before the history loaded would be missing its
+// first part, so its open, high and low would be wrong. The last candle is
+// the one still running, as on every chart.
 func candleStarts(size CandleSize, from, to time.Time) []int64 {
 	var starts []int64
 	switch size.Calendar {
@@ -52,7 +52,8 @@ func candleStarts(size CandleSize, from, to time.Time) []int64 {
 		}
 	default:
 		step := int64(size.Interval / time.Second)
-		for t := from.Unix() / step * step; t <= to.Unix(); t += step {
+		first := (from.Unix() + step - 1) / step * step // round up to a whole step
+		for t := first; t <= to.Unix(); t += step {
 			starts = append(starts, t)
 		}
 	}

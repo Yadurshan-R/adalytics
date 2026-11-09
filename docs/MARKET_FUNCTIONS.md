@@ -31,7 +31,7 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | Function | What it does |
 |---|---|
 | `weekStart` / `monthStart` | The Monday 00:00 UTC of t's week, and the 1st 00:00 UTC of its month. |
-| `candleStarts` | Where each candle starts between from and to. Fixed sizes step from the step before from; 1W and 1M start at the first Monday or 1st at or after from, so a week or month missing days is left out. The last candle is the running one. |
+| `candleStarts` | Where each candle starts between from and to: the first whole step at or after from (a multiple of the size, or the first Monday or 1st for 1W and 1M), so a first candle that began before the history, and would miss part of its time, is left out. The last candle is the running one. |
 
 ## `internal/market/details.go`
 

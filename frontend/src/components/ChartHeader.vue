@@ -2,7 +2,6 @@
      candle size | candles or line | indicators                Price / FDV
      One bar for both chart styles, so changing the style keeps the size. -->
 <script setup>
-import { computed } from 'vue'
 import CandleSizePicker from './CandleSizePicker.vue'
 import IndicatorMenu from './IndicatorMenu.vue'
 
@@ -11,17 +10,9 @@ const props = defineProps({
   type: { type: String, required: true }, // 'candles' or 'line'
   indicators: { type: Array, required: true }, // picked indicators
   unit: { type: String, required: true }, // 'price' or 'fdv'
-  history: { type: Object, required: true }, // loading progress from the backend
   canFdv: { type: Boolean, default: false }, // false when the total supply is unknown
 })
 const emit = defineEmits(['update:size', 'update:type', 'update:indicators', 'update:unit'])
-
-// loaded is how much of the history is in, while older days still load.
-const loaded = computed(() => {
-  const h = props.history
-  return h.done || !h.days ? 100 : Math.min(99, Math.floor(((h.loaded_hours || 0) / (h.days * 24)) * 100))
-})
-
 
 const STYLES = [
   { key: 'candles', label: 'Candles', icon: 'M6 3v3M6 14v3M4 6h4v8H4zM14 3v5M14 15v2M12 8h4v7h-4z' },
@@ -42,8 +33,7 @@ const STYLES = [
     </div>
     <span class="sep"></span>
     <IndicatorMenu :model-value="indicators" @update:model-value="emit('update:indicators', $event)" />
-    <span v-if="loaded < 100" class="hist end" title="Older candles appear as the history loads">History {{ loaded }}%</span>
-    <div v-if="canFdv" class="group" :class="{ end: loaded >= 100 }" role="group" aria-label="Price or fully diluted value">
+    <div v-if="canFdv" class="group end" role="group" aria-label="Price or fully diluted value">
       <button type="button" class="btn" :aria-pressed="unit !== 'fdv'" @click="emit('update:unit', 'price')">Price</button>
       <span class="slash">/</span>
       <button type="button" class="btn" :aria-pressed="unit === 'fdv'" title="Fully diluted value: price × total supply" @click="emit('update:unit', 'fdv')">FDV</button>
@@ -57,7 +47,6 @@ const STYLES = [
 .end { margin-left: auto; }
 .sep { width: 1px; height: 20px; margin: 0 6px; background: var(--line); }
 .slash { color: var(--disabled); }
-.hist { margin-right: 8px; font-size: 12px; color: var(--faint); }
 .btn { display: inline-flex; align-items: center; height: 30px; padding: 0 8px; border: 0; border-radius: 4px; background: none; color: var(--subtle); font: inherit; font-weight: 500; cursor: pointer; }
 .btn:hover { background: var(--btn-hover); color: var(--text); }
 .btn[aria-pressed="true"] { color: var(--accent); }

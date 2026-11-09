@@ -13,7 +13,7 @@ import { MEASURE } from '../chart/useDrawTools.js'
 const props = defineProps({
   tool: { type: String, required: true }, // the tool picked
   magnet: { type: String, default: 'off' }, // 'off', 'weak' or 'strong'
-  stay: { type: Boolean, default: false },
+  stay: { type: Boolean, default: true },
   locked: { type: Boolean, default: false },
   hidden: { type: Boolean, default: false }, // drawings hidden
   hiddenInd: { type: Boolean, default: false }, // indicators hidden

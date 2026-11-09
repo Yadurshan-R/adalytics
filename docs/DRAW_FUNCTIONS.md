@@ -81,7 +81,7 @@ The drawings themselves (placing, picking, moving, the handles, the labels, the 
 | `pick` | Chooses a tool. Picking the tool that is on goes back to the cursor from a button, not from a menu. |
 | `clearMeasure` | Removes the measurement. |
 | `setMagnet` | Off, weak (snaps to the open, high, low or close when near one) or strong (always snaps). |
-| `setStay` | Stay in drawing mode: keep the tool after a drawing, to draw several in a row. |
+| `setStay` | Stay in drawing mode: keep the tool after a drawing, to draw several in a row. On by default, so the picked tool stays until another tool, the cross or Esc. |
 | `setLocked` | Locks or unlocks every drawing: a locked drawing can be selected but not moved or deleted with the Delete key. |
 | `setHidden` | Hides or shows every drawing. |
 | `show` | Switches to the drawings of one chart (token, Price/FDV and candle size): the ones on screen are put aside (drawBoards.js), and that timeframe's own come back. Called by PriceChart when the size, unit or token changes. |

@@ -43,6 +43,14 @@ function setup() {
 }
 
 describe('useDrawTools', () => {
+  it('keeps the picked tool after a drawing by default (stay in drawing mode on)', () => {
+    const { t, dm } = setup()
+    expect(t.stay.value).toBe(true)
+    expect(dm().opts.stayInDrawingMode).toBe(true)
+    t.setStay(false)
+    expect(dm().opts.stayInDrawingMode).toBe(false)
+  })
+
   it('moves the drawings to the new series on a switch between candles and line', () => {
     const { t, made, state, dm } = setup()
     t.setMagnet('strong')

@@ -63,7 +63,7 @@ Indicators describe the past; none of them predicts the price.
 
 ## Drawing tools
 
-The toolbar on the left works like Birdeye's (TradingView's). Each button holds a group of tools: click it to use the tool it shows, or hover it and click the small arrow tab on its right to open the group's menu. The button then keeps the last tool you picked. The tool you are using has a grey square behind it. After one drawing the tool goes back to the cross (✛), like TradingView. The drawings are TradingView's own tools, from the open-source library lightweight-charts-drawing.
+The toolbar on the left works like Birdeye's (TradingView's). Each button holds a group of tools: click it to use the tool it shows, or hover it and click the small arrow tab on its right to open the group's menu. The button then keeps the last tool you picked. The tool you are using has a grey square behind it. The tool stays picked after a drawing, so you can draw several in a row; it changes only when you pick another tool, the cross (✛), or press Esc. To select, move or delete a drawing, pick the cross first. The drawings are TradingView's own tools, from the open-source library lightweight-charts-drawing.
 
 | Button | Tool | Clicks | What it is for |
 |---|---|---|---|
@@ -93,7 +93,7 @@ Hold **Shift** while drawing for straight angles (45° steps) and to turn the ma
 | **Zoom in / out** | Fewer or more candles on screen, keeping the newest on the right. |
 | **Reset view** | Fits all the history loaded so far on screen. |
 | **Magnet** | While drawing, points snap to the open, high, low or close of the candle under the mouse, so a line starts exactly on a low or a high. Its menu has **Weak magnet** (snaps when the mouse is near one) and **Strong magnet** (always snaps). |
-| **Stay in drawing mode** | Keeps the tool on after a drawing, to draw several in a row. Press Esc to stop. |
+| **Stay in drawing mode** | On by default: the tool stays picked after a drawing. Click it to turn it off, and each drawing then goes back to the cross, like TradingView's default. The Measure ruler always ends after one use. |
 | **Lock all drawings** | Drawings can still be selected, but not moved or deleted with the Delete key, so nothing changes by accident. New drawings are locked too while it is on. |
 | **Hide** (eye) | Hides every drawing to see the chart clean; click again to show them. Its menu can also hide the indicators, or both. |
 | **Remove** (bin) | Removes every drawing. Its menu can also remove the indicators, or both. |

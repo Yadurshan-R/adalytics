@@ -25,7 +25,9 @@ const newManager = (chart, series, opts) => new DrawingManager(chart, series, op
 export function useDrawTools(get, make = newManager) {
   const tool = ref('cursor') // 'cursor', MEASURE or a drawing kind (toolList.js)
   const magnet = ref('off') // 'off', 'weak' or 'strong'
-  const stay = ref(false) // keep the tool after a drawing, to draw several in a row
+  // stay keeps the picked tool after a drawing, until another tool, the cross
+  // or Esc is picked. On by default (TradingView's is off): draw several in a row.
+  const stay = ref(true)
   const locked = ref(false) // every drawing locked: no moving, no Delete key
   const hidden = ref(false) // every drawing hidden
   const count = ref(0) // drawings on the chart, the measurement not counted

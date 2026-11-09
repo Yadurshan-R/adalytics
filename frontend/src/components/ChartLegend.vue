@@ -41,7 +41,8 @@ const volDir = computed(() => (props.bar && props.bar.close < props.bar.open ? '
       <span>C<b :class="dir">{{ fmt(bar.close) }}</b></span>
     </template>
     <span v-else><b :class="dir">{{ fmt(bar.close) }}</b></span>
-    <span v-if="change" :class="dir">
+    <span v-if="change && change.diff === 0" :class="dir">0 (0.00%)</span><!-- no move, like TradingView -->
+    <span v-else-if="change" :class="dir">
       {{ sign(change.diff) }}{{ fmt(Math.abs(change.diff)).slice(1) }} ({{ sign(change.pct) }}{{ Math.abs(change.pct).toFixed(2) }}%)
     </span>
     <span class="vol">Vol<b :class="volDir">{{ formatADA(bar.volume) }}</b></span>

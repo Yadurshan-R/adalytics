@@ -3,6 +3,7 @@
 import { LineStyle, CrosshairMode } from 'lightweight-charts'
 import { color } from '../theme.js'
 import { SCROLL, SCALE } from './view.js'
+import { tickMark, crosshairTime } from './localTime.js'
 
 // chartColors reads the chart's colours from the current theme (style.css):
 // TradingView's green and red candles, CoinMarketCap's blue line.
@@ -30,17 +31,6 @@ export function themeOptions(C) {
   }
 }
 
-// tickMark writes the time axis: hours like "16:00"; a new day as "5 Oct",
-// like CoinGecko; a new month or year as its name.
-function tickMark(t, type) {
-  const d = new Date(t * 1000)
-  if (type === 0) return String(d.getFullYear())
-  const month = d.toLocaleString('en-US', { month: 'short' })
-  if (type === 1) return month
-  if (type === 2) return `${d.getDate()} ${month}`
-  return d.toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
 // chartOptions are the options the chart is created with (C: chartColors()).
 export function chartOptions(C) {
   const theme = themeOptions(C)
@@ -58,9 +48,7 @@ export function chartOptions(C) {
       horzLine: { ...theme.crosshair.horzLine, style: LineStyle.Dashed, width: 1 },
     },
     // The date under the mouse, on the time axis: "Tue 13 Oct, 10:00".
-    localization: {
-      timeFormatter: (t) => new Date(t * 1000).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }),
-    },
+    localization: { timeFormatter: crosshairTime },
     handleScroll: SCROLL,
     handleScale: SCALE,
   }

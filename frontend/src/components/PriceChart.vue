@@ -18,6 +18,7 @@ import { useDrawTools } from '../chart/useDrawTools.js'
 import { useIndicators } from '../chart/useIndicators.js'
 import { zoom, resetView } from '../chart/view.js'
 import { priceStep } from '../chart/priceStep.js'
+import { localShift, toLocal } from '../chart/localTime.js'
 import { indicators as picked } from '../chartPrefs.js'
 import DrawToolbar from './DrawToolbar.vue'
 import ChartTextBox from './ChartTextBox.vue'
@@ -39,7 +40,7 @@ const shown = ref(null) // the bar the legend shows
 const base = ref(0) // line: the close before the bar shown, for the legend's change
 
 let chart, area, candleSeries, volume
-let bars = [] // the candles on the chart
+let bars = [] // the candles on the chart, moved to the visitor's clock (localTime.js)
 let fitted = null // the fitKey the view was last fitted for
 
 // isCandles reports whether the chart shows candles instead of a line.
@@ -78,7 +79,7 @@ function showBar(i) {
 function load() {
   if (!chart) return
   const line = !isCandles()
-  bars = props.candles.filter((c) => c.close > 0)
+  bars = toLocal(props.candles.filter((c) => c.close > 0), localShift())
   candleSeries.setData(line ? [] : bars.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })))
   area.setData(line ? bars.map((c) => ({ time: c.time, value: c.close })) : [])
   // The latest price: a label on the axis and a dotted line across the chart, like Birdeye and CoinMarketCap.

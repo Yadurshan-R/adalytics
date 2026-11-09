@@ -1,6 +1,5 @@
-<!-- Token page: the token panel on the left (laid out like Birdeye's, with
-     CoinMarketCap's info list under it), the chart and recent trades on the
-     right.
+<!-- Token page: the chart and recent trades on the left, the token panel on
+     the right (laid out like Birdeye's, with CoinMarketCap's info list under it).
      - TokenOverview: name, links, policy ID and the main numbers in boxes.
      - ActivityBox: 5m, 1h, 4h and 24h volume and trades, buys against sells.
      - TokenInfo: Minswap button, traders/holders/security, price performance,
@@ -77,7 +76,8 @@ const span = ref(null)
 </template>
 
 <style scoped>
-.layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: "top chart" "rest chart"; column-gap: 32px; align-items: start; }
+/* Chart on the left, the token details on the right, like Birdeye and DexScreener. */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-rows: auto 1fr; grid-template-areas: "chart top" "chart rest"; column-gap: 32px; align-items: start; }
 .top { grid-area: top; }
 .rest { grid-area: rest; }
 .chart-col { grid-area: chart; min-width: 0; }

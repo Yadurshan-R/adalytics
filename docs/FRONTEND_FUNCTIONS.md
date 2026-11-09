@@ -77,7 +77,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 
 | Function | What it does |
 |---|---|
-| (template) | The top of the left column, like Birdeye's token panel: logo, ticker and name, website and Cardanoscan links, the short policy ID, and boxes for price (ADA and USD), liquidity, FDV and 24h volume. |
+| (template) | The top of the right column, like Birdeye's token panel: logo, ticker and name, website and Cardanoscan links, the short policy ID, and boxes for price (ADA and USD), liquidity, FDV and 24h volume. |
 | `copy` | Puts the policy ID on the clipboard and shows a tick for 1.5 seconds. |
 
 ## `src/components/TokenInfo.vue`
@@ -188,5 +188,5 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `token` | The token this page is about, found by the id in the address. |
 | (tab title) | The browser tab shows the token and its live price, like "NIGHT ₳0.1890 +2.60% \| Adalytics", or "Token not found" for a wrong id. |
 | `back` | Goes to the previous page if it was the list, otherwise opens the list. |
-| (layout) | Laptop: token panel on the left, chart and the Trades / Top Traders tabs (TradesSection) on the right. Phone: price boxes, then the chart and trades, then activity, the Minswap button and Token Info, like Birdeye's app. |
+| (layout) | Laptop: chart and the Trades / Top Traders tabs (TradesSection) on the left, token panel on the right, like Birdeye and DexScreener. Phone: price boxes, then the chart and trades, then activity, the Minswap button and Token Info, like Birdeye's app. |
 | `span` | The low and high of the last 24 hours, sent by the chart (ChartPanel), for the price performance bar. |

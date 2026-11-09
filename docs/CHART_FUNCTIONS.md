@@ -50,17 +50,21 @@ Every function behind the price chart on a token page: the bar on top, the chart
 
 | Function | What it does |
 |---|---|
+| `INDICATORS` | The Indicators menu: MA 20, MA 50, RSI 14 and ATR 14, the ones most traders use, with their colour, length, panel and whether their value is a price. |
 | `sma` | Simple moving average: the average close of the last n bars. |
-| `ema` | Exponential moving average: recent bars count more, so it turns sooner. |
-| `bollinger` | The n-bar average with a band two standard deviations above and below it. |
-| `vwap` | Volume weighted average price of each day so far; starts again every day (UTC). |
-| `rsi` | Relative strength index, 0 to 100 (Wilder's smoothing): above 70 overbought, below 30 oversold. |
+| `wilder` | Wilder's smoothing, used by RSI and ATR: the average of the first n values, then each new value counts 1/n. |
+| `rsi` | Relative strength index, 0 to 100: above 70 overbought, below 30 oversold. |
+| `trueRange` | How far the price moved in one bar, gaps included: the largest of high − low, \|high − previous close\| and \|low − previous close\|. |
+| `atr` | Average true range: how much the price usually moves in one bar, in price; size only, no direction. |
 
 ## `src/chart/useIndicators.js`
 
 | Function | What it does |
 |---|---|
-| `set` | Shows the picked indicators for the bars on the chart and removes the rest. RSI goes in its own panel under the chart. |
+| `panelHeight` / `RSI_LEVELS` | An indicator panel's height (110px, 70px on a phone); RSI's lines as TradingView draws them: 70 and 30 dashed, 50 dotted, on an axis that always shows 0 to 100. |
+| `create` | Adds an indicator's line: the moving averages on the price, RSI and ATR each in a new panel under the chart (with RSI's level lines). The chart removes an empty panel by itself. |
+| `dataOf` | Works out an indicator's line from the bars. |
+| `set` | Shows the picked indicators for the bars on the chart and removes the rest. |
 | `at` | Each indicator's value at the bar under the mouse, for the legend (nothing while the indicators are hidden). |
 | `show` | Hides or shows every indicator, lines and legend (the toolbar's "Hide indicators"); indicators added while hidden stay hidden. |
 
@@ -184,6 +188,7 @@ The drawings themselves (placing, picking, moving, the handles, the labels, the 
 |---|---|
 | `priceStep.test.js` | The step is one unit of the fifth significant digit (SNEK, HOSKY, LQ, an FDV); a real move counts 3,297 ticks, not 329 million; no price gives the fallback. |
 | `toolList.test.js` | Every tool on the toolbar exists in the library and has a name and an icon; each tool is in one group; the 16 tools chosen. |
+| `indicators.test.js` | The menu lists MA 20, MA 50, RSI 14, ATR 14; the moving average, RSI (100 all up, 0 all down, 50 for equal moves), the true range with gaps, and ATR give the textbook values on hand-checked bars. |
 | `useDrawTools.test.js` | With a pretend manager: drawings move with a switch between candles and line (with the magnet and hide settings); the measurement is not counted and goes on the next click; lock all locks new drawings too and keeps locked ones from Delete; a button picking the tool on goes back to the cursor, a menu does not; typed text is written, and an empty new text removed. |
 
 ## `src/chart/useUnits.js`

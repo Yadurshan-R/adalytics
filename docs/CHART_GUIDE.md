@@ -53,10 +53,9 @@ They are worked out in your browser from the candles on screen, so they follow t
 | Indicator | What it is | How traders use it |
 |---|---|---|
 | **MA 20** (orange) | The average close of the last 20 candles. | Smooths out the noise. Price above it: short-term trend up; below: down. |
-| **EMA 50** (purple) | An average of the last 50 candles where recent ones count more. | A slower trend line. When MA 20 crosses above EMA 50, the trend may be turning up; below, down. |
-| **Bollinger Bands 20 2** (blue) | The MA 20 with a band 2 standard deviations above and below. | Narrow bands: a quiet market, often before a big move. Price at the top band: stretched up; at the bottom band: stretched down. |
-| **VWAP** (pink) | The average price of the day, weighted by how much was traded at each price. Starts again every day (UTC). | Shows the "fair" price of the day. Buying below it is buying cheaper than most did today. |
-| **RSI 14** (violet, own panel) | Relative strength index, 0 to 100, from the last 14 candles' ups and downs. Dashed lines at 70 and 30. | Above 70: overbought (rose fast, may pull back). Below 30: oversold (fell fast, may bounce). |
+| **MA 50** (pink) | The average close of the last 50 candles. | The slower trend. When MA 20 crosses above MA 50, the trend may be turning up; below, down. |
+| **RSI 14** (violet, own panel) | Relative strength index, 0 to 100, from the last 14 candles' ups and downs. Dashed lines at 70 and 30, a dotted one at 50, like TradingView. | Above 70: overbought (rose fast, may pull back). Below 30: oversold (fell fast, may bounce). |
+| **ATR 14** (cyan, own panel) | Average true range: how much the price usually moves in one candle, in ADA, from the last 14 candles (gaps included), worked out the way TradingView's ATR is. | Size, not direction: a high ATR means wild moves. Traders set a stop-loss beyond the normal swing, for example 1.5 × ATR from the entry. A token nobody trades shows a low ATR, because its price did not move. |
 
 Indicators describe the past; none of them predicts the price.
 

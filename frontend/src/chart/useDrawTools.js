@@ -3,10 +3,13 @@
 // tools, with TradingView's mouse and keys: Esc, Delete, Shift for 45°).
 // This file keeps the toolbar's state and does the few things the library
 // leaves to the app: lock all, hide all, the Measure tool, the text box, and
-// keeping the drawings when the chart switches between candles and line.
+// keeping the drawings when the chart switches between candles and line, and
+// one set of drawings per timeframe (show, drawBoards.js).
 // Nothing is saved: drawings live in memory and go when the page closes.
 import { ref } from 'vue'
 import { DrawingManager } from 'lightweight-charts-drawing'
+import { swap, kept } from './drawBoards.js'
+import { textEditing } from './textEditing.js'
 
 // MEASURE is the toolbar's Measure tool: a date and price range that goes
 // away on the next click, like TradingView's ruler.
@@ -33,18 +36,22 @@ export function useDrawTools(get, make = newManager) {
   let offs = [] // unsubscribe functions of the manager's events
   let measuring = false // the Measure tool is placing its range
   let measureId = null // the measurement on the chart, if any
+  let board = '' // whose drawings are on screen: token, Price/FDV and candle size
+  // The Text tool's box: open on a placed text, write or cancel (textEditing.js).
+  const { onTextEdit, submitText, cancelText } = textEditing(textBox, () => dm)
 
   // attach puts the drawings on the series on screen. After a switch between
   // candles and line it builds a manager on the new series and moves every
-  // drawing over (through the library's JSON, in memory only).
+  // drawing over (through the library's JSON, in memory only). The first
+  // manager brings back this timeframe's drawings, if it had any.
   function attach() {
     const s = get.series()
     if (!s || s === series) return
-    const kept = dm ? dm.exportJSON() : null
+    const json = dm ? dm.exportJSON() : kept(board)
     detach()
     series = s
     dm = make(get.chart(), s, { magnet: magnet.value, stayInDrawingMode: stay.value, bars: get.bars, fontFamily: FONT })
-    if (kept) dm.importJSON(kept)
+    if (json) dm.importJSON(json)
     dm.setDrawingsVisible(!hidden.value)
     offs = [
       dm.on('change', recount),
@@ -132,7 +139,18 @@ export function useDrawTools(get, make = newManager) {
     dm?.setDrawingsVisible(!on)
   }
 
-  // removeAll removes every drawing, locked ones included.
+  // show switches to the drawings of chart key (token, Price/FDV, size): the
+  // ones on screen are put aside for when their timeframe is picked again.
+  function show(key) {
+    if (key === board) return
+    textBox.value = null
+    clearMeasure()
+    swap(dm, board, key)
+    board = key
+    if (dm) recount()
+  }
+
+  // removeAll removes every drawing of this timeframe, locked ones included.
   function removeAll() {
     textBox.value = null
     measureId = null
@@ -144,29 +162,6 @@ export function useDrawTools(get, make = newManager) {
     for (const id of selection.value) if (!dm.get(id)?.locked) dm.remove(id)
   }
 
-  // onTextEdit opens the text box where a text was placed or double-clicked.
-  function onTextEdit(d, at) {
-    textBox.value = { id: d.id, x: at.x, y: at.y, value: d.text ?? '', fresh: !d.text }
-  }
-
-  // submitText writes the typed text on the drawing; an empty new text is removed.
-  function submitText(typed) {
-    const box = textBox.value
-    textBox.value = null
-    const d = box && dm?.get(box.id)
-    if (!d) return
-    const text = String(typed ?? '').trim().slice(0, 80)
-    if (text) dm.update({ ...d, text })
-    else if (box.fresh) dm.remove(d.id)
-  }
-
-  // cancelText closes the text box (Esc); a new text is removed.
-  function cancelText() {
-    const box = textBox.value
-    textBox.value = null
-    if (box?.fresh && dm?.get(box.id)) dm.remove(box.id)
-  }
-
   // A click on the chart removes the measurement, like TradingView's ruler.
   const onPress = () => !measuring && clearMeasure()
   let el = null
@@ -176,12 +171,13 @@ export function useDrawTools(get, make = newManager) {
   }
   function uninstall() {
     el?.removeEventListener('pointerdown', onPress)
+    swap(dm, board, '') // keep them for when the page comes back
     detach()
   }
 
   return {
     tool, magnet, stay, locked, hidden, count, selection, textBox,
-    attach, install, uninstall, pick, setMagnet, setStay, setLocked, setHidden,
+    attach, install, uninstall, show, pick, setMagnet, setStay, setLocked, setHidden,
     removeAll, removeSelected, submitText, cancelText,
   }
 }

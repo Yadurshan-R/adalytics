@@ -1,8 +1,10 @@
 // Tests for useDrawTools, with a pretend manager in place of the library's
 // DrawingManager (which needs a real chart in a browser): the drawings move
-// with the series, the Measure tool, lock all, picking tools, the text box.
-import { describe, it, expect } from 'vitest'
+// with the series, one set per timeframe, the Measure tool, lock all,
+// picking tools, the text box.
+import { describe, it, expect, beforeEach } from 'vitest'
 import { useDrawTools, MEASURE } from './useDrawTools.js'
+import { forget } from './drawBoards.js'
 
 // FakeManager keeps drawings in a list and sends the events the library sends.
 class FakeManager {
@@ -110,5 +112,52 @@ describe('useDrawTools', () => {
     dm().emit('textEdit', dm().get('y'), { x: 0, y: 0 })
     t.submitText('   ')
     expect(dm().get('y')).toBeUndefined()
+  })
+
+  describe('one set of drawings per timeframe', () => {
+    beforeEach(forget)
+    const ids = (dm) => dm.list.map((d) => d.id)
+
+    it('hides a drawing on another timeframe and brings it back', () => {
+      const { t, dm } = setup()
+      t.show('night-ada|1h')
+      dm().add({ id: 'a', kind: 'trend-line' })
+      t.show('night-ada|4h')
+      expect(ids(dm())).toEqual([])
+      expect(t.count.value).toBe(0)
+      dm().add({ id: 'b', kind: 'rectangle' })
+      t.show('night-ada|1h')
+      expect(ids(dm())).toEqual(['a'])
+      expect(t.count.value).toBe(1)
+      t.show('night-ada|4h')
+      expect(ids(dm())).toEqual(['b'])
+    })
+
+    it('keeps them only until deleted, and never keeps the measurement', () => {
+      const { t, dm } = setup()
+      t.show('night-ada|1h')
+      dm().add({ id: 'a', kind: 'trend-line' })
+      t.removeAll()
+      t.show('night-ada|4h')
+      t.show('night-ada|1h')
+      expect(ids(dm())).toEqual([])
+      t.pick(MEASURE)
+      dm().add({ id: 'm', kind: 'date-and-price-range' })
+      t.show('night-ada|4h')
+      t.show('night-ada|1h')
+      expect(ids(dm())).toEqual([])
+    })
+
+    it('keeps them when the chart is left and built again (until the page reloads)', () => {
+      const first = setup()
+      first.t.show('night-ada|1h')
+      first.dm().add({ id: 'a', kind: 'trend-line' })
+      first.t.uninstall()
+      const made = []
+      const t = useDrawTools({ chart: () => ({}), series: () => 'candles', bars: () => [] }, (...a) => made.at(made.push(new FakeManager(...a)) - 1))
+      t.show('night-ada|1h') // the page sets the timeframe before the chart is built
+      t.attach()
+      expect(ids(made[0])).toEqual(['a'])
+    })
   })
 })

@@ -154,7 +154,9 @@ No file is longer than 300 lines. Each one has one job.
 | `src/chart/toolList.js` | The 14 drawing tools on the toolbar, in groups and sections |
 | `src/chart/toolIcons.js` | The toolbar's icons |
 | `src/chart/priceStep.js` | The price step the drawings count ticks in |
-| `src/chart/useDrawTools.js` | Connects the toolbar to the drawing library: lock, hide, Measure, text, candles / line |
+| `src/chart/useDrawTools.js` | Connects the toolbar to the drawing library: lock, hide, Measure, candles / line, one set per timeframe |
+| `src/chart/drawBoards.js` | Each timeframe's drawings, kept in memory while another is on screen |
+| `src/chart/textEditing.js` | The Text tool's box: open, write, cancel |
 | `src/chart/*.test.js` | Frontend tests (Vitest): price step, tool list, drawing tools |
 | `src/components/TradesSection.vue` | The Trades and Top Traders tabs on a token page |
 | `src/components/RecentTrades.vue` | The recent trades table on a token page, with filters and Show more |

@@ -102,7 +102,7 @@ A switch between candles and line keeps the drawings.
 
 **Changing a drawing:** with the cross on, click a drawing to select it. Drag it to move it, drag one of its round points to reshape it, and press Delete or Backspace (or the Delete button above the chart) to remove it. Esc unselects it or stops a drawing halfway.
 
-**Drawings are not saved.** They stay while you are on the page, and are cleared when you open another token, switch between Price and FDV, or reload.
+**Each timeframe has its own drawings.** A line drawn on 1h is hidden on 4h and is back when you pick 1h again; Price and FDV, and every token, have their own too. They stay until you delete them (the bin deletes only this timeframe's) or reload the page: nothing is saved.
 
 ## Mouse, keyboard and phone
 

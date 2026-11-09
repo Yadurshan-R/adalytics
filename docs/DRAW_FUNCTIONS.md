@@ -84,7 +84,21 @@ The drawings themselves (placing, picking, moving, the handles, the labels, the 
 | `setStay` | Stay in drawing mode: keep the tool after a drawing, to draw several in a row. |
 | `setLocked` | Locks or unlocks every drawing: a locked drawing can be selected but not moved or deleted with the Delete key. |
 | `setHidden` | Hides or shows every drawing. |
-| `removeAll` / `removeSelected` | Remove every drawing, or the selected ones that are not locked (the Delete button over the chart). |
-| `onTextEdit` / `submitText` / `cancelText` | Open the text box where a text was placed or double-clicked; write the typed text on it; a new text left empty is removed. |
+| `show` | Switches to the drawings of one chart (token, Price/FDV and candle size): the ones on screen are put aside (drawBoards.js), and that timeframe's own come back. Called by PriceChart when the size, unit or token changes. |
+| `removeAll` / `removeSelected` | Remove every drawing of this timeframe, or the selected ones that are not locked (the Delete button over the chart). |
 | `install` / `onPress` | A click on the chart removes the measurement, like TradingView's ruler. |
 | `uninstall` | Stops listening and removes the manager. |
+
+## `src/chart/drawBoards.js`
+
+| Function | What it does |
+|---|---|
+| `swap` | Puts the drawings on screen aside under their chart's key, clears the chart and brings back the drawings of the other key, if it has any. In memory only: everything goes when the page is reloaded. |
+| `kept` | The drawings put aside for a key, used when the chart is built again (the page was left and opened again). |
+| `forget` | Drops every chart's drawings (the tests). |
+
+## `src/chart/textEditing.js`
+
+| Function | What it does |
+|---|---|
+| `onTextEdit` / `submitText` / `cancelText` | The Text tool's box, which the library leaves to the app: open it where a text was placed or double-clicked; write the typed text on it; a new text left empty or cancelled is removed. |

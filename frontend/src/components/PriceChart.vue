@@ -31,7 +31,7 @@ const props = defineProps({
   fmt: { type: Function, default: formatPrice }, // writes a value: a price, or a compact FDV
   size: { type: String, default: '1h' }, // candle size: sets the time axis (localTime.js)
   fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, size, unit)
-  token: { type: String, default: '' }, // drawings are cleared when the token changes
+  token: { type: String, default: '' }, // with size: each token, unit and size has its own drawings
 })
 
 let C = {} // the chart colours of the current theme (chartColors)
@@ -156,7 +156,7 @@ onMounted(() => {
 })
 
 watch(() => [props.type, props.candles, props.indicators], load)
-watch(() => props.token, () => draw.removeAll())
+watch(() => `${props.token}|${props.size}`, draw.show, { immediate: true }) // drawBoards.js
 // The light / dark switch repaints the chart; the drawings follow on the next redraw.
 watch(theme, applyTheme)
 

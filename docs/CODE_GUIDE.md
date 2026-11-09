@@ -145,7 +145,7 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/ToolMenu.vue` | A toolbar menu with section headings |
 | `src/components/ToolIcon.vue` | A toolbar or menu icon |
 | `src/components/ChartTextBox.vue` | The box for typing a text on the chart |
-| `src/chart/toolList.js` | The 16 drawing tools on the toolbar, in groups and sections |
+| `src/chart/toolList.js` | The 14 drawing tools on the toolbar, in groups and sections |
 | `src/chart/toolIcons.js` | The toolbar's icons |
 | `src/chart/priceStep.js` | The price step the drawings count ticks in |
 | `src/chart/useDrawTools.js` | Connects the toolbar to the drawing library: lock, hide, Measure, text, candles / line |

@@ -19,10 +19,6 @@ export const GROUPS = [
     ],
   },
   {
-    key: 'fib', label: 'Fibonacci tools',
-    sections: [{ title: 'Fibonacci', kinds: ['fib-retracement', 'trend-based-fib-extension'] }],
-  },
-  {
     key: 'projection', label: 'Projection and measurement tools',
     sections: [
       { title: 'Projection', kinds: ['long-position', 'short-position'] },
@@ -52,8 +48,6 @@ export const LABELS = {
   'horizontal-ray': 'Horizontal ray',
   'vertical-line': 'Vertical line',
   'parallel-channel': 'Parallel channel',
-  'fib-retracement': 'Fib retracement',
-  'trend-based-fib-extension': 'Trend-based Fib extension',
   'long-position': 'Long position',
   'short-position': 'Short position',
   'date-and-price-range': 'Date and price range',

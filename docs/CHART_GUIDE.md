@@ -72,8 +72,6 @@ The toolbar on the left works like Birdeye's (TradingView's). Each button holds 
 | | **Horizontal ray** | 1 | A price level from one candle on to the right: a level that started at a certain moment. |
 | | **Vertical line** | 1 | Marks a moment, like a big announcement. |
 | | **Parallel channel** | 3 | Click two points for the first line, then a third for the width. The price often moves between the two lines. |
-| Fibonacci | **Fib retracement** | 2 | Click a high and a low (or the other way). Draws the 0.236, 0.382, 0.5, 0.618 and 0.786 levels in between with their prices (and 1.618, 2.618… beyond): after a big move, prices often pull back to one of these before going on. |
-| | **Trend-based Fib extension** | 3 | Click the start of a move, its end, and the end of the pullback. Draws where the next move may reach, as levels of the first move's size measured from the pullback (0.618, 1, 1.618, 2.618…). |
 | Projection | **Long position** | 1 | Plans a buy: click the entry price. Green above is the target, red below the stop-loss; drag them. When selected it shows the target, the stop, the risk/reward ratio and the profit or loss so far, for a pretend account of 1,000 ADA risking 25% (TradingView's defaults). |
 | | **Short position** | 1 | The same for a sell: target below, stop above. |
 | | **Date and price range** | 2 | Measures between two points and keeps the measurement on the chart. |
@@ -124,10 +122,9 @@ A switch between candles and line keeps the drawings.
 4. Turn on **MA 20** under Indicators. Is the price above or below the orange line?
 5. Turn on **RSI 14**. Find a moment it went above 70: what did the price do next?
 6. Pick **Horizontal line** and click on a price where the candles stopped falling several times: that is support.
-7. Pick **Fib retracement**, click the lowest point of a big rise, then its top. Did the price pull back to one of the levels?
-8. Pick **Measure** and click two candles to see how much the price moved between them.
-9. Open the Projection menu, pick **Long position** and click a price: drag the green and red parts to a target and a stop-loss, and read the risk/reward ratio.
-10. Click your horizontal line to select it, drag it, then press Delete.
-11. Switch to **FDV** and compare with another token's FDV: which project is bigger?
+7. Pick **Measure** and click two candles to see how much the price moved between them.
+8. Open the Projection menu, pick **Long position** and click a price: drag the green and red parts to a target and a stop-loss, and read the risk/reward ratio.
+9. Click your horizontal line to select it, drag it, then press Delete.
+10. Switch to **FDV** and compare with another token's FDV: which project is bigger?
 
 This chart is for looking at the market, not advice on what to buy or sell.

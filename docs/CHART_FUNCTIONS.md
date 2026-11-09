@@ -141,7 +141,7 @@ The drawings themselves (placing, picking, moving, the handles, the labels, the 
 
 | Function | What it does |
 |---|---|
-| `GROUPS` | The toolbar's group buttons and their menus: cursor; lines (trend line, ray, horizontal line and ray, vertical line, parallel channel); Fibonacci (retracement, trend-based extension); projection (long and short position, date and price range); brushes, arrows and shapes (brush, arrow, rectangle); text and notes (text, price label). 16 drawing tools, the ones that matter on a token chart. Adding one is adding its library kind here, with a name and an icon. |
+| `GROUPS` | The toolbar's group buttons and their menus: cursor; lines (trend line, ray, horizontal line and ray, vertical line, parallel channel); projection (long and short position, date and price range); brushes, arrows and shapes (brush, arrow, rectangle); text and notes (text, price label). 14 drawing tools, the ones that matter on a token chart. Adding one is adding its library kind here, with a name and an icon. |
 | `LABELS` | Each tool's name, as the menus and tooltips show it. |
 | `kindsOf` | Every tool of a group, in menu order. |
 | `groupOf` | The group a tool belongs to. |
@@ -187,7 +187,7 @@ The drawings themselves (placing, picking, moving, the handles, the labels, the 
 | Test | What it checks |
 |---|---|
 | `priceStep.test.js` | The step is one unit of the fifth significant digit (SNEK, HOSKY, LQ, an FDV); a real move counts 3,297 ticks, not 329 million; no price gives the fallback. |
-| `toolList.test.js` | Every tool on the toolbar exists in the library and has a name and an icon; each tool is in one group; the 16 tools chosen. |
+| `toolList.test.js` | Every tool on the toolbar exists in the library and has a name and an icon; each tool is in one group; the 14 tools chosen. |
 | `indicators.test.js` | The menu lists MA 20, MA 50, RSI 14, ATR 14; the moving average, RSI (100 all up, 0 all down, 50 for equal moves), the true range with gaps, and ATR give the textbook values on hand-checked bars. |
 | `useDrawTools.test.js` | With a pretend manager: drawings move with a switch between candles and line (with the magnet and hide settings); the measurement is not counted and goes on the next click; lock all locks new drawings too and keeps locked ones from Delete; a button picking the tool on goes back to the cursor, a menu does not; typed text is written, and an empty new text removed. |
 

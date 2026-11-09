@@ -19,10 +19,6 @@ export const ICONS = {
   'vertical-line': { icon: 'M10 2v6.4M10 11.6V18', dots: [[10, 10]] },
   'parallel-channel': { icon: 'M4.1 10.9 10.9 4.1M8 17 15.9 9.1', dots: [[3, 12], [12, 3], [17, 8]] },
 
-  // Fibonacci
-  'fib-retracement': { icon: 'M5.1 4H18M2 8h16M2 12h16M2 16h12.9', dots: [[3.5, 4], [16.5, 16]] },
-  'trend-based-fib-extension': { icon: 'M9 4h9M9 8h9M9 12h9M3.6 16.2l1.8-3.4M6.4 12.6l1.2 2', dots: [[3, 17.4], [6, 11.4], [8.2, 15.8]] },
-
   // Projection and measurer
   'long-position': { icon: 'M4.6 4H18M4.6 10H18M4.6 16H18M7 10l9-5', dots: [[3, 4], [3, 10], [3, 16]] },
   'short-position': { icon: 'M4.6 4H18M4.6 10H18M4.6 16H18M7 10l9 5', dots: [[3, 4], [3, 10], [3, 16]] },

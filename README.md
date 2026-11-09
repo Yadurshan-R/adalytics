@@ -14,7 +14,7 @@ Adalytics follows every token that Minswap marks as verified and shows its price
 * Search by name, ticker or policy ID (press `/`); refreshes by itself every minute
 
 **Token page**
-* A live price chart (TradingView Lightweight Charts) with candles from 5 minutes to 1 day, up to 30 days back, volume bars, indicators (MA 20, MA 50, RSI 14, ATR 14), Price / FDV, and a drawing toolbar like Birdeye's: trend lines, rays, horizontal and vertical lines, channels, Fibonacci retracement and extension, long and short positions, measuring, brush, arrow, rectangle, text and price labels, with magnet, lock and hide. **See the [chart guide](docs/CHART_GUIDE.md) for what each part means and how to use it.**
+* A live price chart (TradingView Lightweight Charts) with candles from 5 minutes to 1 day, up to 30 days back, volume bars, indicators (MA 20, MA 50, RSI 14, ATR 14), Price / FDV, and a drawing toolbar like Birdeye's: trend lines, rays, horizontal and vertical lines, channels, long and short positions, measuring, brush, arrow, rectangle, text and price labels, with magnet, lock and hide. **See the [chart guide](docs/CHART_GUIDE.md) for what each part means and how to use it.**
 * A token panel: price, liquidity, FDV, 5m / 1h / 4h / 24h volume and trades with buys, sells and net, holders, whether the minting policy is locked, price range, links and the project description
 * **Trades**: the latest trades with the wallet behind each (Minswap fills many orders in one transaction; Adalytics splits them into one trade per wallet), filter by buys or sells, BIG and WHALE tags for ₳10K and ₳50K+
 * **Top Traders**: the 50 wallets that traded the token most in 24 hours, 7 or 30 days. Click a trader to see only its trades and what else it traded

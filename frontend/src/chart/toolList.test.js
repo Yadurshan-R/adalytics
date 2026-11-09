@@ -24,8 +24,8 @@ describe('toolList', () => {
     expect(groupOf('xabcd-pattern')).toBeUndefined()
   })
 
-  it('has the 16 drawing tools chosen for a token chart', () => {
-    expect(DRAWING_KINDS).toHaveLength(16)
+  it('has the 14 drawing tools chosen for a token chart', () => {
+    expect(DRAWING_KINDS).toHaveLength(14)
     expect(DRAWING_KINDS).toContain('long-position')
     expect(DRAWING_KINDS).not.toContain('cursor')
   })

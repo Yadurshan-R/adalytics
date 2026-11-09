@@ -15,7 +15,7 @@ const props = defineProps({
   on: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
   sections: { type: Array, default: null }, // the menu, as ToolMenu takes it
-  menuLabel: { type: String, default: '' }, // the arrow's tooltip, e.g. "Fibonacci tools"
+  menuLabel: { type: String, default: '' }, // the arrow's tooltip, e.g. "Trend line tools"
 })
 const emit = defineEmits(['press', 'choose'])
 

@@ -12,7 +12,7 @@ import (
 type Period struct {
 	Key       string  `json:"key"`
 	ChangePct float64 `json:"change_pct"` // price change over the period
-	VolumeADA float64 `json:"volume_ada"` // everything traded, small trades too
+	VolumeADA float64 `json:"volume_ada"` // every trade, each order of a batch on its own (= BuyADA + SellADA)
 	Buys      int     `json:"buys"`
 	Sells     int     `json:"sells"`
 	BuyADA    float64 `json:"buy_ada"`  // ADA spent buying

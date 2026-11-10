@@ -130,24 +130,21 @@ func (t *Tracker) rebuild(s *tokenState) {
 	var prev *minswap.Pool
 	for i := range s.history {
 		p := &s.history[i].pool
-		vol := 0.0
+		var trades []Trade
 		// A swap moves ADA in or out without changing the LP supply; adding or
 		// removing liquidity changes the LP supply and is not a trade.
 		if prev != nil && p.Liquidity.Cmp(prev.Liquidity) == 0 {
 			diffA := new(big.Int).Sub(p.ReserveA, prev.ReserveA)
 			diffB := new(big.Int).Sub(p.ReserveB, prev.ReserveB)
-			vol = math.Abs(scaled(diffA, 6))
-			s.trades = append(s.trades, tradesFrom(*p, s.history[i].fills, diffA, diffB)...)
+			trades = tradesFrom(*p, s.history[i].fills, diffA, diffB)
 		} else if prev == nil && p.LastSwap.Unix() > cut {
 			// The oldest state loaded (only the newest hour, just after a start)
 			// has no state before it to compare with, but its own transaction
 			// already says who traded what (fills), so its trades count too.
-			trades := tradesFrom(*p, s.history[i].fills, new(big.Int), new(big.Int))
-			for _, tr := range trades {
-				vol += tr.AmountADA
-			}
-			s.trades = append(s.trades, trades...)
+			trades = tradesFrom(*p, s.history[i].fills, new(big.Int), new(big.Int))
 		}
+		s.trades = append(s.trades, trades...)
+		vol := tradeVolume(trades) // every order of a batch on its own, not the pool's net change
 		s.points = append(s.points, Point{Time: p.LastSwap.Unix(), Price: p.PriceADA(), VolumeADA: vol})
 		prev = p
 	}

@@ -20,11 +20,11 @@ import (
 func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 	f := &fake{t: t, tip: 14030000}
 	f.txs = []fakeTx{
-		{hash: "a1", height: 14029600, time: testNow.Add(-2 * time.Hour).Unix(), outs: []koios.TxOutput{poolOutput(t, "a1", "1977518866875")}},
+		{hash: "a1", height: 14029600, time: testNow.Add(-2 * time.Hour).Unix(), outs: []koios.TxOutput{swapAt(t, "a1", "1977518866875")}},
 		{hash: "x1", height: 14029700, time: testNow.Add(-90 * time.Minute).Unix(), outs: []koios.TxOutput{otherOutput(t, "x1")}},
-		{hash: "a2", height: 14029900, time: testNow.Add(-30 * time.Minute).Unix(), outs: []koios.TxOutput{poolOutput(t, "a2", "2000000000000")}},
+		{hash: "a2", height: 14029900, time: testNow.Add(-30 * time.Minute).Unix(), outs: []koios.TxOutput{swapAt(t, "a2", "2000000000000")}},
 	}
-	f.pools = []koios.UTxO{poolOutput(t, "a2", "2000000000000").UTxO(koios.Tx{BlockHeight: 14029900, TxTimestamp: f.txs[2].time})}
+	f.pools = []koios.UTxO{swapAt(t, "a2", "2000000000000").UTxO(koios.Tx{BlockHeight: 14029900, TxTimestamp: f.txs[2].time})}
 	tr := newTracker(t, f)
 	ctx := context.Background()
 
@@ -39,7 +39,8 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 	if math.Abs(q.Volume24hADA-22481.133125) > 1e-6 {
 		t.Errorf("24h volume %v", q.Volume24hADA)
 	}
-	if want := (2000000.0/1977518.866875 - 1) * 100; math.Abs(q.Change24h-want) > 1e-9 {
+	before := 1977518.866875 / float64(snekAt("1977518866875").Int64()) // the price 24 hours ago
+	if want := (2000000.0/744260765/before - 1) * 100; math.Abs(q.Change24h-want) > 1e-9 {
 		t.Errorf("24h change %v, want %v", q.Change24h, want)
 	}
 	if len(q.Sparkline) != 25 {
@@ -52,7 +53,7 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 	f.mu.Lock()
 	f.tip = 14030006
 	f.txs = append(f.txs, fakeTx{hash: "b1", height: 14030004, time: testNow.Add(-time.Minute).Unix(),
-		outs: []koios.TxOutput{poolOutput(t, "b1", "1990000000000")}})
+		outs: []koios.TxOutput{swapAt(t, "b1", "1990000000000")}})
 	f.spent = true
 	f.mu.Unlock()
 	tr.refresh(ctx)
@@ -71,7 +72,7 @@ func TestLoadsHistoryThenFollowsSwaps(t *testing.T) {
 	if len(points) != 289 {
 		t.Errorf("24H chart has %d points, want 289", len(points))
 	}
-	if last := points[len(points)-1]; math.Abs(last.Price-1990000.0/744260765) > 1e-12 {
+	if last := points[len(points)-1]; math.Abs(last.Price-1990000.0/float64(snekAt("1990000000000").Int64())) > 1e-12 {
 		t.Errorf("last chart price %v", last.Price)
 	}
 

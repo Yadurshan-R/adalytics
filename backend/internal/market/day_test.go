@@ -18,11 +18,11 @@ import (
 func TestListOpensAfterTheNewestHour(t *testing.T) {
 	f := &fake{t: t, tip: 14030000}
 	f.txs = []fakeTx{
-		{hash: "a0", height: 14029000, time: testNow.Add(-5 * time.Hour).Unix(), outs: []koios.TxOutput{poolOutput(t, "a0", "1977518866875")}},
-		{hash: "a1", height: 14029600, time: testNow.Add(-2 * time.Hour).Unix(), outs: []koios.TxOutput{poolOutput(t, "a1", "2000000000000")}},
+		{hash: "a0", height: 14029000, time: testNow.Add(-5 * time.Hour).Unix(), outs: []koios.TxOutput{swapAt(t, "a0", "1977518866875")}},
+		{hash: "a1", height: 14029600, time: testNow.Add(-2 * time.Hour).Unix(), outs: []koios.TxOutput{swapAt(t, "a1", "2000000000000")}},
 	}
 	// SNEK did not trade in the last hour, so its pool is found as it is now.
-	f.pools = []koios.UTxO{poolOutput(t, "a1", "2000000000000").UTxO(koios.Tx{BlockHeight: 14029600, TxTimestamp: f.txs[1].time})}
+	f.pools = []koios.UTxO{swapAt(t, "a1", "2000000000000").UTxO(koios.Tx{BlockHeight: 14029600, TxTimestamp: f.txs[1].time})}
 	tr := newTracker(t, f)
 	var rest func()
 	tr.async = func(fn func()) { rest = fn } // keep the rest of the day for later

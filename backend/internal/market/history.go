@@ -9,7 +9,7 @@ import (
 type Point struct {
 	Time      int64   // unix seconds
 	Price     float64 // ADA per token
-	VolumeADA float64 // ADA traded in this transaction (0 for deposits/withdrawals)
+	VolumeADA float64 // ADA traded in this transaction, every order counted (0 for deposits/withdrawals)
 }
 
 // ChartPoint is one evenly spaced point on a chart.
@@ -122,6 +122,20 @@ func changePct(points []Point, t int64) float64 {
 		return 0
 	}
 	return (now/then - 1) * 100
+}
+
+// tradeVolume is the ADA a pool state traded: the sum of its trades, so every
+// order of a Minswap batch counts on its own (gross volume, as Minswap and
+// DexScreener count it). The pool's own change nets buys against sells: one
+// wallet buying for ₳1,000 and another selling for ₳800 in one batch move the
+// pool by ₳200, but trade ₳1,800. A batch that could not be split into orders
+// is one trade of the pool's change (tradesFrom).
+func tradeVolume(trades []Trade) float64 {
+	v := 0.0
+	for _, tr := range trades {
+		v += tr.AmountADA
+	}
+	return v
 }
 
 // volumeSince adds up the ADA traded from time t (unix seconds) until now.

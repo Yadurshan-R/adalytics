@@ -80,6 +80,14 @@ Every test in `internal/market`, file by file. Run them with `go test ./internal
 | `TestSafeURL` | Checks that only plain http(s) website links are kept. |
 | `TestRankingAndIDs` | Checks the ranking by volume then pool size, that small pools are left out, and that tokens sharing a ticker get unique ids. |
 
+## `internal/market/volume_test.go`
+
+| Function | What it does |
+|---|---|
+| `TestBatchVolumeCountsEveryOrder` | One batch: Alice buys for ₳1,000, Bob sells for ₳800. The pool moves by ₳200, but the 24h volume, the candle's volume and buys + sells must all be ₳1,800 (what Minswap shows for the pool). |
+| `TestUnsplitBatchVolume` | A batch that cannot be split into orders still counts the pool's own change, as one trade. |
+| `snekAt` / `swapAt` / `mustPool` | Helpers: the SNEK/ADA pool after a real swap, where both reserves move (ADA in, SNEK out, or the other way). A fake change of the ADA side alone is not a trade. |
+
 ## `internal/market/tracker_test.go`
 
 | Function | What it does |

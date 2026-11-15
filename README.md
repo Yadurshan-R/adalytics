@@ -145,7 +145,7 @@ frontend/src/            Vue 3: the website
 docs/                    guides; every file and function in plain words
 ```
 
-The [code guide](docs/CODE_GUIDE.md) explains how the parts fit together and lists every file. Every function is described in plain words in [backend](docs/BACKEND_FUNCTIONS.md), [market](docs/MARKET_FUNCTIONS.md) (and its [tests](docs/MARKET_TESTS.md)), [frontend](docs/FRONTEND_FUNCTIONS.md), [chart](docs/CHART_FUNCTIONS.md), [drawing tools](docs/DRAW_FUNCTIONS.md), [Large Trades](docs/TRADES_FUNCTIONS.md) and [Top Traders](docs/TOP_TRADERS_FUNCTIONS.md).
+The [code guide](docs/CODE_GUIDE.md) explains how the parts fit together and lists every file. Every function is described in plain words in [backend](docs/BACKEND_FUNCTIONS.md), [market](docs/MARKET_FUNCTIONS.md) (with [supply and candles](docs/SUPPLY_AND_CANDLES_FUNCTIONS.md), and its [tests](docs/MARKET_TESTS.md)), [frontend](docs/FRONTEND_FUNCTIONS.md), [chart](docs/CHART_FUNCTIONS.md), [drawing tools](docs/DRAW_FUNCTIONS.md), [Large Trades](docs/TRADES_FUNCTIONS.md) and [Top Traders](docs/TOP_TRADERS_FUNCTIONS.md).
 
 ## Code rules
 

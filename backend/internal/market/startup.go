@@ -101,7 +101,7 @@ func (t *Tracker) loadHistory(ctx context.Context) {
 	// Supply, logos and details before the list is shown. If this fails the
 	// list is still shown, and it is tried again every minute.
 	t.Note("%d tokens have a pool with at least ₳%s. Loading their supply, logos and links…", listed, group(MinPoolADA))
-	t.loadInfo(ctx)
+	t.loadDetails(ctx) // supply, logos and the protocol reserves
 	t.Note("Done. Opening the token list.")
 
 	t.mu.Lock()
@@ -152,7 +152,7 @@ func (t *Tracker) findPools(ctx context.Context, tokens []*tokenState) (map[*tok
 		if prev, ok := out[s]; ok && prev.height >= u.BlockHeight {
 			continue
 		}
-		out[s] = poolState{pool: p, height: u.BlockHeight, order: chainOrder(u.BlockHeight, 0), address: u.Address, current: true}
+		out[s] = poolState{pool: s.token.withDecimals(p), height: u.BlockHeight, order: chainOrder(u.BlockHeight, 0), address: u.Address, current: true}
 	}
 	return out, nil
 }

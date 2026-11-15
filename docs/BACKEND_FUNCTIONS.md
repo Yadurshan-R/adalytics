@@ -1,6 +1,6 @@
 # Backend functions
 
-Every function in the Go backend except the market package (see [MARKET_FUNCTIONS.md](MARKET_FUNCTIONS.md)), file by file. Each one also has the same comment above it in the code. See [CODE_GUIDE.md](CODE_GUIDE.md) for how the parts fit together.
+Every function in the Go backend except the market package (see [MARKET_FUNCTIONS.md](MARKET_FUNCTIONS.md) and [SUPPLY_AND_CANDLES_FUNCTIONS.md](SUPPLY_AND_CANDLES_FUNCTIONS.md)), file by file. Each one also has the same comment above it in the code. See [CODE_GUIDE.md](CODE_GUIDE.md) for how the parts fit together.
 
 ## `main.go`
 
@@ -51,6 +51,13 @@ Every function in the Go backend except the market package (see [MARKET_FUNCTION
 | `AssetSummary` | Asks Koios how many wallets hold a token. It uses the slow HTTP client, because Koios can take minutes to count big tokens. |
 | `TxInfo` | Returns transactions with their inputs and outputs, assets and inline datums. The inputs show which wallets' orders a batch swapped. |
 | `TxContracts` | Returns only the scripts each transaction ran, with their redeemers. A separate, smaller request than TxInfo, made only for the few batches where one wallet placed several orders. |
+
+## `internal/koios/holdings.go`
+
+| Function | What it does |
+|---|---|
+| `NFTAddress` | Returns the address holding an NFT (a token with a supply of one), from `asset_nft_address`. Protocols keep their state next to an NFT like this, so it finds their contract even after it has moved. |
+| `AddressAssets` | Returns every native token held at one address, from `address_assets`, as one flat list (older Koios versions nest the rows in `asset_list`). |
 
 ## `internal/koios/parallel.go`
 

@@ -1,6 +1,7 @@
 package market
 
 import (
+	"cmp"
 	"strings"
 	"time"
 )
@@ -10,6 +11,7 @@ type Point struct {
 	Time      int64   // unix seconds
 	Price     float64 // ADA per token
 	VolumeADA float64 // ADA traded in this transaction, every order counted (0 for deposits/withdrawals)
+	Low, High float64 // lowest and highest price its orders were filled at; 0 if none (tradeRange)
 }
 
 // ChartPoint is one evenly spaced point on a chart.
@@ -124,20 +126,6 @@ func changePct(points []Point, t int64) float64 {
 	return (now/then - 1) * 100
 }
 
-// tradeVolume is the ADA a pool state traded: the sum of its trades, so every
-// order of a Minswap batch counts on its own (gross volume, as Minswap and
-// DexScreener count it). The pool's own change nets buys against sells: one
-// wallet buying for ₳1,000 and another selling for ₳800 in one batch move the
-// pool by ₳200, but trade ₳1,800. A batch that could not be split into orders
-// is one trade of the pool's change (tradesFrom).
-func tradeVolume(trades []Trade) float64 {
-	v := 0.0
-	for _, tr := range trades {
-		v += tr.AmountADA
-	}
-	return v
-}
-
 // volumeSince adds up the ADA traded from time t (unix seconds) until now.
 func volumeSince(points []Point, t int64) float64 {
 	v := 0.0
@@ -156,7 +144,10 @@ func candles(points []Point, from, to time.Time, interval time.Duration) []Candl
 // candlesAt groups swaps into one candlestick per start time (Unix seconds,
 // oldest first); each candle lasts until the next start, the last one until
 // to. A slot with no swaps is a flat candle at the previous close, and each
-// candle opens at the previous close so the candles join up.
+// candle opens at the previous close so the candles join up. Open and close
+// are pool prices, like the Price card; high and low also take the prices
+// orders were filled at (Point.Low, Point.High), so the wicks show what
+// traders actually paid.
 func candlesAt(points []Point, starts []int64, to time.Time) []Candle {
 	if len(starts) == 0 {
 		return nil
@@ -176,8 +167,8 @@ func candlesAt(points []Point, starts []int64, to time.Time) []Candle {
 		c := Candle{Time: bStart, Open: price, High: price, Low: price, Close: price}
 		for i < len(points) && points[i].Time < bEnd {
 			p := points[i].Price
-			c.High = max(c.High, p)
-			c.Low = min(c.Low, p)
+			c.High = max(c.High, p, points[i].High) // High and Low: order prices, the wicks
+			c.Low = min(c.Low, p, cmp.Or(points[i].Low, p))
 			c.Close = p
 			c.Volume += points[i].VolumeADA
 			i++

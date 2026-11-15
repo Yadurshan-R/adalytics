@@ -4,6 +4,7 @@ This guide explains how Adalytics is built. Read it to see how the pieces fit to
 
 - [Backend functions](BACKEND_FUNCTIONS.md): the Go backend and its tests
 - [Market functions](MARKET_FUNCTIONS.md): the market package (prices, history, candles)
+- [Supply and candle functions](SUPPLY_AND_CANDLES_FUNCTIONS.md): supply, decimals, chart points and candles
 - [Market tests](MARKET_TESTS.md): the market package's tests
 - [Frontend functions](FRONTEND_FUNCTIONS.md): the Vue website
 - [Chart functions](CHART_FUNCTIONS.md): the price chart, its units, the loading box and indicators
@@ -74,6 +75,7 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/config/config.go` | Reads settings from `.env` |
 | `internal/koios/client.go` | The Koios client and the function that sends every request |
 | `internal/koios/endpoints.go` | One function per Koios endpoint used |
+| `internal/koios/holdings.go` | Who holds an NFT, and what an address holds (for protocol reserves) |
 | `internal/koios/types.go` | The shapes of the data Koios returns |
 | `internal/koios/retry.go` | Retry timing and the rate limiter (stays under the free tier's limit) |
 | `internal/koios/parallel.go` | Runs batches of requests several at a time (KOIOS_PARALLEL, default 8) |
@@ -95,14 +97,16 @@ No file is longer than 300 lines. Each one has one job.
 | `internal/market/periods.go` | Trading over 5m, 1h, 4h and 24h for the activity box |
 | `internal/market/quotes.go` | What the API reads: token list, charts, trades, logos |
 | `internal/market/details.go` | Supply, logos and links |
+| `internal/market/reserves.go` | Supply given out: leaves out tokens a protocol pre-minted and holds (Djed) |
 | `internal/market/holders.go` | Holder counts, five tokens at a time; failed ones retried one at a time, after growing waits |
 | `internal/market/policy.go` | Whether a token's minting policy is locked or open |
 | `internal/market/progress.go` | Loading progress for the loading page |
 | `internal/market/activity.go` | The live activity feed for the loading page |
 | `internal/market/history.go` | Chart ranges, chart points, candles and price changes |
+| `internal/market/points.go` | One chart point per pool state: price, volume, and the order prices that make the wicks |
 | `internal/market/candles.go` | Candle sizes (5m to 1M) and how far back each goes |
 | `internal/market/calendar.go` | Where each candle starts: whole steps, or Mondays and the 1st for 1W and 1M, without a first candle that began before the history |
-| `internal/market/tokens.go` | The list of verified tokens (from `tokens.json`) |
+| `internal/market/tokens.go` | The list of verified tokens (from `tokens.json`), and their decimals when Koios has none |
 | `internal/market/format.go` | Small number and text helpers for the log |
 | `internal/api/server.go` | The API routes |
 | `internal/api/logging.go` | Logs every API call with a request ID, and catches crashes |

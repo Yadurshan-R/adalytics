@@ -67,7 +67,7 @@ func (t *Tracker) readPools(ctx context.Context, txs []koios.AddressTx, progress
 				continue
 			}
 			found[s] = append(found[s], poolState{
-				pool: p, height: tx.BlockHeight, order: chainOrder(tx.BlockHeight, tx.TxBlockIndex), address: o.PaymentAddr.Bech32,
+				pool: s.token.withDecimals(p), height: tx.BlockHeight, order: chainOrder(tx.BlockHeight, tx.TxBlockIndex), address: o.PaymentAddr.Bech32,
 				fills: fillsFrom(tx, s.token.Asset, p.LPAsset),
 			})
 		}
@@ -144,8 +144,7 @@ func (t *Tracker) rebuild(s *tokenState) {
 			trades = tradesFrom(*p, s.history[i].fills, new(big.Int), new(big.Int))
 		}
 		s.trades = append(s.trades, trades...)
-		vol := tradeVolume(trades) // every order of a batch on its own, not the pool's net change
-		s.points = append(s.points, Point{Time: p.LastSwap.Unix(), Price: p.PriceADA(), VolumeADA: vol})
+		s.points = append(s.points, pointOf(p, trades, len(s.history[i].fills) > 0)) // volume of every order, wicks (points.go)
 		prev = p
 	}
 

@@ -24,7 +24,7 @@ type Quote struct {
 	Change24h      float64    `json:"change_24h"`
 	Change7d       *float64   `json:"change_7d,omitempty"` // only once 7 days of history are loaded
 	Volume24hADA   float64    `json:"volume_24h_ada"`
-	TotalSupply    float64    `json:"total_supply,omitempty"`    // whole tokens
+	TotalSupply    float64    `json:"total_supply,omitempty"`    // whole tokens given out (issued)
 	FDVADA         float64    `json:"fdv_ada,omitempty"`         // price × total supply
 	Holders        int        `json:"holders,omitempty"`         // staked wallets plus addresses without a stake key holding the token, contracts included (e.g. its pool); 0 until counted
 	HoldersAt      *time.Time `json:"holders_at,omitempty"`      // when Holders was counted (refreshed every HoldersEvery)
@@ -106,8 +106,8 @@ func (t *Tracker) Quotes() []Quote {
 				q.SellVol24hADA += tr.AmountADA
 			}
 		}
-		if s.supply != nil {
-			q.TotalSupply = scaled(s.supply, q.Decimals)
+		if n := s.issued(); n != nil { // minus a protocol's reserve (reserves.go)
+			q.TotalSupply = scaled(n, q.Decimals)
 			q.FDVADA = q.PriceADA * q.TotalSupply
 		}
 		q.Traders24h = len(traders)

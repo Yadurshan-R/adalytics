@@ -1,6 +1,6 @@
 # Market tests
 
-Every test in `internal/market`, file by file. Run them with `go test ./internal/market/` from `backend/`. They use a fake Koios server, so they need no internet and no API token. The functions they check are in [MARKET_FUNCTIONS.md](MARKET_FUNCTIONS.md).
+Every test in `internal/market`, file by file. Run them with `go test ./internal/market/` from `backend/`. They use a fake Koios server, so they need no internet and no API token. The functions they check are in [MARKET_FUNCTIONS.md](MARKET_FUNCTIONS.md) and [SUPPLY_AND_CANDLES_FUNCTIONS.md](SUPPLY_AND_CANDLES_FUNCTIONS.md).
 
 ## `internal/market/holders_test.go`
 
@@ -139,3 +139,21 @@ Every test in `internal/market`, file by file. Run them with `go test ./internal
 | Function | What it does |
 |---|---|
 | `TestWallet` | A wallet's trades are added up per token for the last 24 hours, other wallets are left out, and the whale level is 1% of the pool. |
+
+## `internal/market/points_test.go`
+
+| Test | What it checks |
+|---|---|
+| `TestTradeRange` | The lowest and highest order price of a batch; a trade without a price is left out. |
+| `TestPointOfWicksOnlyFromSplitBatches` | Order prices make wicks only when the batch was read order by order. An unsplit batch (₳60 of fees for 1 token) gives no wick. |
+| `TestCandleWicksFromOrderPrices` | A candle's high and low take the order prices (a buy paid 0.24182 while the pool went 0.24104 to 0.24116), open and close stay pool prices, and a deposit (no orders) does not pull the low to zero. |
+
+## `internal/market/reserves_test.go`
+
+| Test | What it checks |
+|---|---|
+| `TestDjedSupplyLeavesOutTheReserve` | With the reserve read on 10 Nov 2026, DJED's supply is 1,410,269 and SHEN's 31,686,386, not one trillion; in two requests, with both answer shapes Koios has used for `address_assets`. |
+| `TestReserveReadEveryTenMinutes` | The reserve is read again only after `ReservesEvery`. |
+| `TestNoSupplyUntilTheReserveIsKnown` | DJED shows no supply (so no FDV) before the reserve is read, or when none is found there, instead of the trillion pre-minted. |
+| `TestOtherTokensKeepTheirSupply` | A token without a protocol reserve (SNEK) shows its on-chain total supply. |
+| `TestDecimalsFromTheTokenList` | A pool Koios gave no decimals for takes the token list's (SUPERIOR: 8); Koios's decimals are kept when it has them. |

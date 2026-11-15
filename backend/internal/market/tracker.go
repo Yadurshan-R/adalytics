@@ -66,6 +66,7 @@ type tokenState struct {
 	trades       []Trade         // swaps with amounts, oldest first (built from history)
 	readFrom     int             // when the pool is spent but its swap not read yet: block to read from
 	supply       *big.Int        // total supply in the smallest unit, from asset_info
+	reserved     *big.Int        // part of supply in its protocol's reserve, not given out (reserves.go)
 	logo         []byte          // PNG from the token registry
 	holders      int             // from asset_summary, loaded in the background
 	holdersFails int             // holder counts that failed in a row (see HoldersGiveUp)
@@ -106,6 +107,7 @@ type Tracker struct {
 	dayDone     bool         // the whole first 24 hours are read (see day.go)
 	async       func(func()) // runs the rest of the first day; tests run it in place
 	infoReady   bool         // supply and logos loaded
+	reservesAt  time.Time    // when the protocol reserves were last read (reserves.go)
 	lastCheck   int          // chain block height at the previous check
 	firstHeight int          // block the first (24 hour) load started from
 	coveredFrom time.Time    // history is complete from this time until now
@@ -193,15 +195,13 @@ func (t *Tracker) Run(ctx context.Context) {
 }
 
 // refresh runs once a minute: the first time it does the first load, and after
-// that it loads token details if they are still missing and checks for new swaps.
+// that it loads token details and reserves (loadDetails) and checks for new swaps.
 func (t *Tracker) refresh(ctx context.Context) {
 	if !t.loaded {
 		t.loadHistory(ctx)
 		return
 	}
-	if !t.infoReady {
-		t.loadInfo(ctx)
-	}
+	t.loadDetails(ctx) // details until loaded, and the protocol reserves (reserves.go)
 	t.update(ctx)
 }
 

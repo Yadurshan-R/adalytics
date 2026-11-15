@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cardano-analytics/internal/koios"
+	"cardano-analytics/internal/minswap"
 )
 
 // Token is a Cardano native token the platform can track.
@@ -52,4 +53,18 @@ func mustLoadTokens() []Token {
 		}
 	}
 	return out
+}
+
+// withDecimals fills in the token's decimals on a pool read from the chain
+// when Koios gave none. Koios knows decimals from the Cardano Token Registry
+// and from CIP-68 metadata it can read; for a few CIP-68 tokens (SUPERIOR,
+// BOS, FNX) it says 0, and a price and supply off by 10^decimals would show
+// (SUPERIOR: 8 decimals, so a price 100,000,000 times too small). The token
+// list (tokens.json, from Minswap's verified token list) has their decimals,
+// the same Minswap shows. A token Koios gives decimals for keeps Koios's.
+func (t Token) withDecimals(p minswap.Pool) minswap.Pool {
+	if p.DecimalsB == 0 && t.Decimals > 0 {
+		p.DecimalsB = t.Decimals
+	}
+	return p
 }

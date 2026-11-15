@@ -1,6 +1,6 @@
 # Market functions
 
-Every function in `internal/market`, the package that reads the Minswap pools and keeps prices, history and trades in memory. Each one also has the same comment above it in the code. The rest of the backend is in [BACKEND_FUNCTIONS.md](BACKEND_FUNCTIONS.md). The tests are in [MARKET_TESTS.md](MARKET_TESTS.md).
+Every function in `internal/market`, the package that reads the Minswap pools and keeps prices, history and trades in memory. Each one also has the same comment above it in the code. The rest of the backend is in [BACKEND_FUNCTIONS.md](BACKEND_FUNCTIONS.md). The tests are in [MARKET_TESTS.md](MARKET_TESTS.md). Supply, decimals, chart points and candles (`details.go`, `tokens.go`, `reserves.go`, `history.go`, `points.go`) are in [SUPPLY_AND_CANDLES_FUNCTIONS.md](SUPPLY_AND_CANDLES_FUNCTIONS.md).
 
 ## `internal/market/activity.go`
 
@@ -33,13 +33,6 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | `weekStart` / `monthStart` | The Monday 00:00 UTC of t's week, and the 1st 00:00 UTC of its month. |
 | `candleStarts` | Where each candle starts between from and to: the first whole step at or after from (a multiple of the size, or the first Monday or 1st for 1W and 1M), so a first candle that began before the history, and would miss part of its time, is left out. The last candle is the running one. |
 
-## `internal/market/details.go`
-
-| Function | What it does |
-|---|---|
-| `loadInfo` | Reads total supply, ticker and logo for every tracked token with asset_info, and each minting policy with script_info, 25 tokens per request. If it fails, prices still work and it is tried again next minute. |
-| `safeURL` | Keeps a registry website only if it is a plain http(s) link, so a token's metadata cannot put another kind of link on the page. |
-
 ## `internal/market/holders.go`
 
 | Function | What it does |
@@ -67,18 +60,6 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 | `change` | Describes a price move for the log, e.g. "▲ 2.10%". |
 | `group` | Formats a number as 1,977,518. |
 
-## `internal/market/history.go`
-
-| Function | What it does |
-|---|---|
-| `RangeByKey` | Finds a range by its key ("24H", "7D", "30D"), ignoring case. |
-| `priceAt` | Returns the price at time t: the last swap at or before t. If every swap is after t, the first known price is used. |
-| `bucket` | Turns swaps into evenly spaced chart points between from and to. Each point carries the last price in its interval (or the previous price if nothing traded) and the ADA volume traded in it. |
-| `changePct` | The percentage change from the price at time t to now. |
-| `tradeVolume` | The ADA a pool state traded: the sum of its trades, so every order of a Minswap batch counts on its own (gross volume, as Minswap and DexScreener count it). The pool's own change nets buys against sells: a ₳1,000 buy and a ₳800 sell in one batch move the pool by ₳200 but trade ₳1,800. |
-| `volumeSince` | Adds up the ADA traded from time t (unix seconds) until now. |
-| `candles` / `candlesAt` | Groups swaps into candlesticks; `candlesAt` takes the candle starts (from `candleStarts`), so weeks and months work the same as fixed sizes. A slot with no swaps is a flat candle at the previous close, and each candle opens at the previous close so the candles join up. |
-
 ## `internal/market/periods.go`
 
 | Function | What it does |
@@ -92,7 +73,7 @@ Every function in `internal/market`, the package that reads the Minswap pools an
 |---|---|
 | `readPools` | Reads transactions with tx_info (50 per request, several requests at a time: KOIOS_PARALLEL, default 8) and returns, for each token, the pool state after each of its transactions, oldest first. |
 | `merge` | Adds pool states to a token's history (skipping ones it already has), keeps the history in chain order and rebuilds prices, volume and trades. It returns how many states were new. Call with t.mu held. |
-| `rebuild` | Works out a token's price points, volume and trades from its pool history, drops history older than the kept span (keeping the last state before it, so the price at the start is known) and updates the quote from the newest pool state. A trade is the change from one pool state to the next; the oldest state loaded (just after a start only the newest hour is read) has none before it, but its own transaction's fills still count as trades. Each state's volume is its trades added up (`tradeVolume`), so the list, the activity box and the candles show the same volume. Call with t.mu held. |
+| `rebuild` | Works out a token's price points, volume and trades from its pool history, drops history older than the kept span (keeping the last state before it, so the price at the start is known) and updates the quote from the newest pool state. A trade is the change from one pool state to the next; the oldest state loaded (just after a start only the newest hour is read) has none before it, but its own transaction's fills still count as trades. Each state's chart point comes from `pointOf`: its volume is its trades added up, so the list, the activity box and the candles show the same volume, and its order prices make the candle wicks. A pool read from the chain takes its decimals from `withDecimals`. Call with t.mu held. |
 | `replaceCurrent` | Swaps a pool state found at startup (as the pool is now) for the same pool output read from its transaction, which has the wallets and its place in the block. |
 | `tradesFrom` | Turns a swap into trades: one per wallet when the transaction was split into fills, otherwise one trade without a wallet from the change in the pool's reserves. Each trade keeps its order's number (`Fill`), because one wallet can have two orders in one batch. |
 | `tradeFrom` | Makes one trade from ADA into the pool and tokens to the trader: both positive is a buy, both negative a sell. Dust below MinTradeADA is left out. |
@@ -152,12 +133,6 @@ Minswap does not swap each order on its own: a batcher swaps several people's or
 |---|---|
 | `readDay` | Reads the rest of the first 24 hours after the list has opened, newest first, 300 transactions at a time (DayChunk). After each chunk the site has more of the day: 4h numbers after a few chunks, 24h at the end. A chunk that fails is tried again a minute later. Then the older history starts. |
 
-## `internal/market/tokens.go`
-
-| Function | What it does |
-|---|---|
-| `mustLoadTokens` | Reads the embedded tokens.json. It stops the program if the file is broken, because nothing can work without the token list. |
-
 ## `internal/market/tracker.go`
 
 | Function | What it does |
@@ -167,7 +142,7 @@ Minswap does not swap each order on its own: a batcher swaps several people's or
 | `SetHistoryDays` | Sets how many days of history are loaded and kept (1 to 30). Call it before Run. |
 | `assignSlugs` | Gives each token a short unique id, normally its ticker in lower case; tokens sharing a ticker get part of their policy ID added. |
 | `Run` | Loads history now, then checks for new swaps every interval, until ctx ends. Holder counts are loaded separately in the background. |
-| `refresh` | Runs once a minute: the first time it does the first load, and after that it loads token details if they are still missing and checks for new swaps. |
+| `refresh` | Runs once a minute: the first time it does the first load, and after that it loads token details and protocol reserves (`loadDetails`) and checks for new swaps. |
 | `tracked` | Returns the tokens whose pool was found and holds at least MinPoolADA: the ones listed and checked every minute. Call with t.mu held. |
 | `sleepCtx` | Waits for d, or returns early with an error when ctx is cancelled. |
 | `blocksIn` | About how many blocks Cardano makes in d. |

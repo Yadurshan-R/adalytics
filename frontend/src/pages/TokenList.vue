@@ -30,7 +30,7 @@ const VIEWS = [
 ]
 const pick = (v, list, def) => (list.includes(v) ? v : def)
 const view = ref(pick(route.query.view, VIEWS.map((v) => v.key), 'volume'))
-const period = ref('24h') // Volume, Txns, Gainers and Losers are for the last 24 hours
+const period = ref('24h') // Volume, Gainers and Losers are for the last 24 hours
 const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
 // sort is the column picked by the visitor ({ key, dir }), or null for the
 // view's own order.

@@ -14,7 +14,7 @@ import { COLUMNS, HOURS, periodOf, signedPct, changeTone } from '../listSort.js'
 
 const props = defineProps({
   rows: { type: Array, required: true }, // the tokens to show, in order
-  period: { type: String, required: true }, // '24h': the period Vol and Txns are for
+  period: { type: String, required: true }, // '24h': the period Vol is for
   sort: { type: Object, default: null }, // the column picked { key, dir }, or null
   view: { type: String, default: 'volume' }, // decides the order when no column is picked
   loading: { type: Boolean, default: false },
@@ -34,10 +34,10 @@ function sortedBy(key) {
   const [k, dir] = props.sort ? [props.sort.key, props.sort.dir] : own
   return k === key ? dir : 0
 }
-// title is a column's heading; Vol and Txns name the period.
+// title is a column's heading; Vol names the period.
 const title = (c) => (c.period ? `${c.title} ${props.period}` : c.title)
 // hidden hides a column on a phone: only price, volume and the period's change stay.
-const hidden = (c) => ['fdv', 'txns', 'liquidity', 'holders'].includes(c.key) || (c.change && c.change !== props.period)
+const hidden = (c) => ['fdv', 'liquidity', 'holders'].includes(c.key) || (c.change && c.change !== props.period)
 // faded is true for numbers whose history is not fully loaded yet.
 const faded = (c) => (c.change ? props.hours < HOURS[c.change] : c.period && !props.periodReady)
 
@@ -48,7 +48,6 @@ function cell(c, t) {
     case 'price': return formatPrice(t.price_ada)
     case 'fdv': return t.fdv_ada ? formatCompact(t.fdv_ada) : '—'
     case 'volume': return p.volume_ada ? formatCompact(p.volume_ada) : '—'
-    case 'txns': return p.buys + p.sells ? (p.buys + p.sells).toLocaleString('en-US') : '—'
     case 'liquidity': return formatCompact(t.reserve_ada * 2)
     case 'holders': return holdersText(t) // counted in the background after a restart
   }

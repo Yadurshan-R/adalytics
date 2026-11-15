@@ -14,7 +14,8 @@ export function periodOf(t, key) {
 }
 
 // COLUMNS is every sortable column: its key, title and the value it sorts by.
-// Volume and Txns follow the period picked above the table. A value not known
+// Volume follows the period picked above the table (the token page's activity
+// box has the buy and sell counts). A value not known
 // (yet) is null, not 0: holders still being counted, or that Koios could not
 // count, and FDV without a known supply. Unknown is not zero (HOSKY has many
 // holders), so sortRows puts these last whichever way the column is sorted.
@@ -22,7 +23,6 @@ export const COLUMNS = [
   { key: 'price', title: 'Price', value: (t) => t.price_ada },
   { key: 'fdv', title: 'FDV', value: (t) => t.fdv_ada || null },
   { key: 'volume', title: 'Vol', value: (t, p) => periodOf(t, p).volume_ada, period: true },
-  { key: 'txns', title: 'Txns', value: (t, p) => periodOf(t, p).buys + periodOf(t, p).sells, period: true },
   { key: 'liquidity', title: 'Liquidity', value: (t) => t.reserve_ada * 2 },
   { key: 'holders', title: 'Holders', value: (t) => t.holders || null },
   ...PERIODS.map((k) => ({ key: `c${k}`, title: `${k} %`, value: (t) => periodOf(t, k).change_pct, change: k })),

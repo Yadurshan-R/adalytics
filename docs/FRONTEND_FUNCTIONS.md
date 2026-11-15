@@ -127,7 +127,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `periodOf` | A token's trading over one period (5m, 1h, 4h or 24h): change, volume, buys and sells. |
 | `PERIODS` | The change columns in the table: 1h, 4h and 24h (5m is left out; it was mostly empty). |
-| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol and Txns are for 24 hours. A value not known (yet) is null, not 0: holders still being counted or that Koios could not count, and FDV without a known supply. |
+| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol is for 24 hours (the Txns column was removed; buy and sell counts are in the token page's activity box). A value not known (yet) is null, not 0: holders still being counted or that Koios could not count, and FDV without a known supply. |
 | `sortRows` | Sorts the rows by a column, either way. Unknown values go last whichever way (unknown is not zero: HOSKY has many holders); equal values (often quiet tokens) keep the bigger pool first. |
 | `signedPct` | Shows a change like +3.65% or −0.64%. |
 | `changeTone` | Colours a % change: green when it shows a +, red otherwise, so 0.00% is red, like Birdeye and CoinMarketCap. Used by the list, the activity box and the token panel. |
@@ -138,7 +138,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `setSort` | Sorts by a column title: highest first, then lowest first on a second click. |
 | `setView` | Picks Top Volume, Gainers or Losers and drops the column sort. |
-| `periodReady` | True once the last 24 hours are fully loaded; until then Vol and Txns are faded. |
+| `periodReady` | True once the last 24 hours are fully loaded; until then Vol is faded. |
 | `changeOf` | A token's 24h price change, for Gainers and Losers. |
 | `moved` | A change that rounds to 0.00% is not a gain or a loss. |
 | `traded` / `active` | Whether a token traded in the last 24 hours, and how many did (shown at the top right). |
@@ -158,7 +158,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `open` | Goes to a token's page. |
 | `sortedBy` | Which way the rows are in order of a column (1 up, -1 down, 0 not that column), for the ▲▼ arrows. |
-| `title` | A column's heading; Vol and Txns name their period (24h). |
+| `title` | A column's heading; Vol names its period (24h). |
 | `hidden` | Hides a column on a phone: only price, volume and the 24h change stay. |
 | (Holders) | How many wallets hold the token (holdersText): 64.4K with the exact number on hover, "…" while it is still being counted after a restart, "—" when Koios could not count them in its last 5 tries. |
 | `faded` | True for numbers whose history is not fully loaded yet. |

@@ -68,7 +68,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | `load` | Asks the backend for the token's activity, and again every minute. |
-| `rows` | The two lines under the tabs, like Birdeye's: volume in ADA and number of trades, each with buys, sells and net. |
+| `rows` | The line under the tabs, like Birdeye's: volume in ADA with buys, sells and net. The number of trades was removed (one bot can make many tiny trades, so the ADA says more). |
 | `share` | The buyers' part of a green and red bar, in percent (50 when nothing traded). |
 | `ready` | True once a period's history is fully loaded; until then its tab shows the loading % and its numbers are faded. |
 | `tone` | Colours a net amount green or red, grey for none. The % changes use changeTone, where 0.00% is red. |
@@ -127,7 +127,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 |---|---|
 | `periodOf` | A token's trading over one period (5m, 1h, 4h or 24h): change, volume, buys and sells. |
 | `PERIODS` | The change columns in the table: 1h, 4h and 24h (5m is left out; it was mostly empty). |
-| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol is for 24 hours (the Txns column was removed; buy and sell counts are in the token page's activity box). A value not known (yet) is null, not 0: holders still being counted or that Koios could not count, and FDV without a known supply. |
+| `COLUMNS` | Every sortable column of the list and the value it sorts by; Vol is for 24 hours (the Txns column was removed; each wallet's number of trades is in Top Traders). A value not known (yet) is null, not 0: holders still being counted or that Koios could not count, and FDV without a known supply. |
 | `sortRows` | Sorts the rows by a column, either way. Unknown values go last whichever way (unknown is not zero: HOSKY has many holders); equal values (often quiet tokens) keep the bigger pool first. |
 | `signedPct` | Shows a change like +3.65% or −0.64%. |
 | `changeTone` | Colours a % change: green when it shows a +, red otherwise, so 0.00% is red, like Birdeye and CoinMarketCap. Used by the list, the activity box and the token panel. |

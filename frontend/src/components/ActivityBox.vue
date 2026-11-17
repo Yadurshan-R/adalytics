@@ -1,7 +1,6 @@
 <!-- The activity box on a token page, laid out like Birdeye's: pick 5m, 1h,
-     4h or 24h (each tab shows its price change), then the volume and the
-     number of trades for that period, each split into buys, sells and net
-     with a green/red bar. Refreshed every minute from the trades the backend
+     4h or 24h (each tab shows its price change), then the volume for that
+     period, split into buys, sells and net with a green/red bar. Refreshed every minute from the trades the backend
      already holds. Right after the backend starts, a period that is not
      fully loaded yet shows its numbers faded. -->
 <script setup>
@@ -37,13 +36,14 @@ watch(() => props.id, load)
 
 // p is the period picked now.
 const p = computed(() => periods.value.find((x) => x.key === picked.value))
-// rows are the two lines under the tabs: volume in ADA and number of trades.
+// rows is the line under the tabs: the volume in ADA, with buys, sells and
+// net. (The number of trades was removed: one bot can make many tiny trades,
+// so the ADA says more.)
 const rows = computed(() => {
   if (!p.value) return []
-  const { buy_ada: bv, sell_ada: sv, buys, sells } = p.value
+  const { buy_ada: bv, sell_ada: sv } = p.value
   return [
     { label: `${picked.value} Vol`, total: formatCompact(bv + sv), buy: formatCompact(bv), sell: formatCompact(sv), net: bv - sv, netText: formatCompact(Math.abs(bv - sv)), share: share(bv, sv) },
-    { label: `${picked.value} Txns`, total: (buys + sells).toLocaleString('en-US'), buy: buys.toLocaleString('en-US'), sell: sells.toLocaleString('en-US'), net: buys - sells, netText: Math.abs(buys - sells).toLocaleString('en-US'), share: share(buys, sells) },
   ]
 })
 // share is the buyers' part of a bar, in percent (50 when nothing traded).

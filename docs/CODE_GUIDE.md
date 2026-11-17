@@ -174,4 +174,4 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/TradesTable.vue` | The Large Trades table |
 | `src/tradeSizes.js` | Small, Big and Whale: the three trade sizes |
 | `src/components/SizeTag.vue` | The BIG / WHALE tag after a trade's value |
-| `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, then volume and trades with buys, sells and net |
+| `src/components/ActivityBox.vue` | The 5m / 1h / 4h / 24h box: change, then volume with buys, sells and net |

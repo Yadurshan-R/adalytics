@@ -84,7 +84,6 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 
 | Function | What it does |
 |---|---|
-| `security` | The policy box: Locked (no more tokens can be made), Open, Smart contract or Unknown, with a short explanation on hover. |
 | `minswap` | The link for the Trade on Minswap button: the token's swap page on Minswap. |
 | `pos` | Places the price now between the 24h low and high, for the price performance bar. |
 | `copy` | Puts a policy ID or fingerprint on the clipboard and shows "Copied" for 1.5 seconds. |
@@ -188,5 +187,5 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `token` | The token this page is about, found by the id in the address. |
 | (tab title) | The browser tab shows the token and its live price, like "NIGHT ₳0.1890 +2.60% \| Adalytics", or "Token not found" for a wrong id. |
 | `back` | Goes to the previous page if it was the list, otherwise opens the list. |
-| (layout) | Laptop: chart and the Trades / Top Traders tabs (TradesSection) on the left, token panel on the right, like Birdeye and DexScreener. Phone: price boxes, then the chart and trades, then activity, the Minswap button and Token Info, like Birdeye's app. |
+| (layout) | Laptop: chart and the Trades / Top Traders tabs (TradesSection) on the left, token panel on the right, like Birdeye and DexScreener. Phone: price boxes, then the chart and trades, then activity and the Minswap button, like Birdeye's app. |
 | `span` | The low and high of the last 24 hours, sent by the chart (ChartPanel), for the price performance bar. |

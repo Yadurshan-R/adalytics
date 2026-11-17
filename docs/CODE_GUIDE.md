@@ -134,7 +134,7 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/TokenTable.vue` | The token table: sortable columns, faded numbers while loading, the empty message |
 | `src/pages/TokenPage.vue` | One token's page: the token panel, chart and trades |
 | `src/components/TokenOverview.vue` | The token panel: name, links, policy ID and the main numbers in boxes |
-| `src/components/TokenInfo.vue` | Trade on Minswap, 24h traders, holders, policy, price performance, links and IDs |
+| `src/components/TokenInfo.vue` | Trade on Minswap, price performance, links and IDs |
 | `src/components/ChartPanel.vue` | The chart and its data: the candles at the picked size, refreshed every minute |
 | `src/components/ChartWaiting.vue` | The loading box over the chart while the picked size has too little history |
 | `src/chart/loadWait.js` | When a candle size has enough history to show (20 candles) |

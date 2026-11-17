@@ -2,7 +2,7 @@
      the right (laid out like Birdeye's, with CoinMarketCap's info list under it).
      - TokenOverview: name, links, policy ID and the main numbers in boxes.
      - ActivityBox: 5m, 1h, 4h and 24h volume and trades, buys against sells.
-     - TokenInfo: Minswap button, traders/holders/security, price performance,
+     - TokenInfo: Minswap button, price performance,
        links and IDs, supply, pool, description.
      On phones the chart comes right after the price boxes, like Birdeye's app. -->
 <script setup>

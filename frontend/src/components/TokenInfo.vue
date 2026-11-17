@@ -1,13 +1,10 @@
 <!-- The lower part of the token page's left column:
      - a button that opens the token on Minswap (we never trade or hold funds);
-     - Token Info like Birdeye's: 24h traders, holders and security, which on
-       Cardano means whether the minting policy is locked (no more tokens can
-       ever be made) or still open;
      - price performance (24h low and high), then links, IDs, supply, pool and
        last trade as a plain list like CoinMarketCap's, and the description. -->
 <script setup>
 import { ref, computed } from 'vue'
-import { formatPrice, formatCompact, formatAmount, formatAgo, short, host, createdDate, holdersText, holdersTip } from '../format.js'
+import { formatPrice, formatCompact, formatAmount, formatAgo, short, host, createdDate } from '../format.js'
 
 const props = defineProps({
   token: { type: Object, required: true },
@@ -21,14 +18,6 @@ const pos = computed(() => {
   return Math.min(100, Math.max(0, ((props.token.price_ada - r.low) / (r.high - r.low)) * 100))
 })
 
-// SECURITY explains each policy state for the Security box.
-const SECURITY = {
-  locked: { text: 'Locked', tone: 'up', tip: 'The minting policy is locked: no more tokens can ever be made.' },
-  open: { text: 'Open', tone: 'warn', tip: 'The policy can still mint: the creator can make more tokens.' },
-  script: { text: 'Smart contract', tone: 'muted', tip: 'Minting is controlled by a smart contract, so it cannot be read as locked or open.' },
-  unknown: { text: 'Unknown', tone: 'muted', tip: 'Koios has no script for this policy.' },
-}
-const security = computed(() => SECURITY[props.token.policy_state] ?? { text: '…', tone: 'muted', tip: 'Checking the minting policy' })
 // minswap opens the token's swap page on Minswap.
 const minswap = computed(() => `https://app.minswap.org/swap?currencySymbolA=&tokenNameA=&currencySymbolB=${props.token.policy_id}&tokenNameB=${props.token.asset_name}`)
 
@@ -44,18 +33,6 @@ function copy(text, key) {
 <template>
   <div class="info">
     <a :href="minswap" target="_blank" rel="noopener" class="trade">Trade {{ token.ticker }} on Minswap ↗</a>
-
-    <h2>Token Info</h2>
-    <div class="cards">
-      <div class="card"><b class="num">{{ token.traders_24h != null ? token.traders_24h.toLocaleString('en-US') : '…' }}</b><span>24h Traders</span></div>
-      <div class="card" :title="holdersTip(token)"><b class="num">{{ holdersText(token) }}</b><span>Holders</span></div>
-      <div class="card" :title="security.tip">
-        <b :class="security.tone">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 2.5 3.5v4c0 3.3 2.3 5.9 5.5 7 3.2-1.1 5.5-3.7 5.5-7v-4z" /></svg>{{ security.text }}
-        </b>
-        <span>Policy</span>
-      </div>
-    </div>
 
     <h2>Price performance <span class="muted">24h</span></h2>
     <div v-if="span" class="perf num">
@@ -92,12 +69,6 @@ function copy(text, key) {
 .info { margin-top: 12px; }
 .trade { display: block; padding: 10px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; text-align: center; text-decoration: none; }
 .trade:hover { background: var(--accent-hover); }
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 4px; border: 1px solid var(--line); border-radius: 8px; }
-.card b { display: inline-flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 600; }
-.card span { font-size: 12px; color: var(--muted); }
-.card svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; }
-.warn { color: var(--warn); }
 h2 { margin: 22px 0 10px; font-size: 15px; font-weight: 700; }
 h2:first-child { margin-top: 0; }
 h2 .muted { font-weight: 500; font-size: 13px; margin-left: 4px; }

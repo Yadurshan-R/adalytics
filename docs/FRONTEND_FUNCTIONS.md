@@ -140,7 +140,7 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | `periodReady` | True once the last 24 hours are fully loaded; until then Vol is faded. |
 | `changeOf` | A token's 24h price change, for Gainers and Losers. |
 | `moved` | A change that rounds to 0.00% is not a gain or a loss. |
-| `traded` / `active` | Whether a token traded in the last 24 hours, and how many did (shown at the top right). |
+| `traded` | Whether a token traded in the last 24 hours. |
 | `shown` | The list on screen: tokens that traded in the last 24 hours (every token while the 24 hours still load), filtered by the view, in the view's order or the column picked. A search also finds quiet tokens. |
 | `emptyText` | Explains why the list is empty. |
 
@@ -149,7 +149,6 @@ Every function in the Vue website except the chart (see [CHART_FUNCTIONS.md](CHA
 | Function | What it does |
 |---|---|
 | `onKey` | Makes "/" jump to the search box from anywhere on the page. |
-| (slot) | The live status from the list page ("19 tokens traded in 24h · updated 13:00"), shown beside the search box. |
 
 ## `src/components/TokenTable.vue`
 

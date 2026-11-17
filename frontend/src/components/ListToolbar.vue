@@ -1,5 +1,5 @@
 <!-- The bar above the token list, like Birdeye's: Top Volume / Gainers /
-     Losers as underlined tabs, the live status (slot) and the search box.
+     Losers as underlined tabs, and the search box.
      Press "/" anywhere to jump to the search box, Esc to clear it. -->
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
@@ -29,7 +29,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
       <button v-for="v in views" :key="v.key" type="button" :aria-pressed="view === v.key" @click="emit('update:view', v.key)">{{ v.label }}</button>
     </nav>
     <div class="right">
-      <slot />
       <label class="search">
         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" /><path d="M13 13l4 4" /></svg>
         <input ref="search" :value="query" type="search" placeholder="Search token or policy ID" aria-label="Search token"

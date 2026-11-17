@@ -13,13 +13,12 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTokens } from '../useTokens.js'
-import { formatTime } from '../format.js'
 import { HOURS, COLUMNS, periodOf, sortRows } from '../listSort.js'
 import ListToolbar from '../components/ListToolbar.vue'
 import TokenTable from '../components/TokenTable.vue'
 import LoadingProgress from '../components/LoadingProgress.vue'
 
-const { tokens, history, day, error, updatedAt, loading } = useTokens()
+const { tokens, history, day, error, loading } = useTokens()
 const route = useRoute()
 const router = useRouter()
 
@@ -63,8 +62,6 @@ const moved = (v) => Math.abs(v) >= 0.005
 
 // traded is true for a token with at least one trade in the last 24 hours.
 const traded = (t) => periodOf(t, '24h').buys + periodOf(t, '24h').sells > 0
-// active counts the tokens that traded in the last 24 hours.
-const active = computed(() => tokens.value.filter((t) => t.price_ada && traded(t)).length)
 
 // shown is the list on screen, in the view's order or the column picked.
 // Only tokens that traded in the last 24 hours are listed; a quiet token shows
@@ -94,13 +91,7 @@ const emptyText = computed(() => {
 <template>
   <section>
     <h1 class="sr-only">Cardano Tokens</h1>
-    <ListToolbar :views="VIEWS" :view="view" v-model:query="query" @update:view="setView">
-      <p v-if="updatedAt && !error" class="live muted num">
-        <span class="dot" aria-hidden="true"></span>
-        <template v-if="day.ready">{{ active }} tokens traded in 24h</template><template v-else>{{ tokens.length }} tokens</template>
-        · updated {{ formatTime(updatedAt) }}
-      </p>
-    </ListToolbar>
+    <ListToolbar :views="VIEWS" :view="view" v-model:query="query" @update:view="setView" />
 
     <p v-if="error" class="notice" role="alert">{{ error }}</p>
     <LoadingProgress v-if="history.loading && !error" :loading="history.loading" />
@@ -117,8 +108,6 @@ const emptyText = computed(() => {
 
 <style scoped>
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; margin: 0 0 6px; white-space: nowrap; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bull); }
 .day { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
 .day b { color: var(--fg); font-weight: 600; }
 .bar { flex: 1; min-width: 120px; max-width: 240px; height: 4px; border-radius: 2px; background: var(--chip); overflow: hidden; }

@@ -43,12 +43,12 @@ function setup() {
 }
 
 describe('useDrawTools', () => {
-  it('keeps the picked tool after a drawing by default (stay in drawing mode on)', () => {
+  it('goes back to the cursor after a drawing by default, like TradingView (stay in drawing mode off)', () => {
     const { t, dm } = setup()
-    expect(t.stay.value).toBe(true)
-    expect(dm().opts.stayInDrawingMode).toBe(true)
-    t.setStay(false)
+    expect(t.stay.value).toBe(false)
     expect(dm().opts.stayInDrawingMode).toBe(false)
+    t.setStay(true)
+    expect(dm().opts.stayInDrawingMode).toBe(true)
   })
 
   it('moves the drawings to the new series on a switch between candles and line', () => {

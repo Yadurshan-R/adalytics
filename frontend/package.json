@@ -10,8 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "lightweight-charts": "^5.2.1",
-    "lightweight-charts-drawing": "0.6.3",
+    "lightweight-charts": "5.3.0",
+    "lightweight-charts-drawing": "0.10.1",
     "vue": "^3.5.43",
     "vue-router": "^5.3.1"
   },

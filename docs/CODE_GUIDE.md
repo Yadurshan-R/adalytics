@@ -145,7 +145,8 @@ No file is longer than 300 lines. Each one has one job.
 | `src/components/ChartLegend.vue` | The open, high, low, close line at the top of the chart, and the indicator values |
 | `src/components/IndicatorMenu.vue` | The Indicators button and its list |
 | `src/components/CandleSizePicker.vue` | The candle size buttons and the list of every size |
-| `src/chart/indicators.js` | The indicator math: MA, RSI, ATR |
+| `src/chart/indicators.js` | The list of indicators (the maths is TradingView's) |
+| `src/vendor/tradingview/` | TradingView's own indicator code, copied from Lightweight Charts (do not edit) |
 | `src/chart/useIndicators.js` | Puts the picked indicators on the chart |
 | `src/chart/chartOptions.js` | How the chart looks: theme colours, axes, crosshair |
 | `src/chart/localTime.js` | Intraday times on the visitor's clock, day candles on UTC dates, and how the time axis writes them |

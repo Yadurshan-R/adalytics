@@ -60,25 +60,32 @@ Every function behind the price chart on a token page: the bar on top, the chart
 
 ## `src/chart/indicators.js`
 
+The maths is TradingView's own code, in `src/vendor/tradingview` (see its README); this file only lists the indicators.
+
 | Function | What it does |
 |---|---|
-| `INDICATORS` | The Indicators menu: MA 20, MA 50, RSI 14 and ATR 14, the ones most traders use, with their colour, length, panel and whether their value is a price. |
-| `minBars` | How many candles an indicator needs for its first value: n, one more for RSI. |
-| `sma` | Simple moving average: the average close of the last n bars. |
-| `wilder` | Wilder's smoothing, used by RSI and ATR: the average of the first n values, then each new value counts 1/n. |
-| `rsi` | Relative strength index, 0 to 100: above 70 overbought, below 30 oversold. |
-| `trueRange` | How far the price moved in one bar, gaps included: the largest of high − low, \|high − previous close\| and \|low − previous close\|. |
-| `atr` | Average true range: how much the price usually moves in one bar, in price; size only, no direction. |
+| `INDICATORS` | The Indicators menu, TradingView's single-token indicators: MA 20, MA 50, Average price, Median price, Weighted close (lines on the price), Momentum 10 and Percent change (own panels), each with its colour, the candles it needs, its panel, how its value is written and TradingView's calculation. |
+| `lineOf` | An indicator's line for the candles, keeping only the candles that have a value. |
+
+## `src/vendor/tradingview/` (TradingView's code, not ours)
+
+| File | What it works out |
+|---|---|
+| `moving-average-calculation.ts` | Average close of the last n candles. |
+| `momentum-calculation.ts` | Close now minus the close n candles ago. |
+| `percent-change-calculation.ts` | % change of the close from the candle before. |
+| `average-price-calculation.ts` | (open + high + low + close) / 4. |
+| `median-price-calculation.ts` | (high + low) / 2. |
+| `weighted-close-calculation.ts` | (high + low + 2 × close) / 4. |
 
 ## `src/chart/useIndicators.js`
 
 | Function | What it does |
 |---|---|
-| `panelHeight` / `RSI_LEVELS` | An indicator panel's height (110px, 70px on a phone); RSI's lines as TradingView draws them: 70 and 30 dashed, 50 dotted, on an axis that always shows 0 to 100. |
-| `create` | Adds an indicator's line: the moving averages on the price, RSI and ATR each in a new panel under the chart (with RSI's level lines). The chart removes an empty panel by itself. |
-| `dataOf` | Works out an indicator's line from the bars. |
-| `set` | Shows the picked indicators for the bars on the chart and removes the rest. One with too few candles for any value (MA 50 on 1D, all four on 1W and 1M) gets no line and no empty panel; the legend says how many candles it needs. |
-| `at` | Each indicator's value at the bar under the mouse, or how many candles it needs, for the legend (nothing while the indicators are hidden). |
+| `panelHeight` / `ZERO` / `PERCENT` / `signedOf` | An indicator panel's height (110px, 70px on a phone); the dotted 0 line in the momentum and percent change panels; percent change written with two decimals; momentum written with its sign (+₳0.0012). |
+| `create` | Adds an indicator's line: the price lines on the price, momentum and percent change each in a new panel under the chart. The chart removes an empty panel by itself. |
+| `set` | Shows the picked indicators for the bars on the chart and removes the rest. One with too few candles for any value (MA 50 on 1D, the moving averages and momentum on 1W and 1M) gets no line and no empty panel; the legend says how many candles it needs. |
+| `at` | Each indicator's value at the bar under the mouse, written like its axis, or how many candles it needs, for the legend (nothing while the indicators are hidden). |
 | `show` | Hides or shows every indicator, lines and legend (the toolbar's "Hide indicators"); indicators added while hidden stay hidden. |
 
 ## `src/components/CandleSizePicker.vue`
@@ -124,7 +131,7 @@ Every function behind the price chart on a token page: the bar on top, the chart
 |---|---|
 | `priceStep.test.js` | The step is one unit of the fifth significant digit (SNEK, HOSKY, LQ, an FDV); a real move counts 3,297 ticks, not 329 million; no price gives the fallback. |
 | `toolList.test.js` | Every tool on the toolbar exists in the library and has a name and an icon; each tool is in one group; the 14 tools chosen. |
-| `indicators.test.js` | The menu lists MA 20, MA 50, RSI 14, ATR 14; the moving average, RSI (100 all up, 0 all down, 50 for equal moves), the true range with gaps, and ATR give the textbook values on hand-checked bars; with too few candles they give no value (not a wrong one), and the first value comes exactly at `minBars`. |
+| `indicators.test.js` | The menu lists TradingView's seven indicators; with TradingView's maths, MA 20, Momentum 10, Percent change, Average, Median and Weighted close give hand-checked values, the newest candle included (TradingView's example left it out; see `src/vendor/tradingview/README.md`); with too few candles they give no line, not NaN. |
 | `localTime.test.js` | The offset of Colombo and New York; only 5m to 12h are moved (a 1D candle stays on 9 Nov in New York); intraday times written as the local clock, "9 Nov" at local midnight; 1D, 1W, 1M written as dates ("Nov", "Week of 2 Nov", "Mon 9 Nov"), never a clock time. |
 | `loadWait.test.js` | 20 candles per size (1h after 20 hours, 4h after 80, 1D after 20 days, 1W after all 30 days), capped by the history kept; never 100% while something is missing. |
 | `useDrawTools.test.js` | With a pretend manager: drawings move with a switch between candles and line (with the magnet and hide settings); the measurement is not counted and goes on the next click; lock all locks new drawings too and keeps locked ones from Delete; a button picking the tool on goes back to the cursor, a menu does not; typed text is written, and an empty new text removed; after a drawing the cursor comes back by default, and stay in drawing mode keeps the tool; each timeframe keeps its own drawings (hidden on 4h, back on 1h), a deleted drawing or the measurement is not kept, and drawings come back when the chart is built again. |

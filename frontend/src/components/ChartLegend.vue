@@ -10,7 +10,7 @@ const props = defineProps({
   type: { type: String, default: 'candles' }, // 'candles' or 'line'
   bar: { type: Object, default: null }, // the candle shown
   base: { type: Number, default: 0 }, // line: the close of the bar before
-  extras: { type: Array, default: () => [] }, // indicators: [{ name, color, value, price, need }]
+  extras: { type: Array, default: () => [] }, // indicators: [{ name, color, text, need }]
   fmt: { type: Function, default: formatPrice }, // writes a price (or an FDV)
 })
 
@@ -50,7 +50,7 @@ const volDir = computed(() => (props.bar && props.bar.close < props.bar.open ? '
       <span class="break"></span>
       <span v-for="x in extras" :key="x.name" class="extra">
         {{ x.name }}<b v-if="x.need" class="need">needs {{ x.need }} candles</b>
-        <b v-else :style="{ color: x.color }">{{ x.value == null ? '—' : x.price ? fmt(x.value) : x.value.toFixed(1) }}</b>
+        <b v-else :style="{ color: x.color }">{{ x.text }}</b>
       </span>
     </template>
   </div>

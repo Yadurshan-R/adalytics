@@ -27,7 +27,7 @@ import ChartLegend from './ChartLegend.vue'
 const props = defineProps({
   type: { type: String, default: 'candles' }, // 'candles' or 'line'
   candles: { type: Array, default: () => [] }, // [{ time, open, high, low, close, volume }], oldest first
-  indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma20', 'atr']
+  indicators: { type: Array, default: () => [] }, // picked indicators, e.g. ['ma20', 'mom']
   fmt: { type: Function, default: formatPrice }, // writes a value: a price, or a compact FDV
   size: { type: String, default: '1h' }, // candle size: sets the time axis (localTime.js)
   fitKey: { type: String, default: '' }, // the view is fitted again only when this changes (token, size, unit)

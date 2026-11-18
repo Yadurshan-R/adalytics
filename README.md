@@ -14,7 +14,7 @@ Adalytics follows every token that Minswap marks as verified and shows its price
 * Search by name, ticker or policy ID (press `/`); refreshes by itself every minute
 
 **Token page**
-* A live price chart (TradingView Lightweight Charts) with candles from 5 minutes to 1 month (1W and 1M are calendar candles, like Birdeye's), up to 30 days back, a loading box with the percentage while history loads, volume bars, indicators (MA 20, MA 50, RSI 14, ATR 14), Price / FDV, and a drawing toolbar like Birdeye's: trend lines, rays, horizontal and vertical lines, channels, long and short positions, measuring, brush, arrow, rectangle, text and price labels, with magnet, lock and hide. **See the [chart guide](docs/CHART_GUIDE.md) for what each part means and how to use it.**
+* A live price chart (TradingView Lightweight Charts) with candles from 5 minutes to 1 month (1W and 1M are calendar candles, like Birdeye's), up to 30 days back, a loading box with the percentage while history loads, volume bars, TradingView's own indicators (MA 20, MA 50, average, median and weighted close, momentum, percent change), Price / FDV, and a drawing toolbar like Birdeye's: trend lines, rays, horizontal and vertical lines, channels, long and short positions, measuring, brush, arrow, rectangle, text and price labels, with magnet, lock and hide. **See the [chart guide](docs/CHART_GUIDE.md) for what each part means and how to use it.**
 * A token panel: price, liquidity, FDV, 5m / 1h / 4h / 24h volume with buys, sells and net, price range, links and the project description
 * **Trades**: the latest trades with the wallet behind each (Minswap fills many orders in one transaction; Adalytics splits them into one trade per wallet), filter by buys or sells, BIG and WHALE tags for ₳10K and ₳50K+
 * **Top Traders**: the 50 wallets that traded the token most in 24 hours, 7 or 30 days. Click a trader to see only its trades and what else it traded
@@ -165,6 +165,6 @@ The [code guide](docs/CODE_GUIDE.md) explains how the parts fit together and lis
 
 ## Built with
 
-Go, Vue 3 (Composition API), Vite, Vue Router, TradingView Lightweight Charts, lightweight-charts-drawing (TradingView's drawing tools for it, MIT), Vitest, the Koios API and the Minswap verified token list.
+Go, Vue 3 (Composition API), Vite, Vue Router, TradingView Lightweight Charts and its open-source indicator code (Apache 2.0), lightweight-charts-drawing (drawing tools for Lightweight Charts by an independent developer, MIT), Vitest, the Koios API and the Minswap verified token list.
 
 ![Phone view](docs/screenshots/phone.png)

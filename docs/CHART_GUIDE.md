@@ -13,7 +13,7 @@ How to read the price chart on a token page and what every button does. It works
 |  =   |                                                                |
 |  #   |   volume bars                                                  |
 |  T   +----------------------------------------------------------------+
-| ...  |   RSI panel (only when RSI is on)                              |
+| ...  |   Momentum / Percent change panels (only when they are on)    |
 +------+----------------------------------------------------------------+
 ```
 
@@ -54,10 +54,15 @@ They are worked out in your browser from the candles on screen, so they follow t
 |---|---|---|
 | **MA 20** (orange) | The average close of the last 20 candles. | Smooths out the noise. Price above it: short-term trend up; below: down. |
 | **MA 50** (pink) | The average close of the last 50 candles. | The slower trend. When MA 20 crosses above MA 50, the trend may be turning up; below, down. |
-| **RSI 14** (violet, own panel) | Relative strength index, 0 to 100, from the last 14 candles' ups and downs. Dashed lines at 70 and 30, a dotted one at 50, like TradingView. | Above 70: overbought (rose fast, may pull back). Below 30: oversold (fell fast, may bounce). |
-| **ATR 14** (cyan, own panel) | Average true range: how much the price usually moves in one candle, in ADA, from the last 14 candles (gaps included), worked out the way TradingView's ATR is. | Size, not direction: a high ATR means wild moves. Traders set a stop-loss beyond the normal swing, for example 1.5 × ATR from the entry. A token nobody trades shows a low ATR, because its price did not move. |
+| **Average price** (green) | Each candle's (open + high + low + close) / 4. | One number for the whole candle; it hugs the candles. |
+| **Median price** (blue) | Each candle's (high + low) / 2: the middle of its range. | Where the candle's range was centred, ignoring where it opened and closed. |
+| **Weighted close** (purple) | Each candle's (high + low + 2 × close) / 4. | Like the median, but leaning towards the close. |
+| **Momentum 10** (violet, own panel) | The close now minus the close 10 candles ago, in ADA. | Above 0: higher than 10 candles ago; the further from 0, the faster the move. |
+| **Percent change** (cyan, own panel) | How much each candle's close moved from the one before, in %. | Big spikes mark the sharp candles; a quiet token stays near 0%. |
 
-An indicator needs a number of candles before its first value: 20 for MA 20, 50 for MA 50, 15 for RSI 14, 14 for ATR 14. Adalytics keeps 30 days, which is only 30 daily candles and about 5 weekly ones, so MA 50 cannot show on 1D and none of them on 1W or 1M. The legend then says "needs 50 candles" in grey instead of drawing nothing. RSI and ATR start from the oldest candle loaded (as on TradingView), so they can shift a little while the history still loads.
+All seven are TradingView's own code, from its open-source Lightweight Charts. TradingView's open source has no RSI or ATR, so the chart no longer has them.
+
+An indicator needs a number of candles before its first value: 20 for MA 20, 50 for MA 50, 11 for Momentum 10, 2 for Percent change. Adalytics keeps 30 days, which is only 30 daily candles and about 5 weekly ones, so MA 50 cannot show on 1D and the moving averages and momentum not on 1W or 1M. The legend then says "needs 50 candles" in grey instead of drawing nothing.
 
 Indicators describe the past; none of them predicts the price.
 
@@ -122,7 +127,7 @@ A switch between candles and line keeps the drawings.
 2. Move the mouse over a few candles and watch the legend: find a big green candle and check its Vol.
 3. Click **1h**, then **1D**: the same history in bigger candles. Go back to **15m**.
 4. Turn on **MA 20** under Indicators. Is the price above or below the orange line?
-5. Turn on **RSI 14**. Find a moment it went above 70: what did the price do next?
+5. Turn on **Momentum 10**. Find a moment it was far above 0: what did the price do next?
 6. Pick **Horizontal line** and click on a price where the candles stopped falling several times: that is support.
 7. Pick **Measure** and click two candles to see how much the price moved between them.
 8. Open the Projection menu, pick **Long position** and click a price: drag the green and red parts to a target and a stop-loss, and read the risk/reward ratio.

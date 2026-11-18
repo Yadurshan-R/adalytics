@@ -1,81 +1,56 @@
-// Tests for indicators.js: the moving average, RSI and ATR give the textbook
-// values on small hand-checked examples.
+// Tests for indicators.js: TradingView's indicator code (src/vendor/tradingview)
+// gives the textbook numbers on our candles, and lineOf keeps only real values.
 import { describe, it, expect } from 'vitest'
-import { INDICATORS, sma, rsi, atr, trueRange, minBars } from './indicators.js'
+import { INDICATORS, lineOf } from './indicators.js'
 
-// bar makes one bar at time t (open is not used by these indicators).
-const bar = (t, high, low, close) => ({ time: t, open: close, high, low, close })
+// bar makes one candle at time t.
+const bar = (t, open, high, low, close) => ({ time: t, open, high, low, close, volume: 1 })
+// closes makes candles whose open, high and low equal the close.
+const closes = (xs) => xs.map((c, i) => bar(1000 + i * 60, c, c, c, c))
+const byKey = (k) => INDICATORS.find((i) => i.key === k)
 
 describe('INDICATORS', () => {
-  it('lists the three indicators traders use: MA 20, MA 50, RSI 14, ATR 14', () => {
-    expect(INDICATORS.map((i) => i.name)).toEqual(['MA 20', 'MA 50', 'RSI 14', 'ATR 14'])
+  it('lists TradingView\'s single-token indicators, each with its maths', () => {
+    expect(INDICATORS.map((i) => i.name)).toEqual([
+      'MA 20', 'MA 50', 'Average price', 'Median price', 'Weighted close', 'Momentum 10', 'Percent change',
+    ])
+    for (const i of INDICATORS) expect(typeof i.calc).toBe('function')
   })
 })
 
-describe('sma', () => {
-  it('averages the last n closes, from the nth bar on', () => {
-    const bars = [1, 2, 3, 4, 5].map((c, i) => bar(i, c, c, c))
-    expect(sma(bars, 3)).toEqual([{ time: 2, value: 2 }, { time: 3, value: 3 }, { time: 4, value: 4 }])
-  })
-})
-
-describe('rsi', () => {
-  it('is 100 when every move was up, 0 when every move was down', () => {
-    const up = [1, 2, 3, 4, 5, 6].map((c, i) => bar(i, c, c, c))
-    const down = [6, 5, 4, 3, 2, 1].map((c, i) => bar(i, c, c, c))
-    expect(rsi(up, 3).map((p) => p.value)).toEqual([100, 100, 100])
-    expect(rsi(down, 3).map((p) => p.value)).toEqual([0, 0, 0])
+describe('lineOf with TradingView\'s maths', () => {
+  it('MA 20 is the average close of the last 20 candles, from the 20th candle on', () => {
+    const bars = closes(Array.from({ length: 25 }, (_, i) => i + 1)) // closes 1..25
+    const line = lineOf(byKey('ma20'), bars)
+    expect(line).toHaveLength(6)
+    expect(line[0]).toEqual({ time: bars[19].time, value: 10.5 }) // (1 + … + 20) / 20
+    expect(line[5].value).toBeCloseTo(15.5) // (6 + … + 25) / 20
   })
 
-  it('is 50 when the ups and downs are the same size', () => {
-    const bars = [10, 11, 10, 11, 10].map((c, i) => bar(i, c, c, c))
-    expect(rsi(bars, 2)[0]).toEqual({ time: 2, value: 50 })
-  })
-})
-
-describe('trueRange', () => {
-  it('counts a gap from the previous close', () => {
-    expect(trueRange(bar(1, 12, 11, 11.5), 10)).toBe(2) // gap up: high − previous close
-    expect(trueRange(bar(1, 9, 8, 8.5), 10)).toBe(2) // gap down: previous close − low
-    expect(trueRange(bar(1, 12, 9, 10), 10)).toBe(3) // no gap: high − low
-    expect(trueRange(bar(0, 12, 9, 10), null)).toBe(3) // the first bar
-  })
-})
-
-describe('atr', () => {
-  it('averages the first n true ranges, then smooths each new one by 1/n', () => {
-    const bars = [bar(0, 11, 9, 10), bar(1, 12, 10, 11), bar(2, 13, 11, 12), bar(3, 18, 12, 16)]
-    // true ranges: 2, 2, 2, 6 → ATR 2 at bar 2, then (2 × 2 + 6) / 3 = 3.333 at bar 3
-    const out = atr(bars, 3)
-    expect(out[0]).toEqual({ time: 2, value: 2 })
-    expect(out[1].time).toBe(3)
-    expect(out[1].value).toBeCloseTo(10 / 3, 10)
+  it('Momentum 10 is the close now minus the close 10 candles ago', () => {
+    const bars = closes([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 20, 3])
+    const line = lineOf(byKey('mom'), bars)
+    expect(line.map((p) => p.value)).toEqual([15, -3]) // 20 − 5, 3 − 6
+    expect(line[0].time).toBe(bars[10].time)
   })
 
-  it('is 0 for bars where the price never moved (a token nobody traded)', () => {
-    const flat = [1, 2, 3, 4].map((t) => bar(t, 5, 5, 5))
-    expect(atr(flat, 3).every((p) => p.value === 0)).toBe(true)
-  })
-})
-
-describe('too few bars', () => {
-  // A 1W chart has about 5 candles in 30 days, a 1D chart 30: fewer than some
-  // indicators need. They must give no value at all, not a wrong one or NaN.
-  const five = [1, 2, 3, 4, 5].map((c, i) => bar(i, c + 1, c - 1, c))
-  it('gives no value with fewer bars than needed', () => {
-    expect(sma(five, 20)).toEqual([])
-    expect(rsi(five, 14)).toEqual([])
-    expect(atr(five, 14)).toEqual([])
-    expect(sma([], 20)).toEqual([])
-    expect(rsi([], 14)).toEqual([])
+  it('Percent change is the % move of the close from the candle before, newest candle included', () => {
+    const bars = closes([100, 110, 99])
+    const line = lineOf(byKey('pct'), bars)
+    expect(line.map((p) => p.time)).toEqual([bars[1].time, bars[2].time])
+    expect(line[0].value).toBeCloseTo(10) // 100 → 110
+    expect(line[1].value).toBeCloseTo(-10) // 110 → 99
   })
 
-  it('gives the first value exactly at minBars', () => {
-    const many = Array.from({ length: 60 }, (_, i) => bar(i, i + 2, i, i + 1))
-    for (const ind of INDICATORS) {
-      const f = { ma20: sma, ma50: sma, rsi, atr }[ind.key]
-      expect(f(many.slice(0, minBars(ind) - 1), ind.n), ind.name).toEqual([])
-      expect(f(many.slice(0, minBars(ind)), ind.n), ind.name).toHaveLength(1)
-    }
+  it('Average, median and weighted close use the candle\'s own prices, newest candle included', () => {
+    const bars = [bar(1000, 1, 1, 1, 1), bar(1060, 10, 14, 6, 12)]
+    expect(lineOf(byKey('avg'), bars).at(-1)).toEqual({ time: 1060, value: 10.5 }) // (10 + 14 + 6 + 12) / 4
+    expect(lineOf(byKey('median'), bars).at(-1)).toEqual({ time: 1060, value: 10 }) // (14 + 6) / 2
+    expect(lineOf(byKey('wclose'), bars).at(-1)).toEqual({ time: 1060, value: 11 }) // (14 + 6 + 2 × 12) / 4
+  })
+
+  it('gives no line, not NaN, when there are too few candles (1W, 1M)', () => {
+    for (const k of ['ma20', 'ma50', 'mom']) expect(lineOf(byKey(k), closes([1, 2, 3]))).toEqual([])
+    expect(lineOf(byKey('ma20'), [])).toEqual([])
   })
 })

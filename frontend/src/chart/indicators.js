@@ -1,82 +1,40 @@
-// indicators.js works out the chart indicators from the bars on screen, in the
-// browser: nothing is asked from the backend. Each takes bars as
-// [{ time, open, high, low, close }] and returns [{ time, value }], with no
-// value for the first bars where there is not enough history yet.
+// indicators.js lists the indicators in the Indicators menu. The maths is
+// TradingView's own code (src/vendor/tradingview, copied unchanged from the
+// Lightweight Charts repository); this file only names each indicator, gives
+// it a colour and says where it goes. Nothing is asked from the backend.
+import { calculateMovingAverageIndicatorValues } from '../vendor/tradingview/indicators/moving-average/moving-average-calculation.ts'
+import { calculateMomentumIndicatorValues } from '../vendor/tradingview/indicators/momentum/momentum-calculation.ts'
+import { calculatePercentChangeIndicatorValues } from '../vendor/tradingview/indicators/percent-change/percent-change-calculation.ts'
+import { calculateAveragePriceIndicatorValues } from '../vendor/tradingview/indicators/average-price/average-price-calculation.ts'
+import { calculateMedianPriceIndicatorValues } from '../vendor/tradingview/indicators/median-price/median-price-calculation.ts'
+import { calculateWeightedCloseIndicatorValues } from '../vendor/tradingview/indicators/weighted-close/weighted-close-calculation.ts'
 
-// INDICATORS is the list in the Indicators menu: the three most traders use.
-//   key, name, colour; n, the number of bars it looks back;
+// INDICATORS is the list in the Indicators menu, in TradingView's names.
+//   key, name, colour; need, the candles it needs for its first value;
 //   panel: false for a line on the price, true for its own panel under the
-//   chart (RSI, ATR); price: true when its value is a price (the legend
-//   writes it like one), false for a score (RSI, 0 to 100).
+//   chart; value: 'price' (written like a price), 'signed' (a price move,
+//   up or down) or 'percent'; calc, TradingView's maths for the candles.
 export const INDICATORS = [
-  { key: 'ma20', name: 'MA 20', color: '#f59e0b', n: 20, panel: false, price: true },
-  { key: 'ma50', name: 'MA 50', color: '#ec407a', n: 50, panel: false, price: true },
-  { key: 'rsi', name: 'RSI 14', color: '#7e57c2', n: 14, panel: true, price: false },
-  { key: 'atr', name: 'ATR 14', color: '#00acc1', n: 14, panel: true, price: true },
+  { key: 'ma20', name: 'MA 20', color: '#f59e0b', need: 20, panel: false, value: 'price',
+    calc: (b) => calculateMovingAverageIndicatorValues(b, { length: 20, source: 'close' }) },
+  { key: 'ma50', name: 'MA 50', color: '#ec407a', need: 50, panel: false, value: 'price',
+    calc: (b) => calculateMovingAverageIndicatorValues(b, { length: 50, source: 'close' }) },
+  { key: 'avg', name: 'Average price', color: '#26a69a', need: 1, panel: false, value: 'price',
+    calc: (b) => calculateAveragePriceIndicatorValues(b, {}) },
+  { key: 'median', name: 'Median price', color: '#42a5f5', need: 1, panel: false, value: 'price',
+    calc: (b) => calculateMedianPriceIndicatorValues(b, {}) },
+  { key: 'wclose', name: 'Weighted close', color: '#ab47bc', need: 1, panel: false, value: 'price',
+    calc: (b) => calculateWeightedCloseIndicatorValues(b, {}) },
+  { key: 'mom', name: 'Momentum 10', color: '#7e57c2', need: 11, panel: true, value: 'signed',
+    calc: (b) => calculateMomentumIndicatorValues(b, { length: 10, source: 'close' }) },
+  { key: 'pct', name: 'Percent change', color: '#00acc1', need: 2, panel: true, value: 'percent',
+    calc: (b) => calculatePercentChangeIndicatorValues(b, {}) },
 ]
 
-// minBars is how many bars an indicator needs for its first value: n, and
-// one more for RSI, which works on the moves between bars. With fewer, the
-// legend says "needs 15 candles" (1W and 1M have only a few in 30 days).
-export function minBars(ind) {
-  return ind.key === 'rsi' ? ind.n + 1 : ind.n
-}
-
-// sma is the simple moving average: the average close of the last n bars.
-// Above it the price is in an uptrend, below it in a downtrend.
-export function sma(bars, n) {
-  const out = []
-  let sum = 0
-  bars.forEach((b, i) => {
-    sum += b.close
-    if (i >= n) sum -= bars[i - n].close
-    if (i >= n - 1) out.push({ time: b.time, value: sum / n })
-  })
-  return out
-}
-
-// wilder smooths values over n steps the way RSI and ATR do (J. Welles
-// Wilder): the plain average of the first n, then each new value counts 1/n.
-// It returns one smoothed value per input from the nth on.
-function wilder(values, n) {
-  const out = []
-  let avg = 0
-  values.forEach((v, i) => {
-    if (i < n) {
-      avg += v / n
-      if (i === n - 1) out.push(avg)
-    } else {
-      avg = (avg * (n - 1) + v) / n
-      out.push(avg)
-    }
-  })
-  return out
-}
-
-// rsi is the relative strength index (0 to 100): how much of the recent
-// movement was up. Above 70 the price has risen fast (overbought), below 30
-// it has fallen fast (oversold).
-export function rsi(bars, n) {
-  const moves = bars.slice(1).map((b, i) => b.close - bars[i].close)
-  const gains = wilder(moves.map((m) => Math.max(m, 0)), n)
-  const losses = wilder(moves.map((m) => Math.max(-m, 0)), n)
-  return gains.map((g, i) => ({
-    time: bars[i + n].time,
-    value: losses[i] === 0 ? 100 : 100 - 100 / (1 + g / losses[i]),
-  }))
-}
-
-// trueRange is how far the price moved in one bar, gaps included: the largest
-// of high − low, |high − previous close| and |low − previous close|.
-export function trueRange(bar, prevClose) {
-  if (prevClose == null) return bar.high - bar.low
-  return Math.max(bar.high - bar.low, Math.abs(bar.high - prevClose), Math.abs(bar.low - prevClose))
-}
-
-// atr is the average true range: how much the price usually moves in one bar,
-// in price. It says nothing about direction, only size: traders use it to set
-// a stop-loss beyond the normal swings (for example 1.5 × ATR from the entry).
-export function atr(bars, n) {
-  const ranges = bars.map((b, i) => trueRange(b, i ? bars[i - 1].close : null))
-  return wilder(ranges, n).map((value, i) => ({ time: bars[i + n - 1].time, value }))
+// lineOf works out an indicator's line for the candles, [{ time, value }],
+// keeping only the candles that have a value (TradingView's code also returns
+// the first candles, before there is enough history, with no value).
+export function lineOf(ind, bars) {
+  const candles = bars.map((b) => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }))
+  return ind.calc(candles).filter((p) => typeof p.value === 'number' && Number.isFinite(p.value))
 }
